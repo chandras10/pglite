@@ -1,4 +1,14 @@
 Pglite::Application.routes.draw do
+  get "users/login"
+
+#  get "reports/login"
+#  get "reports/home"
+
+  root to: 'users#login'
+
+  match '/login', to: 'users#login'
+  match '/home', to: 'reports#home'
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
