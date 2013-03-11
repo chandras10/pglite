@@ -1,5 +1,5 @@
 Pglite::Application.routes.draw do
-  get "users/login"
+  resources :users
 
 #  get "reports/login"
 #  get "reports/home"

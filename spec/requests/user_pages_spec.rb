@@ -1,10 +1,14 @@
 require 'spec_helper'
 
 describe "UserPages" do
-  describe "Login Page" do
-    it "should have username and password fields." do
-      visit login_path
-      page.should have_content('Please login with your Username and Password.')
-    end
+
+  subject { page }
+
+  describe "profile page" do
+    let(:user) { FactoryGirl.create(:user) }
+    before { visit user_path(user) }
+
+    it { should have_selector('h1',    text: user.name) }
+    it { should have_selector('title', text: user.name) }
   end
 end
