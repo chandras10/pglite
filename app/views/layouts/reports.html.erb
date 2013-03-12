@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+                Charisma v1.0.0
+
+                Copyright 2012 Muhammad Usman
+                Licensed under the Apache License v2.0
+                http://www.apache.org/licenses/LICENSE-2.0
+
+                http://usman.it
+                http://twitter.com/halalit_usman
+  -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Peregrine Guard - Agentless BYOD discovery and control.">
+
+  <%= stylesheet_link_tag    "application", :media => "all" %>
+  <%= javascript_include_tag "application" %>
+  <%= csrf_meta_tags %>
+
+  <style type="text/css">
+     body {
+            padding-bottom: 40px;
+     }
+     .sidebar-nav {
+            padding: 9px 0;
+     }
+  </style>
+
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+</head>
+<body>
+
+<!-- topbar starts -->
+<div class="navbar">
+   <div class="navbar-inner">
+      <div class="container-fluid">
+         <a class="btn btn-navbar" data-toggle="collapse" data-target=".top-nav.nav-collapse,.sidebar-nav.nav-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+         </a>
+                                
+         <%= link_to "inventory_dashboard" do 
+             image_tag("i7logo.png", :class=>"brand",:alt=> "Peregrine Guard Logo", :size => "10x36") 
+             end 
+         %>
+				
+	 <!-- theme selector starts -->
+	 <div class="btn-group pull-right theme-container" >
+            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	       <i class="icon-tint"></i><span class="hidden-phone"> Change Theme / Skin</span>
+	       <span class="caret"></span>
+	    </a>
+	    <ul class="dropdown-menu" id="themes">
+	       <li><a data-value="classic" href="#"><i class="icon-blank"></i> Classic</a></li>
+	       <li><a data-value="cerulean" href="#"><i class="icon-blank"></i> Cerulean</a></li>
+	       <li><a data-value="cyborg" href="#"><i class="icon-blank"></i> Cyborg</a></li>
+	       <li><a data-value="redy" href="#"><i class="icon-blank"></i> Redy</a></li>
+	       <li><a data-value="journal" href="#"><i class="icon-blank"></i> Journal</a></li>
+	       <li><a data-value="simplex" href="#"><i class="icon-blank"></i> Simplex</a></li>
+	       <li><a data-value="slate" href="#"><i class="icon-blank"></i> Slate</a></li>
+	       <li><a data-value="spacelab" href="#"><i class="icon-blank"></i> Spacelab</a></li>
+	       <li><a data-value="united" href="#"><i class="icon-blank"></i> United</a></li>
+	    </ul>
+	 </div>
+	 <!-- theme selector ends -->
+				
+	 <!-- user dropdown starts -->
+	 <div class="btn-group pull-right" >
+	    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+	       <i class="icon-user"></i><span class="hidden-phone"> admin</span>
+	       <span class="caret"></span>
+	    </a>
+	    <ul class="dropdown-menu">
+	       <li><a href="#">Profile</a></li>
+	       <li class="divider"></li>
+	       <li><a href="login.html">Logout</a></li>
+	    </ul>
+	 </div>
+	 <!-- user dropdown ends -->
+				
+			</div>
+	 </div>
+	</div>
+	<!-- topbar ends -->
+		<div class="container-fluid">
+		<div class="row-fluid">
+				
+			<!-- left menu starts -->
+			<div class="span2 main-menu-span">
+				<div class="well nav-collapse sidebar-nav">
+					<ul class="nav nav-tabs nav-stacked main-menu">
+						<li class="nav-header hidden-tablet">Dashboards</li>
+						<li><a class="ajax-link" href="/inventory_dashboard"><i class="icon-home"></i><span class="hidden-tablet"> Inventory</span></a></li>
+						<li><a class="ajax-link" href="ui.html"><i class="icon-eye-open"></i><span class="hidden-tablet"> Security</span></a></li>
+						<li><a class="ajax-link" href="form.html"><i class="icon-edit"></i><span class="hidden-tablet"> Users</span></a></li>
+						<li><a class="ajax-link" href="chart.html"><i class="icon-list-alt"></i><span class="hidden-tablet"> Assets</span></a></li>
+						<li class="nav-header hidden-tablet">Reports</li>
+					</ul>
+				</div><!--/.well -->
+			</div><!--/span-->
+			<!-- left menu ends -->
+			
+			<noscript>
+				<div class="alert alert-block span10">
+					<h4 class="alert-heading">Warning!</h4>
+					<p>You need to have <a href="http://en.wikipedia.org/wiki/JavaScript" target="_blank">JavaScript</a> enabled to use this site.</p>
+				</div>
+			</noscript>
+			
+<%= yield %>
+              </div> <!-- row-fluid -->
+              <div class="modal hide fade" id="myModal">
+                        <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">Ã/button>
+                                <h3>Settings</h3>
+                        </div>
+                        <div class="modal-body">
+                                <p>Here settings can be configured...</p>
+                        </div>
+                        <div class="modal-footer">
+                                <a href="#" class="btn" data-dismiss="modal">Close</a>
+                                <a href="#" class="btn btn-primary">Save changes</a>
+                        </div>
+                </div>
+
+                <footer>
+                        <p class="pull-left">&copy; <a href="http://www.i7nw.com" target="_blank">i7 Networks Pvt Ltd.</a> 2013</p>
+                        <p class="pull-right">Powered by: <a href="http://usman.it/free-responsive-admin-template">Charisma</a></p>
+                </footer>
+
+           </div> <!-- container-fluid -->
+
+
+
+<%= javascript_include_tag "jquery-1.7.2.min" %>
+<%= javascript_include_tag "jquery-ui-1.8.21.custom.min" %>
+<%= javascript_include_tag "bootstrap-transition" %>
+<%= javascript_include_tag "bootstrap-alert" %>
+<%= javascript_include_tag "bootstrap-modal" %>
+<%= javascript_include_tag "bootstrap-dropdown" %>
+<%= javascript_include_tag "bootstrap-scrollspy" %>
+<%= javascript_include_tag "bootstrap-tab" %>
+<%= javascript_include_tag "bootstrap-tooltip" %>
+<%= javascript_include_tag "bootstrap-popover" %>
+<%= javascript_include_tag "bootstrap-button" %>
+<%= javascript_include_tag "bootstrap-collapse" %>
+<%= javascript_include_tag "bootstrap-carousel" %>
+<%= javascript_include_tag "bootstrap-typeahead" %>
+<%= javascript_include_tag "bootstrap-tour" %>
+<%= javascript_include_tag "jquery.cookie" %>
+<%= javascript_include_tag "fullcalendar.min.js" %>
+<%= javascript_include_tag "jquery.dataTables.min" %>
+<%= javascript_include_tag "excanvas" %>
+<%= javascript_include_tag "jquery.flot.min" %>
+<%= javascript_include_tag "jquery.flot.pie.min" %>
+<%= javascript_include_tag "jquery.flot.stack" %>
+<%= javascript_include_tag "jquery.flot.resize.min" %>
+<%= javascript_include_tag "jquery.chosen.min" %>
+<%= javascript_include_tag "jquery.uniform.min" %>
+<%= javascript_include_tag "jquery.colorbox.min" %>
+<%= javascript_include_tag "jquery.cleditor.min" %>
+<%= javascript_include_tag "jquery.noty" %>
+<%= javascript_include_tag "jquery.elfinder.min" %>
+<%= javascript_include_tag "jquery.raty.min" %>
+<%= javascript_include_tag "jquery.iphone.toggle" %>
+<%= javascript_include_tag "jquery.autogrow-textarea" %>
+<%= javascript_include_tag "jquery.uploadify-3.1.min" %>
+<!-- history.js for cross-browser state change on ajax -->
+<%= javascript_include_tag "jquery.history" %>
+<%= javascript_include_tag "charisma" %>
+
+<%= debug(params) if Rails.env.development? %>
+</body>
+</html>

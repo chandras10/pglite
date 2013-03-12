@@ -1,5 +1,7 @@
 Pglite::Application.routes.draw do
+
   resources :users
+  resources :deviceinfos
 
 #  get "reports/login"
 #  get "reports/home"
@@ -7,7 +9,8 @@ Pglite::Application.routes.draw do
   root to: 'users#login'
 
   match '/login', to: 'users#login'
-  match '/home', to: 'reports#home'
+  match '/inventory_dashboard', to: 'reports#inventory_dashboard'
+  match '/inventory_table', to: 'reports#inventory_table'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

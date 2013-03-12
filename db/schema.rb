@@ -11,7 +11,22 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130311064413) do
+ActiveRecord::Schema.define(:version => 20130311134558) do
+
+  create_table "deviceinfos", :force => true do |t|
+    t.string   "macid"
+    t.string   "username"
+    t.string   "groupname"
+    t.string   "location"
+    t.string   "devicename"
+    t.string   "classname"
+    t.string   "osversion"
+    t.string   "devicetype"
+    t.integer  "weight"
+    t.string   "ipaddr"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
 
   create_table "users", :force => true do |t|
     t.string   "name"
