@@ -1,0 +1,155 @@
+<div id="content" class="span10">
+<!-- content starts -->
+			
+
+   <div>
+      <ul class="breadcrumb">
+         <li>
+            <a href="#">Inventory</a> <span class="divider">/</span>
+         </li>
+      </ul>
+   </div>
+			
+			<div class="sortable row-fluid">
+				<a data-rel="tooltip" title="Total number of unique devices detected so far." class="well span3 top-block" href="#">
+					<span class="icon32 icon-red icon-web"></span>
+					<div>Total Devices</div>
+					<div><%= @deviceinfos.count %></div>
+					<span class="notification green">
+                                           <%= Deviceinfo.where('created_at >= ? ', Date.today).length %>
+                                        </span>
+				</a>
+
+				<a data-rel="tooltip" title="Total number of unique users detected." class="well span3 top-block" href="#">
+					<span class="icon32 icon-color icon-users"></span>
+					<div>Total Users</div>
+					<div><%= Deviceinfo.select(:username).uniq.length %></div>
+					<span class="notification green">
+                                           <%= Deviceinfo.select(:username).uniq.where('created_at >= ? ', Date.today).length %>
+                                        </span>
+				</a>
+
+				<a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." class="well span3 top-block" href="#">
+					<span class="icon32 icon-color icon-suitcase"></span>
+					<div>Assets</div>
+					<div>0</div>
+					<span class="notification">0</span>
+				</a>
+				
+				<a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." class="well span3 top-block" href="#">
+					<span class="icon32 icon-color icon-alert"></span>
+					<div>CVE/Snort Alerts</div>
+					<div>0</div>
+					<span class="notification red">0</span>
+				</a>
+			</div>
+   <div class="row-fluid sortable">		
+         <div class="box span4">
+            <div class="box-header well" data-original-title>
+	       <h2><i class="icon-folder-open"></i> Device Types</h2>
+	       <div class="box-icon">
+	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
+	       </div>
+	    </div>
+            <div class="box-content">
+               <canvas id="cvs" width="350" height="300" >[No canvas support]</canvas>
+            </div> <!-- box-content -->
+         </div> <!-- box span4 -->
+
+
+         <div class="box span4">
+            <div class="box-header well" data-original-title>
+	       <h2><i class="icon-folder-open"></i> Operating Systems</h2>
+	       <div class="box-icon">
+	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
+	       </div>
+	    </div>
+            <div class="box-content">
+               <canvas id="devinfo_hbar" width="300" height="300" >[No canvas support]</canvas>
+            </div> <!-- box-content -->
+         </div> <!-- box span4 -->
+
+         <div class="box span4">
+            <div class="box-header well" data-original-title>
+	       <h2><i class="icon-folder-open"></i> Device Types</h2>
+	       <div class="box-icon">
+	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
+	       </div>
+	    </div>
+            <div class="box-content center " style="height:300px">
+               <%
+                  @DeviceTypes = Deviceinfo.count(:select => :devicetype, :group => :devicetype)
+               %>
+	       <div class="sortable row-fluid" style="height: 300px; #position: relative; overflow: hidden;">
+		  <div class="well span4 top-block" >
+		     <div>Laptop</div>
+		     <span class="icon-laptop icon-4x"></span>
+		     <div><%= @DeviceTypes["Laptop"] %> </div>
+                  </div>
+		  <div class="well span4 top-block" >
+		     <div>Tablet</div>
+		     <span class="icon-tablet icon-4x"></span>
+		     <div><%= @DeviceTypes["Tablet"] %> </div>
+                  </div>
+		  <div class="well span4 top-block" >
+		     <div>Phone</div>
+		     <span class="icon-mobile-phone icon-4x"></span>
+		     <div><%= @DeviceTypes["Phone"] %> </div>
+                  </div>
+               </div> <!-- sortable -->
+            </div> <!-- box-content -->
+         </div> <!-- box span4 -->
+   </div><!-- row-fluid sortable -->
+</div><!-- content ends -->
+               <script type="text/javascript">
+                   function roundNumber(rnum, rlength) {
+                       var newnumber = Math.round(rnum*Math.pow(10,rlength))/Math.pow(10,rlength);
+                       return parseFloat(newnumber);
+                   }
+
+                   window.onload = function (){
+                       var labels = <%=raw @deviceNameLabels %>;
+                       var data = <%=raw @deviceNameData %>;
+                       var total = 0;
+                       for (var i=0; i < data.length; i++) {
+                           total += data[i];
+                       }
+
+                       var pie = new RGraph.Pie('cvs', data);
+                       pie.Set('chart.colors', ['#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5']);
+                       //pie.Set('chart.colors', ['Gradient(white:#004CB0)','Gradient(white:#FF7300)','Gradient(white:#FFCD00)','Gradient(white:#00B869)','Gradient(white:#999)','Gradient(white:#A0D300)','Gradient(white:#EC0033)']);
+                       pie.Set('chart.strokestyle', 'white');
+                       pie.Set('chart.linewidth', 3);
+                       pie.Set('chart.text.size', 6);
+                       pie.Set('chart.text.font', "Comic Sans");
+                       pie.Set('chart.exploded', 7);
+                       pie.Set('chart.shadow', false);
+                       pie.Set('chart.shadow.offsetx', 2);
+                       pie.Set('chart.shadow.offsety', 2);
+                       pie.Set('chart.shadow.blur', 3);
+                       pie.Set('chart.shadow.color', '#bbb');
+                       pie.Set('chart.labels.ingraph', true);
+
+                       for (var i=0; i< labels.length; i++) {
+                           labels[i] = labels[i] + ' ' + roundNumber(data[i]/total*100, 0) + '%';
+                       }
+                       pie.Set('chart.labels.ingraph.specific', labels);
+
+                       RGraph.Effects.Pie.RoundRobin(pie);
+
+                       var hbar = new RGraph.HBar('devinfo_hbar', <%=raw @OsData %>);
+                       hbar.Set('chart.labels', <%=raw @OsLabels %>);
+                       hbar.Set('chart.vmargin', 15);
+                       hbar.Set('chart.background.grid', false);
+                       hbar.Set('chart.strokestyle', 'rgba(0,0,0,0)');
+                       hbar.Set('chart.colors', ['#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
+                       hbar.Set('chart.colors.sequential', true);
+                       RGraph.Effects.Bar.Wave(hbar);
+                  };
+               </script>

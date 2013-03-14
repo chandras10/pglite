@@ -18,6 +18,7 @@ group :assets do
   gem 'uglifier', '1.2.3'
 end
 
+gem 'gon'
 gem 'jquery-rails', '2.0.2'
 
 group :development do

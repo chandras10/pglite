@@ -9,8 +9,8 @@ Pglite::Application.routes.draw do
   root to: 'users#login'
 
   match '/login', to: 'users#login'
-  match '/inventory_dashboard', to: 'reports#inventory_dashboard'
-  match '/inventory_table', to: 'reports#inventory_table'
+  match '/dash_inventory', to: 'reports#dash_inventory'
+  match '/tbl_inventory', to: 'reports#tbl_inventory'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

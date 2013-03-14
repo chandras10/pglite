@@ -279,7 +279,6 @@ function docReady(){
 		$target.slideToggle();
 	});
 	$('.btn-setting').click(function(e){
-alert("foo");
 		e.preventDefault();
 		$('#myModal').modal('show');
 	});
