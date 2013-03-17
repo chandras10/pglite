@@ -1,17 +1,8 @@
 <div id="content" class="span10">
 <!-- content starts -->
 			
-
-   <div>
-      <ul class="breadcrumb">
-         <li>
-            <a href="#">Inventory</a> <span class="divider">/</span>
-         </li>
-      </ul>
-   </div>
-			
 			<div class="sortable row-fluid">
-				<a data-rel="tooltip" title="Total number of unique devices detected so far." class="well span3 top-block" href="#">
+				<a data-rel="tooltip" title="Total number of unique devices detected so far." class="well span3 top-block" href="/tbl_inventory">
 					<span class="icon32 icon-red icon-web"></span>
 					<div>Total Devices</div>
 					<div><%= @deviceinfos.count %></div>
@@ -20,7 +11,7 @@
                                         </span>
 				</a>
 
-				<a data-rel="tooltip" title="Total number of unique users detected." class="well span3 top-block" href="#">
+				<a data-rel="tooltip" title="Total number of unique users detected." class="well span3 top-block" href="/tbl_inventory">
 					<span class="icon32 icon-green icon-users"></span>
 					<div>Total Users</div>
 					<div><%= Deviceinfo.select(:username).uniq.length %></div>
@@ -29,14 +20,14 @@
                                         </span>
 				</a>
 
-				<a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." class="well span3 top-block" href="#">
+				<a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." class="well span3 top-block" href="/tbl_inventory">
 					<span class="icon32 icon-blue icon-briefcase-new"></span>
 					<div>Assets</div>
 					<div>0</div>
 					<span class="notification">0</span>
 				</a>
 				
-				<a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." class="well span3 top-block" href="#">
+				<a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." class="well span3 top-block" href="/tbl_inventory">
 					<span class="icon32 icon-color icon-alert"></span>
 					<div>CVE/Snort Alerts</div>
 					<div>0</div>
@@ -48,9 +39,9 @@
             <div class="box-header well" data-original-title>
 	       <h2><i class="icon-folder-open"></i> Device Types</h2>
 	       <div class="box-icon">
-	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
-	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
-	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
+	          <a href="/tbl_inventory" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+	          <a href="/tbl_inventory" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+	          <a href="/tbl_inventory" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
 	       </div>
 	    </div>
             <div class="box-content">
@@ -63,9 +54,9 @@
             <div class="box-header well" data-original-title>
 	       <h2><i class="icon-folder-open"></i> Operating Systems</h2>
 	       <div class="box-icon">
-	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
-	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
-	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
+	          <a href="/tbl_inventory" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+	          <a href="/tbl_inventory" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+	          <a href="/tbl_inventory" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
 	       </div>
 	    </div>
             <div class="box-content">
@@ -77,9 +68,9 @@
             <div class="box-header well" data-original-title>
 	       <h2><i class="icon-folder-open"></i> Device Types</h2>
 	       <div class="box-icon">
-	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
-	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
-	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
+	          <a href="/tbl_inventory" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+	          <a href="/tbl_inventory" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+	          <a href="/tbl_inventory" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
 	       </div>
 	    </div>
             <div class="box-content center " style="height:300px">
