@@ -97,10 +97,10 @@
 				<div class="well nav-collapse sidebar-nav">
 					<ul class="nav nav-tabs nav-stacked main-menu">
 						<li class="nav-header hidden-tablet">Dashboards</li>
-						<li><a class="ajax-link" href="/inventory_dashboard"><i class="icon-home"></i><span class="hidden-tablet"> Inventory</span></a></li>
-						<li><a class="ajax-link" href="ui.html"><i class="icon-eye-open"></i><span class="hidden-tablet"> Security</span></a></li>
-						<li><a class="ajax-link" href="form.html"><i class="icon-edit"></i><span class="hidden-tablet"> Users</span></a></li>
-						<li><a class="ajax-link" href="chart.html"><i class="icon-list-alt"></i><span class="hidden-tablet"> Assets</span></a></li>
+						<li><a class="ajax-link" href="/inventory_dashboard"><i class="icon-bar-chart"></i><span class="hidden-tablet"> Inventory</span></a></li>
+						<li><a class="ajax-link" href="ui.html"><i class="icon-dashboard"></i><span class="hidden-tablet"> Bandwidth</span></a></li>
+						<li><a class="ajax-link" href="form.html"><i class="icon-eye-open"></i><span class="hidden-tablet"> Security</span></a></li>
+						<li><a class="ajax-link" href="chart.html"><i class="icon-briefcase"></i><span class="hidden-tablet"> Assets</span></a></li>
 						<li class="nav-header hidden-tablet">Reports</li>
 					</ul>
 				</div><!--/.well -->
@@ -164,6 +164,7 @@
 <%= javascript_include_tag "RGraph.common.effects" %>
 <%= javascript_include_tag "RGraph.pie" %>
 <%= javascript_include_tag "RGraph.hbar" %>
+<%= javascript_include_tag "RGraph.line" %>
 <%= javascript_include_tag "jquery.chosen.min" %>
 <%= javascript_include_tag "jquery.uniform.min" %>
 <%= javascript_include_tag "jquery.colorbox.min" %>

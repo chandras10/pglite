@@ -11,6 +11,7 @@ Pglite::Application.routes.draw do
   match '/login', to: 'users#login'
   match '/dash_inventory', to: 'reports#dash_inventory'
   match '/tbl_inventory', to: 'reports#tbl_inventory'
+  match '/dash_bw', to: 'reports#dash_bw'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

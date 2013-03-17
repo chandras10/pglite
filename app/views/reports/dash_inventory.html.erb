@@ -21,7 +21,7 @@
 				</a>
 
 				<a data-rel="tooltip" title="Total number of unique users detected." class="well span3 top-block" href="#">
-					<span class="icon32 icon-color icon-users"></span>
+					<span class="icon32 icon-green icon-users"></span>
 					<div>Total Users</div>
 					<div><%= Deviceinfo.select(:username).uniq.length %></div>
 					<span class="notification green">
@@ -30,7 +30,7 @@
 				</a>
 
 				<a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." class="well span3 top-block" href="#">
-					<span class="icon32 icon-color icon-suitcase"></span>
+					<span class="icon32 icon-blue icon-briefcase-new"></span>
 					<div>Assets</div>
 					<div>0</div>
 					<span class="notification">0</span>
@@ -86,20 +86,26 @@
                <%
                   @DeviceTypes = Deviceinfo.count(:select => :devicetype, :group => :devicetype)
                %>
-	       <div class="sortable row-fluid" style="height: 300px; #position: relative; overflow: hidden;">
+	       <div class="sortable row-fluid" style="height: 300px; #position: relative; overflow: hidden; vertical-align: center">
 		  <div class="well span4 top-block" >
 		     <div>Laptop</div>
+               <a class="ajax-link" href='/tbl_inventory'>
 		     <span class="icon-laptop icon-4x"></span>
+               </a>
 		     <div><%= @DeviceTypes["Laptop"] %> </div>
                   </div>
 		  <div class="well span4 top-block" >
 		     <div>Tablet</div>
+               <a class="ajax-link" href='/tbl_inventory'>
 		     <span class="icon-tablet icon-4x"></span>
+               </a>
 		     <div><%= @DeviceTypes["Tablet"] %> </div>
                   </div>
 		  <div class="well span4 top-block" >
 		     <div>Phone</div>
+               <a class="ajax-link" href='/tbl_inventory'>
 		     <span class="icon-mobile-phone icon-4x"></span>
+               </a>
 		     <div><%= @DeviceTypes["Phone"] %> </div>
                   </div>
                </div> <!-- sortable -->

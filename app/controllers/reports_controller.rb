@@ -39,4 +39,7 @@ class ReportsController < ApplicationController
   def tbl_inventory
     @deviceinfos = Deviceinfo.all 
   end
+ 
+  def dash_bw
+  end
 end
