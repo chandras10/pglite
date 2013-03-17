@@ -13,7 +13,7 @@
    <div class="row-fluid sortable">		
          <div class="box span12">
             <div class="box-header well" data-original-title>
-	       <h2><i class="icon-folder-open"></i> Bandwidth Consumption</h2>
+	       <h2><i class="icon-folder-open"></i> Bandwidth Consumption (Past 24 Hours)</h2>
 	       <div class="box-icon">
 	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
 	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
@@ -23,21 +23,132 @@
 
             <div class="box-content" id="divCanvas">
                 <% 
-                       @IpStatRecs= Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, destip as ip, sum(inbytes)+sum(outbytes) as total").
-                                                 group(:time, :destip).order(:destip)
+                       #
+                       # Generate the 24 hour labels, showing the current hour on the right most edge and then
+                       # working backwards upto to 24 hours ago.
+                       #
+                       currentHour = Time.now.strftime("%H").to_i + 1
+                       @chartLabel24Hrs = (0..23).to_a
+                       shiftedArray = @chartLabel24Hrs.shift(currentHour)
+                       @chartLabel24Hrs.concat(shiftedArray)
 
-                       @IpsList = @IpStatRecs.map { |i| i.ip }.uniq
-                       @timeIntervals = @IpStatRecs.map { |i| i.time }.uniq
+                       @IpStatRecs= Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, destip as ip, destport, deviceid as device, sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+#                                           where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
+                                            where("timestamp >= ?", "2013-02-01").
+                                            group(:time, :destip, :destport, :deviceid).order(:destip)
 
-                       @dataArray = Array.new
-                       @IpsList.each do | server_ip | 
-                           data = @IpStatRecs.map { |i| i.total if (i.ip == server_ip)}.compact
-                           @dataArray.push(data)
+                       @ServerList = @IpStatRecs.map { |i| i.ip }.uniq
+                       @DeviceList = @IpStatRecs.map { |i| i.device }.uniq
+
+                       @ServerArray = Array.new
+                       @ServerList.each do | server_ip | 
+
+                           #Hourly stats for each server
+                           data = Array.new(24,0) 
+
+                           @IpStatRecs.map do |i| 
+                                 if (i.ip == server_ip) 
+                                    data[i.time.split[1].to_i] += (i.inbytes + i.outbytes)
+                                 end
+                           end
+                           shiftedArray = data.shift(currentHour)
+                           data.concat(shiftedArray)
+                           @ServerArray.push(data)
                        end
                 %>
-                <canvas id="cvs" width="900" height="300" >[No canvas support]</canvas>
+                <canvas id="cvs" width="900" height="300">[No canvas support]</canvas>
             </div> <!-- box-content -->
          </div> <!-- box span12 -->
+   </div><!-- row-fluid sortable -->
+   <div class="row-fluid sorttable">
+         <div class="box span6">
+            <div class="box-header well" data-original-title>
+	       <h2><i class="icon-folder-open"></i> Top Servers</h2>
+	       <div class="box-icon">
+	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
+	       </div>
+	    </div>
+
+            <div class="box-content">
+            <table class="table table-striped table-bordered bootstrap-datatable datatable">
+               <thead>
+	          <tr>
+	             <th>Server</th>
+		     <th>Incoming (Mbytes) </th>
+                     <th>Outgoing (Mbytes)</th>
+                     <th>Total (MBytes)</th>
+	          </tr>
+	       </thead>   
+	       <tbody>
+               <%
+                  @ServerList.each do | server_ip | 
+                     inbytes = outbytes = 0
+                     @IpStatRecs.map do |i| 
+                        if (i.ip == server_ip) 
+                           inbytes += i.inbytes
+                           outbytes += i.outbytes
+                        end
+                     end
+               %>
+                     
+                     <tr>
+                        <td><%= server_ip %></td>
+                        <td><%= inbytes %></td>
+                        <td><%= outbytes %></td>
+                        <td><%= inbytes+outbytes %></td>
+                     </tr>
+               <% end %>
+               
+               </tbody>
+            </table>
+            </div> <!-- box-content -->
+         </div> <!-- box span6 -->
+         <div class="box span6">
+            <div class="box-header well" data-original-title>
+	       <h2><i class="icon-folder-open"></i> Top Devices </h2>
+	       <div class="box-icon">
+	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
+	       </div>
+	    </div>
+
+            <div class="box-content">
+            <table class="table table-striped table-bordered bootstrap-datatable datatable">
+               <thead>
+	          <tr>
+	             <th>Device</th>
+		     <th>Incoming (Mbytes) </th>
+                     <th>Outgoing (Mbytes)</th>
+                     <th>Total (MBytes)</th>
+	          </tr>
+	       </thead>   
+	       <tbody>
+               <%
+                  @DeviceList.each do | device | 
+                     inbytes = outbytes = 0
+                     @IpStatRecs.map do |i| 
+                        if (i.device == device) 
+                           inbytes += i.inbytes
+                           outbytes += i.outbytes
+                        end
+                     end
+               %>
+                     
+                     <tr>
+                        <td><%= device %></td>
+                        <td><%= inbytes %></td>
+                        <td><%= outbytes %></td>
+                        <td><%= inbytes+outbytes %></td>
+                     </tr>
+               <% end %>
+               
+               </tbody>
+            </table>
+            </div> <!-- box-content -->
+         </div> <!-- box span6 -->
    </div><!-- row-fluid sortable -->
 </div><!-- content ends -->
 
@@ -45,31 +156,34 @@
 <script type="text/javascript">
         window.onload = function ()
         {
-            var myLine = new RGraph.Line('cvs', <%= @dataArray %>);
-            myLine.Set('chart.labels', <%=raw @timeIntervals %>);
-            myLine.Set('chart.gutter.left', 40);
-            myLine.Set('chart.gutter.right', 15);
-            myLine.Set('chart.gutter.bottom', 20);
-            myLine.Set('chart.colors', ['red', 'black']);
-            myLine.Set('chart.units.post', '%');
+            var myLine = new RGraph.Line('cvs', <%= @ServerArray %>);
+            myLine.Set('chart.labels', <%=raw @chartLabel24Hrs.map { |i| i.to_s } %>);
+
+            myLine.Set('chart.key', <%=raw @ServerList %>);
+            myLine.Set('chart.key.color.shape', 'circle');
+            myLine.Set('chart.key.position', 'graph');
+
             myLine.Set('chart.linewidth', 5);
-            myLine.Set('chart.hmargin', 15);
+            myLine.Set('chart.background.grid.autofit.numvlines', 24);
+            myLine.Set('chart.background.grid.autofit.numhlines', 20);
+
+            myLine.Set('chart.colors', ['red', 'black','#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5']);
             myLine.Set('chart.text.color', '#333');
             myLine.Set('chart.text.font', 'Arial');
             myLine.Set('chart.background.grid.autofit', true);
-            myLine.Set('chart.background.grid.autofit.numvlines', 11);
             myLine.Set('chart.shadow', true);
             myLine.Set('chart.shadow.color', 'rgba(20,20,20,0.3)');
             myLine.Set('chart.shadow.blur',  10);
             myLine.Set('chart.shadow.offsetx', 0);
             myLine.Set('chart.shadow.offsety', 0);
-            myLine.Set('chart.background.grid.vlines', false);
             myLine.Set('chart.background.grid.border', true);
-            myLine.Set('chart.noxaxis', true);
-            myLine.Set('chart.title', 'An example Line chart');
             myLine.Set('chart.axis.color', '#666');
             myLine.Set('chart.text.color', '#666');
+            myLine.Set('chart.key.interactive', true);
             myLine.Set('chart.spline', true);
+            myLine.Set('chart.title', 'Bandwidth (Mbytes)');
+            //myLine.Set('chart.tickmarks', 'circle');
+
 
             /**
             * Use the Trace animation to show the chart
@@ -81,36 +195,6 @@
                 myLine.Set('chart.shadow.color', '#aaa');
                 myLine.Draw();
             } else {
-                myLine.Set('chart.tooltips', [
-                                              '<b>January</b><br />Started off the year quite averagely',
-                                              '<b>February</b><br />Better than January, rising quite nicely',
-                                              '<b>March</b><br />March was quite a spike',
-                                              '<b>April</b><br />Rising very impressively',
-                                              '<b>May</b><br />Dropping after the last two month spike',
-                                              '<b>June</b><br />Still dropping',
-                                              '<b>July</b><br />The fall is beginning to subside, but still dropping',
-                                              '<b>August</b><br />A good rise after the fall',
-                                              '<b>September</b><br />A very good peak',
-                                              '<b>October</b><br />The peak is now subsiding',
-                                              '<b>November</b><br />Still subsiding',
-                                              '<b>December</b><br />Rising again after the last fall',
-    
-    
-                                              '<b>January</b><br />Started off the year quite averagely as with Robert',
-                                              '<b>February</b><br />Rising as with Robert',
-                                              '<b>March</b><br />Not as good as Robert, but OK',
-                                              '<b>April</b><br />Dropping after the peak',
-                                              '<b>May</b><br />The low point as with last year',
-                                              '<b>June</b><br />Rising higher than Robert',
-                                              '<b>July</b><br />Consistent with last month',
-                                              '<b>August</b><br />A nice high point',
-                                              '<b>September</b><br />A low point',
-                                              '<b>October</b><br />A nice rise',
-                                              '<b>November</b><br />Falling for fall...',
-                                              '<b>December</b><br />Rising again for Christmas'
-                                             ]);
-
-                
                 RGraph.Effects.Line.jQuery.UnfoldFromCenterTrace(myLine, {'duration': 1000});
             }
         }

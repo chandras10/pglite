@@ -1,0 +1,38 @@
+<html>
+            <div class="box-content" id="divCanvas">
+                <canvas id="cvs" width="600" height="250">[No canvas support]</canvas>
+            </div> <!-- box-content -->
+<script type="text/javascript">
+        window.onload = function ()
+        {
+            var myLine = new RGraph.Line('cvs', [70,60,80,50,50,60,70,60,50,40,50,50], [20,30,50,40,30,50,40,30,60,50,10,20]);
+            myLine.Set('chart.gutter.left', 45);
+            myLine.Set('chart.background.grid.autofit.numvlines', 11);
+            myLine.Set('chart.background.grid.autofit.numhlines', 10);
+            myLine.Set('chart.noxaxis', true);
+            myLine.Set('chart.noaxes', true);
+            myLine.Set('chart.ymax', 100);
+            myLine.Set('chart.stepped', true);
+            myLine.Set('chart.units.pre', '$');
+            myLine.Set('chart.units.post', 'K');
+            myLine.Set('chart.ylabels.count', 10);
+            myLine.Set('chart.labels', ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']);
+            myLine.Set('chart.key', ['Credit limit','MTM + AR','AR','MTM']);
+            myLine.Set('chart.key.position.graph.boxed', false);
+            myLine.Set('chart.key.color.shape', 'line');
+
+            /**
+            * Use the Trace animation to show the chart
+            */
+            if (RGraph.isOld()) {
+                // IE7/8 don't support shadow blur, so set custom shadow properties
+                myLine.Set('chart.shadow.offsetx', 3);
+                myLine.Set('chart.shadow.offsety', 3);
+                myLine.Set('chart.shadow.color', '#aaa');
+                myLine.Draw();
+            } else {
+                RGraph.Effects.Line.jQuery.UnfoldFromCenterTrace(myLine, {'duration': 1000});
+            }
+        }
+</script>
+</html>
