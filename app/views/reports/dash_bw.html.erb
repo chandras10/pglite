@@ -1,28 +1,4 @@
-<div id="content" class="span10">
-<!-- content starts -->
-			
-
-   <div>
-      <ul class="breadcrumb">
-         <li>
-            <a href="#">Bandwidth</a> <span class="divider">/</span>
-         </li>
-      </ul>
-   </div>
-			
-   <div class="row-fluid sortable">		
-         <div class="box span12">
-            <div class="box-header well" data-original-title>
-	       <h2><i class="icon-folder-open"></i> Bandwidth Consumption (Past 24 Hours)</h2>
-	       <div class="box-icon">
-	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
-	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
-	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
-	       </div>
-	    </div>
-
-            <div class="box-content" id="divCanvas">
-                <% 
+               <%
                        #
                        # Generate the 24 hour labels, showing the current hour on the right most edge and then
                        # working backwards upto to 24 hours ago.
@@ -56,10 +32,53 @@
                            @ServerArray.push(data)
                        end
                 %>
-                <canvas id="cvs" width="900" height="300">[No canvas support]</canvas>
+<div id="content" class="span10">
+<!-- content starts -->
+			
+
+   <div>
+      <ul class="breadcrumb">
+         <li>
+            <a href="#">Bandwidth</a> <span class="divider">/</span>
+         </li>
+      </ul>
+   </div>
+			
+   <div class="row-fluid sortable">		
+         <div class="box span12">
+            <div class="box-header well" data-original-title>
+	       <h2><i class="icon-folder-open"></i> Bandwidth Consumption (Past 24 Hours)</h2>
+	       <div class="box-icon">
+	          <a href="#" class="btn btn-setting btn-round"><i class="icon-cog"></i></a>
+	          <a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
+	          <a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
+	       </div>
+	    </div>
+
+            <div id="tabs" class="box-content">
+               <ul>
+                  <li><a href="#total">Total</a></li>
+
+                  <!-- Display graphs(in individual tab)  for total consumption and top 5 servers -->
+                  <% @ServerList[0..4].each do | server_ip | %>
+                     <% break if server_ip.nil? %>
+                     <li><%= link_to server_ip, '#' + server_ip.gsub(/\s+/,"")  %></li>
+                  <% end %>
+               </ul>
+               <div class="tabs-spacer"></div>
+               <div id="total" class="box-content" id="divCanvas">
+                  <canvas id="total_bw" width="900" height="300">[No canvas support]</canvas>
+               </div> <!-- tab total  -->
+               <% @ServerList[0..4].each do | server_ip | %>
+                  <% break if server_ip.nil? %>
+                  <div id="<%= server_ip.gsub(/\s+/,"") %>" class="box-content">
+                      <%= server_ip + ' - Bandwidth usage for individual ports will be shown here. ' %>
+                  </div> 
+               <% end %>
             </div> <!-- box-content -->
          </div> <!-- box span12 -->
    </div><!-- row-fluid sortable -->
+
    <div class="row-fluid sorttable">
          <div class="box span6">
             <div class="box-header well" data-original-title>
@@ -156,7 +175,9 @@
 <script type="text/javascript">
         window.onload = function ()
         {
-            var myLine = new RGraph.Line('cvs', <%= @ServerArray %>);
+$( "#tabs" ).tabs();
+
+            var myLine = new RGraph.Line('total_bw', <%= @ServerArray %>);
             myLine.Set('chart.labels', <%=raw @chartLabel24Hrs.map { |i| i.to_s } %>);
 
             myLine.Set('chart.key', <%=raw @ServerList %>);
@@ -199,3 +220,4 @@
             }
         }
 </script>
+
