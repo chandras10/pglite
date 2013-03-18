@@ -1,16 +1,19 @@
 <div id="content" class="span10">
 <!-- content starts -->
    <div class="sortable row-fluid">
-      <a data-rel="tooltip" title="Total number of unique devices detected so far." class="well span3 top-block" href="/tbl_inventory">
+      <!-- Summary counters - START -->
+      <a data-rel="tooltip" title="Total number of unique devices detected so far." 
+         class="well span3 top-block" href="/tbl_inventory">
          <span class="icon32 icon-red icon-web"></span>
-	    <div>Total Devices</div>
-	    <div><%= @deviceinfos.count %></div>
-	    <span class="notification green">
-               <%= Deviceinfo.where('created_at >= ? ', Date.today).length %>
-            </span>
+	 <div>Total Devices</div>
+	 <div><%= @deviceinfos.count %></div>
+	 <span class="notification green">
+            <%= Deviceinfo.where('created_at >= ? ', Date.today).length %>
+         </span>
       </a>
 
-      <a data-rel="tooltip" title="Total number of unique users detected." class="well span3 top-block" href="/tbl_inventory">
+      <a data-rel="tooltip" title="Total number of unique users detected." 
+         class="well span3 top-block" href="/tbl_inventory">
          <span class="icon32 icon-green icon-users"></span>
 	 <div>Total Users</div>
 	 <div><%= Deviceinfo.select(:username).uniq.length %></div>
@@ -19,49 +22,54 @@
          </span>
       </a>
 
-      <a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." class="well span3 top-block" href="/dash_bw">
+      <a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." 
+         class="well span3 top-block" href="/dash_bw">
          <span class="icon32 icon-blue icon-briefcase-new"></span>
 	 <div>Assets</div>
 	 <div><%= Ipstat.select(:destip).uniq.length %></div>
 	 <span class="notification">0</span>
       </a>
 				
-      <a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." class="well span3 top-block" href="#">
+      <a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." 
+         class="well span3 top-block" href="#">
 	 <span class="icon32 icon-color icon-alert"></span>
 	 <div>CVE/Snort Alerts</div>
 	 <div>0</div>
 	 <span class="notification red">0</span>
       </a>
+
+      <!-- Summary counters - END -->
+
    </div>
 
 
    <div class="row-fluid sortable">		
       <div class="box span4">
-         <div class="box-header well-small" data-original-title>
-	    <i class="icon-folder-open"></i> Device Classes
-            <%= render 'layouts/title_bar_icons' %>
-	 </div>
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Device Classes",
+                                 :header_link  => "/tbl_inventory" }
+         %>
          <div class="box-content">
-            <canvas id="cvs" width="350" height="300" >[No canvas support]</canvas>
+            <canvas id="devinfo_class_pie" width="400" height="300" >[No canvas support]</canvas>
          </div> <!-- box-content -->
       </div> <!-- box span4 -->
 
 
       <div class="box span4">
-         <div class="box-header well-small" data-original-title>
-	    <i class="icon-folder-open"></i> Operating Systems
-            <%= render 'layouts/title_bar_icons' %>
-	 </div>
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Operating Systems",
+                                 :header_link  => "/tbl_inventory" }
+         %>
          <div class="box-content">
-            <canvas id="devinfo_hbar" width="300" height="300" >[No canvas support]</canvas>
+            <canvas id="devinfo_os_hbar" width="300" height="300" >[No canvas support]</canvas>
          </div> <!-- box-content -->
       </div> <!-- box span4 -->
 
       <div class="box span4">
-         <div class="box-header well-small" data-original-title>
-	    <i class="icon-folder-open"></i> Device Types
-            <%= render 'layouts/title_bar_icons' %>
-	 </div>
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Device Types",
+                                 :header_link  => "/tbl_inventory" }
+         %>
          <div class="box-content center " style="height:300px">
             <%
                @DeviceTypes = Deviceinfo.count(:select => :devicetype, :group => :devicetype)
@@ -69,7 +77,7 @@
 	    <div class="sortable row-fluid" style="height: 300px; #position: relative; overflow: hidden; vertical-align: center">
 	       <div class="well span4 top-block" >
 		  <div>Laptop</div>
-                  <a class="ajax-link" href='/tbl_inventory'>
+                  <a href='/tbl_inventory'>
 		     <span class="icon-laptop icon-4x"></span>
                   </a>
 		  <div><%= @DeviceTypes["Laptop"] %> </div>
@@ -109,7 +117,7 @@
        total += data[i];
      }
 
-     var pie = new RGraph.Pie('cvs', data);
+     var pie = new RGraph.Pie('devinfo_class_pie', data);
      pie.Set('chart.colors', ['#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5']);
      //pie.Set('chart.colors', ['Gradient(white:#004CB0)','Gradient(white:#FF7300)','Gradient(white:#FFCD00)','Gradient(white:#00B869)','Gradient(white:#999)','Gradient(white:#A0D300)','Gradient(white:#EC0033)']);
      pie.Set('chart.strokestyle', 'white');
@@ -131,7 +139,7 @@
 
      RGraph.Effects.Pie.RoundRobin(pie);
 
-     var hbar = new RGraph.HBar('devinfo_hbar', <%=raw @OsData %>);
+     var hbar = new RGraph.HBar('devinfo_os_hbar', <%=raw @OsData %>);
      hbar.Set('chart.labels', <%=raw @OsLabels %>);
      hbar.Set('chart.vmargin', 15);
      hbar.Set('chart.background.grid', false);
