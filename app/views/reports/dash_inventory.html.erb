@@ -8,9 +8,9 @@
 
 
   @deviceinfos.each do |devinfo|
-    hashDeviceType[devinfo['devicetype']] += 1
-    hashDeviceName[devinfo['devicename']] += 1
-    hashClassName[devinfo['classname']] += 1
+    hashDeviceType[devinfo.devicetype] += 1
+    hashDeviceName[devinfo.devicename] += 1
+    hashClassName[devinfo.classname] += 1
   end
 
 %>
@@ -25,7 +25,7 @@
 	 <div>Total Devices</div>
 	 <div><%= @deviceinfos.count %></div>
 	 <span class="notification green">
-            <%= @deviceinfos.count { |x| x['created_at'] >= today } %>
+            <%= @deviceinfos.count { |x| x.created_at >= today } %>
          </span>
       </a>
 
@@ -33,9 +33,9 @@
          class="well span3 top-block" href="/tbl_inventory">
          <span class="icon32 icon-green icon-users"></span>
 	 <div>Total Users</div>
-	 <div><%= @deviceinfos.uniq{|x|x['username']}.count %></div>
+	 <div><%= @deviceinfos.uniq{|x|x.username}.count %></div>
 	 <span class="notification green">
-            <%= @deviceinfos.select{ |x| x['created_at'] >= today }.uniq{|x|x['username']}.count %>
+            <%= @deviceinfos.select{ |x| x.created_at >= today }.uniq{|x|x.username}.count %>
          </span>
       </a>
 
