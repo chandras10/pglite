@@ -1,3 +1,20 @@
+
+<%
+  today = Time.now.strftime("%Y-%m-%d")
+  
+  hashDeviceName = Hash.new(0)
+  hashClassName  = Hash.new(0)
+  hashDeviceType = Hash.new(0)
+
+
+  @deviceinfos.each do |devinfo|
+    hashDeviceType[devinfo['devicetype']] += 1
+    hashDeviceName[devinfo['devicename']] += 1
+    hashClassName[devinfo['classname']] += 1
+  end
+
+%>
+
 <div id="content" class="span10">
 <!-- content starts -->
    <div class="sortable row-fluid">
@@ -8,7 +25,7 @@
 	 <div>Total Devices</div>
 	 <div><%= @deviceinfos.count %></div>
 	 <span class="notification green">
-            <%= Deviceinfo.where('created_at >= ? ', Date.today).length %>
+            <%= @deviceinfos.count { |x| x['created_at'] >= today } %>
          </span>
       </a>
 
@@ -16,9 +33,9 @@
          class="well span3 top-block" href="/tbl_inventory">
          <span class="icon32 icon-green icon-users"></span>
 	 <div>Total Users</div>
-	 <div><%= Deviceinfo.select(:username).uniq.length %></div>
+	 <div><%= @deviceinfos.uniq{|x|x['username']}.count %></div>
 	 <span class="notification green">
-            <%= Deviceinfo.select(:username).uniq.where('created_at >= ? ', Date.today).length %>
+            <%= @deviceinfos.select{ |x| x['created_at'] >= today }.uniq{|x|x['username']}.count %>
          </span>
       </a>
 
@@ -71,30 +88,27 @@
                                  :header_link  => "/tbl_inventory" }
          %>
          <div class="box-content center " style="height:300px">
-            <%
-               @DeviceTypes = Deviceinfo.count(:select => :devicetype, :group => :devicetype)
-            %>
-	    <div class="sortable row-fluid" style="height: 300px; #position: relative; overflow: hidden; vertical-align: center">
-	       <div class="well span4 top-block" >
-		  <div>Laptop</div>
+	          <div class="sortable row-fluid" style="height: 300px; #position: relative; overflow: hidden; vertical-align: center">
+	             <div class="well span4 top-block" >
+		              <div>Laptop</div>
                   <a href='/tbl_inventory'>
-		     <span class="icon-laptop icon-4x"></span>
+		                 <span class="icon-laptop icon-4x"></span>
                   </a>
-		  <div><%= @DeviceTypes["Laptop"] %> </div>
+		              <div><%= hashDeviceType["Laptop"] %> </div>
                </div>
-	       <div class="well span4 top-block" >
-		  <div>Tablet</div>
+	             <div class="well span4 top-block" >
+		              <div>Tablet</div>
                   <a class="ajax-link" href='/tbl_inventory'>
-		     <span class="icon-tablet icon-4x"></span>
+		                 <span class="icon-tablet icon-4x"></span>
                   </a>
-		  <div><%= @DeviceTypes["Tablet"] %> </div>
+		              <div><%= hashDeviceType["Tablet"] %> </div>
                </div>
-	       <div class="well span4 top-block" >
-		  <div>Phone</div>
+	             <div class="well span4 top-block" >
+		              <div>Phone</div>
                   <a class="ajax-link" href='/tbl_inventory'>
-		     <span class="icon-mobile-phone icon-4x"></span>
+		                 <span class="icon-mobile-phone icon-4x"></span>
                   </a>
-		  <div><%= @DeviceTypes["Phone"] %> </div>
+		              <div><%= hashDeviceType["Phone"] %> </div>
                </div>
             </div> <!-- sortable -->
          </div> <!-- box-content -->
@@ -110,8 +124,8 @@
    }
 
    window.onload = function (){
-     var labels = <%=raw @deviceNameLabels %>;
-     var data = <%=raw @deviceNameData %>;
+     var labels = <%=raw hashDeviceName.keys %>;
+     var data = <%=raw hashDeviceName.values %>;
      var total = 0;
      for (var i=0; i < data.length; i++) {
        total += data[i];
@@ -139,13 +153,19 @@
 
      RGraph.Effects.Pie.RoundRobin(pie);
 
-     var hbar = new RGraph.HBar('devinfo_os_hbar', <%=raw @OsData %>);
-     hbar.Set('chart.labels', <%=raw @OsLabels %>);
-     hbar.Set('chart.vmargin', 15);
+     var hbar = new RGraph.HBar('devinfo_os_hbar', <%= hashClassName.values %>);
+     hbar.Set('chart.labels.above', true);
+     hbar.Set('chart.vmargin', 15); 
+     hbar.Set('chart.labels', <%=raw hashClassName.keys %>);
      hbar.Set('chart.background.grid', false);
      hbar.Set('chart.strokestyle', 'rgba(0,0,0,0)');
      hbar.Set('chart.colors', ['#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
      hbar.Set('chart.colors.sequential', true);
-     RGraph.Effects.Bar.Wave(hbar);
+     hbar.Set('chart.labels.above.decimals', 1);
+     hbar.Set('chart.xlabels', false);
+     hbar.Set('chart.noxaxis', true);
+     hbar.Set('chart.noxtickmarks', true);
+     hbar.Set('chart.noytickmarks', true); 
+     RGraph.isOld() ? hbar.Draw() : RGraph.Effects.HBar.Grow(hbar);
    };
 </script>
