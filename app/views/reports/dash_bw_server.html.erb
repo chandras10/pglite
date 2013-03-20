@@ -3,46 +3,41 @@
   # Get all the database records in go!
   #
   @IpStatRecs= Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
-                                destip as ip, deviceid as device, 
+                                destport as destport, deviceid as device, 
                                 sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                       # where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                      where("timestamp >= ?", "2013-02-01").
-                      group(:time, :destip, :deviceid).order(:destip)
+                      where("timestamp >= ? AND destip = ?", "2013-02-01", params[:server_ip]).
+                      group(:time, :destport, :deviceid).order(:destport)
 # Total (IN + OUTbytes) consumption per Server, per hour
 # Key: Internal_Server_IP_address, Value: 24 element 'integer' array holding Mbytes consumed/hr.
 hash24HrData = Hash.new
 
 #
-# Per Server, Total INbytes and OUTBytes.
+# Per Port, Total INbytes and OUTBytes.
 # Key: Internal_Server_IP_address, Value: Array[INbytes, OUTbytes]
-hashServerTotals = Hash.new
+hashPortTotals = Hash.new
 
 #
 # Per Device, Total INbytes and OUTbytes
 # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
 hashDeviceTotals = Hash.new
 
-#
-#Per Server, Per Port, hourly data of INbytes, OUTbytes
-# Key: Internal_Server_IP_address, Value: Hash {Port => Array[INbytes, OUTbytes]}
-hashServerPortTotals = Hash.new 
-
 @IpStatRecs.each do |rec |
-
-  arrayhourlyData = hash24HrData[rec['ip']]
+  
+  arrayhourlyData = hash24HrData[rec['destport']]
   if arrayhourlyData.nil? then
-     arrayhourlyData = hash24HrData[rec['ip']] = Array.new(24, 0)
+     arrayhourlyData = hash24HrData[rec['destport']] = Array.new(24, 0)
   end
 
   recTime = rec['time'].split[1].to_i
   arrayhourlyData[recTime] += (rec['inbytes'] + rec['outbytes'])
 
-  arrayServerTotal = hashServerTotals[rec['ip']]
-  if arrayServerTotal.nil? then
-     arrayServerTotal = hashServerTotals[rec['ip']] = Array.new(2, 0)
+  arrayPortTotal = hashPortTotals[rec['destport']]
+  if arrayPortTotal.nil? then
+     arrayPortTotal = hashPortTotals[rec['destport']] = Array.new(2, 0)
   end
-  arrayServerTotal[0] += rec['inbytes']
-  arrayServerTotal[1] += rec['outbytes']
+  arrayPortTotal[0] += rec['inbytes']
+  arrayPortTotal[1] += rec['outbytes']
 
   arrayDeviceTotal = hashDeviceTotals[rec['device']]
   if arrayDeviceTotal.nil? then
@@ -53,7 +48,7 @@ hashServerPortTotals = Hash.new
 
 end
 
-# Selecting the top 10 servers to display in the bandwidth line graph
+# Selecting the top 10 ports to display in the bandwidth line graph
 hashGraphTimeBasedTotals = Hash[hash24HrData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
 
 currentTime = Time.now.strftime("%H").to_i 
@@ -61,8 +56,8 @@ hashGraphTimeBasedTotals.each do |i, arrayTotals|
   arrayTotals.rotate!(currentTime)
 end
 
-# Servers (sorted in descending order of Total bytes) for the dataTable
-hashServers = Hash[hashServerTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
+# Ports (sorted in descending order of Total bytes) for the dataTable
+hashPorts = Hash[hashPortTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
 # Devices (sorted in descending order of Total bytes) for the dataTable
 hashDevices = Hash[hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
 %>
@@ -72,7 +67,7 @@ hashDevices = Hash[hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reve
    <div class="row-fluid sortable">		
       <div class="box span12">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Bandwidth Consumption (Past 24 Hours)",
+                    :locals => { :header_title => "Bandwidth Consumption for #{params[:server_ip]} (Past 24 Hours)",
                                  :header_link  => "#" }
          %>
          <div class="box-content">
@@ -84,23 +79,23 @@ hashDevices = Hash[hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reve
    <div class="row-fluid sorttable">
       <div class="box span6">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Top Servers",
+                    :locals => { :header_title => "Top Ports",
                                  :header_link  => "#" }
          %>
          <div class="box-content">
             <table class="table table-striped table-bordered bootstrap-datatable datatable">
                <thead>
 	          <tr>
-	             <th>Server</th>
-		     <th>Incoming (Mbytes) </th>
-                     <th>Outgoing (Mbytes)</th>
-                     <th>Total (MBytes)</th>
+	             <th>Ports</th>
+		           <th>Incoming (Mbytes) </th>
+               <th>Outgoing (Mbytes)</th>
+               <th>Total (MBytes)</th>
 	          </tr>
 	       </thead>   
 	       <tbody>
-               <% hashServers.each do | server_ip, arrayTotals | %>
+               <% hashPorts.each do | port, arrayTotals | %>
                      <tr>
-                        <td><%= link_to server_ip, :action => "dash_bw_server", :server_ip => server_ip %></td>
+                        <td><%= port %></td>
                         <td><%= arrayTotals[0] %></td>
                         <td><%= arrayTotals[1] %></td>
                         <td><%= arrayTotals.reduce(:+) %></td>
@@ -150,7 +145,7 @@ hashDevices = Hash[hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reve
             var myLine = new RGraph.Line('total_bw', <%= hashGraphTimeBasedTotals.values %>);
             myLine.Set('chart.labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
 
-            myLine.Set('chart.key', <%=raw hashGraphTimeBasedTotals.keys %>);
+            myLine.Set('chart.key', <%=raw hashGraphTimeBasedTotals.keys.map {|i| i.to_s} %>);
             myLine.Set('chart.key.color.shape', 'circle');
             myLine.Set('chart.key.position', 'graph');
 

@@ -42,4 +42,8 @@ class ReportsController < ApplicationController
  
   def dash_bw
   end
+
+  def dash_bw_server
+  end
+
 end
