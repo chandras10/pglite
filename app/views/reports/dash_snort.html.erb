@@ -1,0 +1,165 @@
+<%
+  today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+  priorityDefinition = Array["High", "Medium", "Low", "Very Low"]
+  snortAlerts = Alertdb.select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
+  	                            priority as priority, sigid as sigid, message as message").
+                        where("timestamp >= ?", today).
+                        order(:priority, :sigid)
+
+  hash24HrData = Hash.new
+  hashSid = Hash.new
+
+  snortAlerts.each do |rec|
+  	rec_priority = priorityDefinition[rec['priority']-1]
+
+    arrayHourlyData = hash24HrData[rec_priority]
+    if arrayHourlyData.nil? then
+    	arrayHourlyData = hash24HrData[rec_priority] = Array.new(24, 0)
+    end
+
+    recTime = rec['time'].split[1].to_i
+    arrayHourlyData[recTime] += 1
+
+    arraySidData = hashSid[rec['sigid']]
+    if arraySidData.nil? then
+       arraySidData = hashSid[rec['sigid']] = Array.new(3, 0)
+       arraySidData[1] = rec['message']
+       arraySidData[2] = rec_priority
+    end
+    arraySidData[0] += 1
+
+  end
+
+
+  currentTime = Time.now.strftime("%H").to_i 
+  hash24HrData.each do |i, arrayTotals|
+    arrayTotals.rotate!(currentTime+1)
+  end
+
+  arrayBarGraphTotals = Array.new(24, 0)
+  24.times do |i|
+    arrayBarGraphTotals[i] = Array.new
+    hash24HrData.each do |key, value|
+    	arrayBarGraphTotals[i] << value[i]
+    end
+  end
+
+%>
+<!-- content starts -->
+<div id="content" class="span10">
+   <div class="row-fluid sortable">		
+      <div class="box span12">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Snort Alerts(Past 24 Hours)",
+                                 :header_link  => "#" }
+         %>
+         <div class="box-content">
+         	<canvas id="priority_bargraph" width="900" height="250">[No canvas support]</canvas>
+         	<canvas id="line_graph" width="900" height="250">[No canvas support]</canvas>
+         </div>
+      </div> <!-- box span12 -->
+   </div><!-- row-fluid sortable -->
+   <div class="row-fluid ">	
+      <div class="box span12">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Snort Alerts",
+                                 :header_link  => "#" }
+         %>
+         <div class="box-content">
+            <table class="table table-striped table-bordered bootstrap-datatable datatable">
+               <thead>
+	          <tr>
+	             <th>Snort Signature ID</th>
+	             <th>Priority</th>
+		         <th>Snort Message</th>
+                 <th>Count</th>
+	          </tr>
+	       </thead>   
+	       <tbody>
+                  <% hashSid.each do |sid, array| %>
+                     <tr>
+                        <td><%= link_to sid, "http://www.snortid.com/snortid.asp?QueryId=#{sid}", :target => "_blank" %></td>
+                        <td><%= array[2] %></td>
+                        <td><%= array[1] %></td>
+                        <td><%= array[0] %></td>
+                     </tr>
+                  <% end %>
+               </tbody>
+            </table>
+
+         </div> <!-- box-content -->
+      </div> <!-- box span12 -->
+   </div><!-- row-fluid sortable -->
+</div> <!-- div id=content -->
+
+<script type="text/javascript">
+        
+        window.onload = function ()
+        {
+            var bar = new RGraph.Bar('priority_bargraph', <%= arrayBarGraphTotals %>);
+            //bar.Set('background.image', '../images/bg.png');
+            bar.Set('chart.background.grid.autofit.numvlines', 24);
+            bar.Set('chart.background.grid.autofit.numhlines', 5);
+            bar.Set('labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
+            bar.Set('key', <%=raw hash24HrData.keys %>);
+            bar.Set('key.position.gutter.boxed', true);
+            bar.Set('key.position', 'gutter');
+            bar.Set('key.background', 'rgb(255,255,255)');
+            bar.Set('colors', ['#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5', 'red', 'black']);
+            bar.Set('shadow', true);
+            bar.Set('shadow.blur', 15);
+            bar.Set('shadow.offsetx', 0);
+            bar.Set('shadow.offsety', 0);
+            bar.Set('shadow.color', '#aaa');
+            bar.Set('strokestyle', 'rgba(0,0,0,0)');
+            bar.Set('gutter.left', 55);
+            bar.Set('gutter.right', 5);
+            bar.Set('hmargin.grouped', 1);
+            bar.Set('tooltips', <%=raw hash24HrData.keys %>);
+            RGraph.Effects.Fade.In(bar, {'duration': 500, 'frames': 10});
+
+            var myLine = new RGraph.Line('line_graph', <%= hash24HrData.values %>);
+            myLine.Set('chart.labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
+
+            myLine.Set('chart.key', <%=raw hash24HrData.keys %>);
+            myLine.Set('chart.key.color.shape', 'circle');
+            myLine.Set('chart.key.position', 'graph');
+
+            myLine.Set('chart.linewidth', 5);
+            myLine.Set('chart.background.grid.autofit.numvlines', 24);
+            myLine.Set('chart.background.grid.autofit.numhlines', 20);
+
+            myLine.Set('chart.colors', ['red', 'black','#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5']);
+            myLine.Set('chart.text.color', '#333');
+            myLine.Set('chart.text.font', 'Arial');
+            myLine.Set('chart.background.grid.autofit', true);
+            myLine.Set('chart.shadow', true);
+            myLine.Set('chart.shadow.color', 'rgba(20,20,20,0.3)');
+            myLine.Set('chart.shadow.blur',  10);
+            myLine.Set('chart.shadow.offsetx', 0);
+            myLine.Set('chart.shadow.offsety', 0);
+            myLine.Set('chart.background.grid.border', true);
+            myLine.Set('chart.axis.color', '#666');
+            myLine.Set('chart.text.color', '#666');
+            myLine.Set('chart.key.interactive', true);
+            myLine.Set('chart.spline', true);
+            //myLine.Set('chart.title', '');
+            myLine.Set('gutter.left', 55);
+            myLine.Set('gutter.right', 5);
+            //myLine.Set('chart.tickmarks', 'circle');
+
+
+            /**
+            * Use the Trace animation to show the chart
+            */
+            if (RGraph.isOld()) {
+                // IE7/8 don't support shadow blur, so set custom shadow properties
+                myLine.Set('chart.shadow.offsetx', 3);
+                myLine.Set('chart.shadow.offsety', 3);
+                myLine.Set('chart.shadow.color', '#aaa');
+                myLine.Draw();
+            } else {
+                RGraph.Effects.Line.jQuery.UnfoldFromCenterTrace(myLine, {'duration': 1000});
+            }
+        }
+</script>

@@ -1,0 +1,39 @@
+<div id="content" class="span10">
+<!-- content starts -->
+			
+   <div class="row-fluid sortable">		
+      <div class="box span12">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Devices",
+                                 :header_link  => "#" }
+         %>
+         <div class="box-content">
+            <table class="table table-striped table-bordered bootstrap-datatable datatable">
+               <thead>
+	          <tr>
+	             <th>Username</th>
+		     <th>IP Address</th>
+                     <th>MAC ID</th>
+                     <th>Device Name</th>
+		     <th>OS Version</th>
+	   	     <th>Location</th>
+	          </tr>
+	       </thead>   
+	       <tbody>
+                  <% @deviceinfos.each do |deviceinfo| %>
+                     <tr>
+                        <td><%= deviceinfo.username %></td>
+                        <td><%= deviceinfo.ipaddr %></td>
+                        <td><%= deviceinfo.macid %></td>
+                        <td><%= deviceinfo.devicename %></td>
+                        <td><%= deviceinfo.osversion %></td>
+                        <td><%= deviceinfo.location %></td>
+                     </tr>
+                  <% end %>
+               </tbody>
+            </table>
+
+         </div> <!-- box-content -->
+      </div> <!-- box span12 -->
+   </div><!-- row-fluid sortable -->
+</div><!-- content ends -->

@@ -43,8 +43,8 @@ hashDeviceTotals = Hash.new
   if arrayDeviceTotal.nil? then
      arrayDeviceTotal = hashDeviceTotals[rec['device']] = Array.new(2, 0)
   end
-  arrayDeviceTotal[0] += rec['inbytes']
-  arrayDeviceTotal[1] += rec['outbytes']
+  arrayDeviceTotal[0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
+  arrayDeviceTotal[1] += rec['inbytes']
 
 end
 

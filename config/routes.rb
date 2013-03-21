@@ -3,16 +3,18 @@ Pglite::Application.routes.draw do
   resources :users
   resources :deviceinfos
 
-#  get "reports/login"
-#  get "reports/home"
-
   root to: 'users#login'
 
   match '/login', to: 'users#login'
+
   match '/dash_inventory', to: 'reports#dash_inventory'
   match '/tbl_inventory', to: 'reports#tbl_inventory'
+
   match '/dash_bw', to: 'reports#dash_bw'
   match '/dash_bw_server', to: 'reports#dash_bw_server'
+
+  match '/tbl_ids', to: 'reports#tbl_snort'
+  match '/dash_ids', to: 'reports#dash_snort'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

@@ -12,9 +12,18 @@ development:
 #
 # Database holding bandwidth usage information of BYODs
 #
-stat_development:
+stat_db:
   adapter: sqlite3
   database: db/stat.db
+  pool: 5
+  timeout: 5000
+
+#
+# Snort Alerts
+#
+snortalert_db:
+  adapter: sqlite3
+  database: db/snortalert.db
   pool: 5
   timeout: 5000
 
