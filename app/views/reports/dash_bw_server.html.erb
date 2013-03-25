@@ -1,65 +1,19 @@
 <%
-  #
-  # Get all the database records in go!
-  #
-  @IpStatRecs= Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
-                                destport as destport, deviceid as device, 
-                                sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                      # where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                      where("timestamp >= ? AND destip = ?", "2013-02-01", params[:server_ip]).
-                      group(:time, :destport, :deviceid).order(:destport)
-# Total (IN + OUTbytes) consumption per Server, per hour
-# Key: Internal_Server_IP_address, Value: 24 element 'integer' array holding Mbytes consumed/hr.
-hash24HrData = Hash.new
-
-#
-# Per Port, Total INbytes and OUTBytes.
-# Key: Internal_Server_IP_address, Value: Array[INbytes, OUTbytes]
-hashPortTotals = Hash.new
-
-#
-# Per Device, Total INbytes and OUTbytes
-# Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
-hashDeviceTotals = Hash.new
-
-@IpStatRecs.each do |rec |
-  
-  arrayhourlyData = hash24HrData[rec['destport']]
-  if arrayhourlyData.nil? then
-     arrayhourlyData = hash24HrData[rec['destport']] = Array.new(24, 0)
-  end
-
-  recTime = rec['time'].split[1].to_i
-  arrayhourlyData[recTime] += (rec['inbytes'] + rec['outbytes'])
-
-  arrayPortTotal = hashPortTotals[rec['destport']]
-  if arrayPortTotal.nil? then
-     arrayPortTotal = hashPortTotals[rec['destport']] = Array.new(2, 0)
-  end
-  arrayPortTotal[0] += rec['inbytes']
-  arrayPortTotal[1] += rec['outbytes']
-
-  arrayDeviceTotal = hashDeviceTotals[rec['device']]
-  if arrayDeviceTotal.nil? then
-     arrayDeviceTotal = hashDeviceTotals[rec['device']] = Array.new(2, 0)
-  end
-  arrayDeviceTotal[0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
-  arrayDeviceTotal[1] += rec['inbytes']
-
-end
 
 # Selecting the top 10 ports to display in the bandwidth line graph
-hashGraphTimeBasedTotals = Hash[hash24HrData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
+hashGraphTimeBasedTotals = Hash[@hashTimeIntervalData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
 
+# Move the hashmap values (in circular fashion) so that the current time 
+# is always the last one on the rightmost edge of the graph
 currentTime = Time.now.strftime("%H").to_i 
 hashGraphTimeBasedTotals.each do |i, arrayTotals|
   arrayTotals.rotate!(currentTime)
 end
 
 # Ports (sorted in descending order of Total bytes) for the dataTable
-hashPorts = Hash[hashPortTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
+hashPorts = Hash[@hashPortTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
 # Devices (sorted in descending order of Total bytes) for the dataTable
-hashDevices = Hash[hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
+hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
 %>
 
 <!-- content starts -->

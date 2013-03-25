@@ -1,50 +1,22 @@
 <%
-  today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
-  priorityDefinition = Array["High", "Medium", "Low", "Very Low"]
-  snortAlerts = Alertdb.select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
-  	                            priority as priority, sigid as sigid, message as message").
-                        where("timestamp >= ?", today).
-                        order(:priority, :sigid)
 
-  hash24HrData = Hash.new
-  hashSid = Hash.new
-
-  snortAlerts.each do |rec|
-  	rec_priority = priorityDefinition[rec['priority']-1]
-
-    arrayHourlyData = hash24HrData[rec_priority]
-    if arrayHourlyData.nil? then
-    	arrayHourlyData = hash24HrData[rec_priority] = Array.new(24, 0)
-    end
-
-    recTime = rec['time'].split[1].to_i
-    arrayHourlyData[recTime] += 1
-
-    arraySidData = hashSid[rec['sigid']]
-    if arraySidData.nil? then
-       arraySidData = hashSid[rec['sigid']] = Array.new(3, 0)
-       arraySidData[1] = rec['message']
-       arraySidData[2] = rec_priority
-    end
-    arraySidData[0] += 1
-
-  end
-
-
+# Move the hashmap values (in circular fashion) so that the current time 
+# is always the last one on the rightmost edge of the graph
   currentTime = Time.now.strftime("%H").to_i 
-  hash24HrData.each do |i, arrayTotals|
+  @hashTimeIntervalData.each do |i, arrayTotals|
     arrayTotals.rotate!(currentTime+1)
   end
 
   arrayBarGraphTotals = Array.new(24, 0)
   24.times do |i|
     arrayBarGraphTotals[i] = Array.new
-    hash24HrData.each do |key, value|
+    @hashTimeIntervalData.each do |key, value|
     	arrayBarGraphTotals[i] << value[i]
     end
   end
 
 %>
+
 <!-- content starts -->
 <div id="content" class="span10">
    <div class="row-fluid sortable">		
@@ -76,7 +48,7 @@
 	          </tr>
 	       </thead>   
 	       <tbody>
-                  <% hashSid.each do |sid, array| %>
+                  <% @hashSnortAlerts.each do |sid, array| %>
                      <tr>
                         <td><%= link_to sid, "http://www.snortid.com/snortid.asp?QueryId=#{sid}", :target => "_blank" %></td>
                         <td><%= array[2] %></td>
@@ -101,7 +73,7 @@
             bar.Set('chart.background.grid.autofit.numvlines', 24);
             bar.Set('chart.background.grid.autofit.numhlines', 5);
             bar.Set('labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
-            bar.Set('key', <%=raw hash24HrData.keys %>);
+            bar.Set('key', <%=raw @hashTimeIntervalData.keys %>);
             bar.Set('key.position.gutter.boxed', true);
             bar.Set('key.position', 'gutter');
             bar.Set('key.background', 'rgb(255,255,255)');
@@ -115,13 +87,13 @@
             bar.Set('gutter.left', 55);
             bar.Set('gutter.right', 5);
             bar.Set('hmargin.grouped', 1);
-            bar.Set('tooltips', <%=raw hash24HrData.keys %>);
+            bar.Set('tooltips', <%=raw @hashTimeIntervalData.keys %>);
             RGraph.Effects.Fade.In(bar, {'duration': 500, 'frames': 10});
 
-            var myLine = new RGraph.Line('line_graph', <%= hash24HrData.values %>);
+            var myLine = new RGraph.Line('line_graph', <%= @hashTimeIntervalData.values %>);
             myLine.Set('chart.labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
 
-            myLine.Set('chart.key', <%=raw hash24HrData.keys %>);
+            myLine.Set('chart.key', <%=raw @hashTimeIntervalData.keys %>);
             myLine.Set('chart.key.color.shape', 'circle');
             myLine.Set('chart.key.position', 'graph');
 

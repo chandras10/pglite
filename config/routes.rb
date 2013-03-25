@@ -13,8 +13,8 @@ Pglite::Application.routes.draw do
   match '/dash_bw', to: 'reports#dash_bw'
   match '/dash_bw_server', to: 'reports#dash_bw_server'
 
-  match '/tbl_ids', to: 'reports#tbl_snort'
-  match '/dash_ids', to: 'reports#dash_snort'
+  match '/tbl_snort', to: 'reports#tbl_snort'
+  match '/dash_snort', to: 'reports#dash_snort'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.
