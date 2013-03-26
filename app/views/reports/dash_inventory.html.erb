@@ -67,7 +67,7 @@
                                  :header_link  => "/tbl_inventory" }
          %>
          <div class="box-content">
-            <canvas id="devinfo_class_pie" width="400" height="300" >[No canvas support]</canvas>
+            <canvas id="devinfo_class_pie" >[No canvas support]</canvas>
          </div> <!-- box-content -->
       </div> <!-- box span4 -->
 
@@ -78,7 +78,7 @@
                                  :header_link  => "/tbl_inventory" }
          %>
          <div class="box-content">
-            <canvas id="devinfo_os_hbar" width="300" height="300" >[No canvas support]</canvas>
+            <canvas id="devinfo_os_hbar">[No canvas support]</canvas>
          </div> <!-- box-content -->
       </div> <!-- box span4 -->
 
@@ -87,8 +87,8 @@
                     :locals => { :header_title => "Device Types",
                                  :header_link  => "/tbl_inventory" }
          %>
-         <div class="box-content center " style="height:300px">
-	          <div class="sortable row-fluid" style="height: 300px; #position: relative; overflow: hidden; vertical-align: center">
+         <div class="box-content center ">
+	          <div class="sortable row-fluid" style="#position: absolute; overflow: hidden; vertical-align: center">
 	             <div class="well span4 top-block" >
 		              <div>Laptop</div>
                   <a href='/tbl_inventory'>
@@ -130,6 +130,19 @@
      for (var i=0; i < data.length; i++) {
        total += data[i];
      }
+
+     //resize the canvas appropriately
+     document.body.onresize = function () {
+       var pieCanvas = document.getElementById('devinfo_class_pie');
+       pieCanvas.width = pieCanvas.parentNode.clientWidth;
+       pieCanvas.height = pieCanvas.parentNode.clientHeight * 2;
+
+       var hbarCanvas = document.getElementById('devinfo_os_hbar');
+       hbarCanvas.width = hbarCanvas.parentNode.clientWidth;
+       hbarCanvas.height = hbarCanvas.parentNode.clientHeight * 2;
+     }
+
+     document.body.onresize();
 
      var pie = new RGraph.Pie('devinfo_class_pie', data);
      pie.Set('chart.colors', ['#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5']);

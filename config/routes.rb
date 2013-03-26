@@ -3,7 +3,7 @@ Pglite::Application.routes.draw do
   resources :users
   resources :deviceinfos
 
-  root to: 'users#login'
+  root to: 'reports#dash_inventory'
 
   match '/login', to: 'users#login'
 

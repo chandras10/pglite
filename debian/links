@@ -1,0 +1,11 @@
+
+etc/pglite/pkgr.yml opt/local/pglite/config/pkgr.yml
+
+etc/pglite/database.yml opt/local/pglite/config/database.yml
+
+etc/pglite/snortalert.db opt/local/pglite/config/snortalert.db
+
+etc/pglite/stat.db opt/local/pglite/config/stat.db
+
+var/log/pglite opt/local/pglite/log
+var/db/pglite opt/local/pglite/db

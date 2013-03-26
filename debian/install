@@ -1,0 +1,22 @@
+
+config/pkgr.yml etc/pglite
+
+config/database.yml etc/pglite
+
+config/snortalert.db etc/pglite
+
+config/stat.db etc/pglite
+
+config opt/local/pglite
+.bundle opt/local/pglite
+Gemfile opt/local/pglite
+Gemfile.lock opt/local/pglite
+config.ru opt/local/pglite
+Rakefile opt/local/pglite
+app opt/local/pglite
+bin opt/local/pglite
+db/* var/db/pglite
+lib opt/local/pglite
+public opt/local/pglite
+script opt/local/pglite
+vendor opt/local/pglite

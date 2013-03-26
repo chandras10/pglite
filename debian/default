@@ -1,0 +1,11 @@
+# Defaults for pglite initscript
+# sourced by /etc/init.d/pglite
+# installed at /etc/default/pglite by the maintainer scripts
+
+#
+# This is a POSIX shell fragment
+#
+
+# Additional options that are passed to the Daemon.
+DAEMON_OPTS="server -d --pid $PIDFILE --user $NAME --group $NAME --log /var/log/$NAME/thin.log"
+

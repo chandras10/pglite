@@ -11,6 +11,7 @@ class ReportsController < ApplicationController
     @deviceinfos = Deviceinfo.all
   end
  
+  # Total bandwidth dashboard showing b/w usage across all internal servers...
   def dash_bw
 
     # Total (IN + OUTbytes) consumption per Server, per hour/day/month etc.
@@ -65,6 +66,7 @@ class ReportsController < ApplicationController
 
   end
 
+  # Bandwidth usage per server, for all ports and devices connected to this server
   def dash_bw_server
 
     # Total (IN + OUTbytes) consumption per Port of the SELECTED server, per hour/day/month etc.
@@ -120,11 +122,12 @@ class ReportsController < ApplicationController
 
   end
 
+  # SNORT Alerts dashboard
   def dash_snort
 
     @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day-4).to_i # Epoch time of today at 00:00:00 hours
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day-5).to_i # Epoch time of today at 00:00:00 hours
     snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
                                 priority as priority, sigid as sigid, message as message").
                         where("timestamp >= ?", today).
@@ -155,10 +158,11 @@ class ReportsController < ApplicationController
     end #for each SNORT alert record...
   end
 
+  
   def tbl_snort
         @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
 
-        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day-4).to_i # Epoch time of today at 00:00:00 hours
+        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day-5).to_i # Epoch time of today at 00:00:00 hours
         @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', datetime(timestamp, 'unixepoch')) as time, 
                                           priority as priority, sigid as sigid, message as message, 
                                           protocol as protocol, srcip as srcip, srcport as srcport, 

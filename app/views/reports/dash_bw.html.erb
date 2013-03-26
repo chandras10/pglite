@@ -26,7 +26,7 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
                                  :header_link  => "#" }
          %>
          <div class="box-content">
-            <canvas id="total_bw" width="900" height="300">[No canvas support]</canvas>
+            <canvas id="total_bw">[No canvas support]</canvas>
          </div>
       </div> <!-- box span12 -->
    </div><!-- row-fluid sortable -->
@@ -97,6 +97,14 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
 <script type="text/javascript">
         window.onload = function ()
         {
+            //Resize the canvas element
+            document.body.onresize = function () {
+              var canvas = document.getElementById('total_bw');
+              canvas.width = canvas.parentNode.clientWidth * 0.9;
+              canvas.height = canvas.parentNode.clientHeight * 1.5;
+            }
+            document.body.onresize();
+
             var myLine = new RGraph.Line('total_bw', <%= hashGraphTimeBasedTotals.values %>);
             myLine.Set('chart.labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
 
