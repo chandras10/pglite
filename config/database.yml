@@ -10,11 +10,20 @@ development:
   timeout: 5000
 
 #
+# Device Inventory database
+#
+deviceinfo_db:
+  adapter: sqlite3
+  database: /usr/local/var/pglite/deviceInfo.db
+  pool: 5
+  timeout: 5000
+
+#
 # Database holding bandwidth usage information of BYODs
 #
 stat_db:
   adapter: sqlite3
-  database: db/stat.db
+  database: /usr/local/var/pglite/stat.db
   pool: 5
   timeout: 5000
 
@@ -23,7 +32,7 @@ stat_db:
 #
 snortalert_db:
   adapter: sqlite3
-  database: db/snortalert.db
+  database: /usr/local/var/alertlistner/snortalert.db
   pool: 5
   timeout: 5000
 
