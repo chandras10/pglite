@@ -38,30 +38,27 @@
 
 <!-- topbar starts -->
 <div class="navbar">
-   <div class="navbar-inner">
+    <div class="navbar-inner">
       <div class="container-fluid">
-         <%= link_to "http://www.i7nw.com" do 
-             image_tag("i7logo.png", :class=>"logo brand",:alt=> "Peregrine Guard Logo") 
-             end 
-         %>
-
-	 <!-- user dropdown starts -->
-	 <div class="btn-group pull-right" >
-	    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-	       <i class="icon-user"></i><span class="hidden-phone"> admin</span>
-	       <span class="caret"></span>
-	    </a>
-	    <ul class="dropdown-menu">
-	       <li><a href="#">Profile</a></li>
-	       <li class="divider"></li>
-	       <li><a href="login.html">Logout</a></li>
-	    </ul>
-	 </div>
-	 <!-- user dropdown ends -->
-				
-			</div>
-	 </div>
-	</div>
+        <div class="top-nav nav-collapse">
+          <ul class="nav">
+            <li> <%= link_to "http://www.i7nw.com" do
+                        image_tag("i7logo.png", :class=>"logo",:alt=> "Peregrine Guard Logo")
+                     end
+                 %>
+            </li>
+            <li> <% 20.times do |i| %>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp 
+                 <% end %>
+            </li>
+            <li>
+              <span class="brand">Peregrine Guard</span>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+</div>
 	<!-- topbar ends -->
 		<div class="container-fluid">
 		<div class="row-fluid">

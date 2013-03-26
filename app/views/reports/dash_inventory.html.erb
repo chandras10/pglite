@@ -121,9 +121,11 @@
      return parseFloat(newnumber);
    }
 
+
    window.onload = function (){
-     var labels = <%=raw hashDeviceType.keys %>;
-     var data = <%=raw hashDeviceType.values %>;
+     var labels = <%=raw hashOperatingSystem.keys %>;
+     var data = <%=raw hashOperatingSystem.values %>;
+
      var total = 0;
      for (var i=0; i < data.length; i++) {
        total += data[i];
@@ -142,7 +144,31 @@
 
      document.body.onresize();
 
-     var pie = new RGraph.Pie('dev_type_pie', data);
+     var hbar = new RGraph.HBar('dev_type_pie', <%= hashDeviceType.values %>);
+     hbar.Set('chart.labels.above', true);
+     hbar.Set('chart.vmargin', 15); 
+     hbar.Set('chart.labels', <%=raw hashDeviceType.keys %>);
+     hbar.Set('chart.background.grid', false);
+     hbar.Set('chart.strokestyle', 'rgba(0,0,0,0)');
+     hbar.Set('chart.colors', ['#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
+     hbar.Set('chart.colors.sequential', true);
+     hbar.Set('chart.labels.above.decimals', 0);
+     hbar.Set('chart.xlabels', false);
+     hbar.Set('chart.noxaxis', true);
+     hbar.Set('chart.noxtickmarks', true);
+     hbar.Set('chart.noytickmarks', true); 
+     hbar.Set('chart.gutter.left', (document.getElementById('devinfo_os_hbar').width * 0.3));
+
+     if (!RGraph.isOld()) {
+        hbar.Set('chart.tooltips', <%=raw hashDeviceType.keys %>);
+        hbar.Set('chart.tooltips.event', 'onmousemove');
+
+        RGraph.Effects.HBar.Grow(hbar);
+     } else {
+        hbar.Draw();
+     } 
+
+     var pie = new RGraph.Pie('devinfo_os_hbar', data);
      pie.Set('chart.colors', ['#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5']);
      //pie.Set('chart.colors', ['Gradient(white:#004CB0)','Gradient(white:#FF7300)','Gradient(white:#FFCD00)','Gradient(white:#00B869)','Gradient(white:#999)','Gradient(white:#A0D300)','Gradient(white:#EC0033)']);
      pie.Set('chart.strokestyle', 'white');
@@ -156,28 +182,18 @@
      pie.Set('chart.shadow.blur', 3);
      pie.Set('chart.shadow.color', '#bbb');
      pie.Set('chart.labels.ingraph', true);
+     pie.Set('chart.labels.position', 'gutter');
+     pie.Set('chart.tooltips', labels);
+     pie.Set('chart.tooltips.event', 'onmousemove');
 
      for (var i=0; i< labels.length; i++) {
        labels[i] = labels[i] + ' ' + roundNumber(data[i]/total*100, 0) + '%';
      }
-     //pie.Set('chart.labels.ingraph.specific', labels);
-     pie.Set('chart.labels', labels);
+     pie.Set('chart.labels.ingraph.specific', labels);
+     
 
      RGraph.Effects.Pie.RoundRobin(pie);
 
-     var hbar = new RGraph.HBar('devinfo_os_hbar', <%= hashOperatingSystem.values %>);
-     hbar.Set('chart.labels.above', true);
-     hbar.Set('chart.vmargin', 15); 
-     hbar.Set('chart.labels', <%=raw hashOperatingSystem.keys %>);
-     hbar.Set('chart.background.grid', false);
-     hbar.Set('chart.strokestyle', 'rgba(0,0,0,0)');
-     hbar.Set('chart.colors', ['#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
-     hbar.Set('chart.colors.sequential', true);
-     hbar.Set('chart.labels.above.decimals', 0);
-     hbar.Set('chart.xlabels', false);
-     hbar.Set('chart.noxaxis', true);
-     hbar.Set('chart.noxtickmarks', true);
-     hbar.Set('chart.noytickmarks', true); 
-     RGraph.isOld() ? hbar.Draw() : RGraph.Effects.HBar.Grow(hbar);
+
    };
 </script>
