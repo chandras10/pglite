@@ -126,6 +126,7 @@
      var labels = <%=raw hashOperatingSystem.keys %>;
      var data = <%=raw hashOperatingSystem.values %>;
 
+     //
      var total = 0;
      for (var i=0; i < data.length; i++) {
        total += data[i];
@@ -140,6 +141,7 @@
        var hbarCanvas = document.getElementById('devinfo_os_hbar');
        hbarCanvas.width = hbarCanvas.parentNode.clientWidth;
        hbarCanvas.height = hbarCanvas.parentNode.clientHeight * 2;
+       
      }
 
      document.body.onresize();

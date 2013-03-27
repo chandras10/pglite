@@ -344,6 +344,7 @@ margin-left:-2px;
 }
 .brand{
 font-family: 'Shojumaru', cursive, Arial, serif; 
+font-size: 33px !important;
 letter-spacing:2px;
 text-shadow:1px 1px 5px rgba(0, 0, 0, 0.5);
 /*width:166px;*/
