@@ -68,22 +68,21 @@
    <div class="row-fluid sortable">		
       <div class="box span4">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Device Types",
-                                 :header_link  => "/tbl_inventory" }
-         %>
-         <div class="box-content">
-            <canvas id="dev_type_pie" >[No canvas support]</canvas>
-         </div> <!-- box-content -->
-      </div> <!-- box span4 -->
-
-
-      <div class="box span4">
-         <%= render :partial => 'layouts/title_bar_icons',
                     :locals => { :header_title => "Operating Systems",
                                  :header_link  => "/tbl_inventory" }
          %>
          <div class="box-content">
             <canvas id="devinfo_os_hbar">[No canvas support]</canvas>
+         </div> <!-- box-content -->
+      </div> <!-- box span4 -->
+
+      <div class="box span4">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Device Types",
+                                 :header_link  => "/tbl_inventory" }
+         %>
+         <div class="box-content">
+            <canvas id="dev_type_pie" >[No canvas support]</canvas>
          </div> <!-- box-content -->
       </div> <!-- box span4 -->
 
