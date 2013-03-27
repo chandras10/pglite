@@ -8,7 +8,12 @@ class ReportsController < ApplicationController
   end
 
   def tbl_inventory
-    @deviceinfos = Deviceinfo.all
+    deviceclass = params[:deviceclass]
+    if deviceclass.nil?
+       @deviceinfos = Deviceinfo.all
+    else
+       @deviceinfos = Deviceinfo.find(:all, :conditions => ["deviceclass = ?", deviceclass])
+    end
   end
  
   # Total bandwidth dashboard showing b/w usage across all internal servers...

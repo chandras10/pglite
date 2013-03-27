@@ -95,16 +95,12 @@
 	          <div class="sortable row-fluid" style="#position: absolute; overflow: hidden; vertical-align: center">
 	             <div class="well span4 top-block" >
 		              <div>Laptop</div>
-                  <a href='/tbl_inventory'>
-		                 <span class="icon-laptop icon-4x"></span>
-                  </a>
+                  <%= link_to content_tag(:span, ''), {:action => "tbl_inventory", :deviceclass => "Desktop/Laptop"}, :class=>"icon-laptop icon-4x" %>
 		              <div><%= hashDeviceClass["Desktop/Laptop"] %> </div>
                </div>
 	             <div class="well span4 top-block" >
 		              <div>Phone</div>
-                  <a class="ajax-link" href='/tbl_inventory'>
-		                 <span class="icon-mobile-phone icon-4x"></span>
-                  </a>
+                  <%= link_to content_tag(:span, ''), {:action => "tbl_inventory", :deviceclass => "MobileDevice"}, :class=>"icon-mobile-phone icon-4x" %>
 		              <div><%= hashDeviceClass["MobileDevice"] %> </div>
                </div>
             </div> <!-- sortable -->
