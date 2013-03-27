@@ -38,7 +38,7 @@
          class="well span3 top-block" href="/tbl_inventory">
          <span class="icon32 icon-green icon-users"></span>
 	 <div>Total Users</div>
-	 <div><%= @deviceinfos.uniq{|x|x.username}.count %></div>
+	 <div><%= Deviceinfo.count(:username, :conditions => "username <> ''", :distinct => true) %></div>
 	 <span class="notification green">
             <%= @deviceinfos.select{ |x| x.created_at >= today }.uniq{|x|x.username}.count %>
          </span>
