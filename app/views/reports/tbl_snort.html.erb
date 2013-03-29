@@ -36,9 +36,22 @@
 	       <tbody>
                   <% @snortAlertRecs.each do |rec| %>
                      <tr>
-                        <td><%= rec.sigid %></td>
+                        <td><%= link_to sid, "http://www.snortid.com/snortid.asp?QueryId=#{sid}", :target => "_blank" %></td>
                         <td><%= rec.time %></td>
-                        <td><%= rec['priority'] %></td>
+
+                        <% case rec['priority']
+                           when 1 %>
+                              <td><span class='label label-important'> High </span></td>
+                        <% when 2 %>
+                              <td><span class='label label-warning'> Medium </span></td>
+                        <% when 3 %>
+                              <td><span class='label label-success'> Low </span></td>
+                        <% when 4 %>
+                              <td><span class='label label-info'> Very Low </span></td>
+                        <% else %>
+                              <td>rec['priority']</td>
+                        <% end %>
+
                         <td><%= rec.protocol %></td>
                         <td><%= "#{rec.srcip}: #{rec.srcport}" %></td>
                         <td><%= "#{rec.dstip}: #{rec.dstport}" %></td>

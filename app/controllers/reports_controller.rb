@@ -132,7 +132,8 @@ class ReportsController < ApplicationController
 
     @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day-5).to_i # Epoch time of today at 00:00:00 hours
+    #today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+    today = Time.mktime(2013, 03, 18).to_i;
     snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
                                 priority as priority, sigid as sigid, message as message").
                         where("timestamp >= ?", today).
@@ -142,7 +143,8 @@ class ReportsController < ApplicationController
     @hashSnortAlerts = Hash.new
 
     snortAlertRecs.each do |rec|
-      rec_priority = @priorityLabels[rec['priority']-1]
+      #rec_priority = @priorityLabels[rec['priority']-1]
+      rec_priority = rec['priority'];
 
       arrayData = @hashTimeIntervalData[rec_priority]
       if arrayData.nil? then
@@ -167,7 +169,8 @@ class ReportsController < ApplicationController
   def tbl_snort
         @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
 
-        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day-5).to_i # Epoch time of today at 00:00:00 hours
+#        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+         today = Time.mktime(2013, 03, 18).to_i;
         @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', datetime(timestamp, 'unixepoch')) as time, 
                                           priority as priority, sigid as sigid, message as message, 
                                           protocol as protocol, srcip as srcip, srcport as srcport, 

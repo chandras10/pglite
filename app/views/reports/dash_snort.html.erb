@@ -51,7 +51,20 @@
                   <% @hashSnortAlerts.each do |sid, array| %>
                      <tr>
                         <td><%= link_to sid, "http://www.snortid.com/snortid.asp?QueryId=#{sid}", :target => "_blank" %></td>
-                        <td><%= array[2] %></td>
+
+                        <% case array[2]
+                           when 1 %>
+                              <td><span class='label label-important'> High </span></td>
+                        <% when 2 %>
+                              <td><span class='label label-warning'> Medium </span></td>
+                        <% when 3 %>
+                              <td><span class='label label-success'> Low </span></td>
+                        <% when 4 %>
+                              <td><span class='label label-info'> Very Low </span></td>
+                        <% else %>
+                              <td>array[2]</td>
+                        <% end %>
+
                         <td><%= array[1] %></td>
                         <td><%= array[0] %></td>
                      </tr>

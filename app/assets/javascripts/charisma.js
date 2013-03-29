@@ -203,11 +203,18 @@ $.fn.dataTableExt.oApi.fnGetColumnData = function ( oSettings, iColumn, bUnique,
 	// set up data array	
 	var asResultData = new Array();
 	
+	var re = new RegExp("<span \s*class=.*>(.*)</span>");
 	for (var i=0,c=aiRows.length; i<c; i++) {
 		iRow = aiRows[i];
 		var aData = this.fnGetData(iRow);
 		var sValue = aData[iColumn];
 		
+		//HACK to take of colored label column values like the SNORT priority labels
+		var matches = sValue.match(re);
+		if ((matches != null) && (matches[1] != null)) {
+			sValue = matches[1].trim();
+		}
+
 		// ignore empty values?
 		if (bIgnoreEmpty == true && sValue.length == 0) continue;
 
