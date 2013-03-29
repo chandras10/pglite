@@ -36,7 +36,7 @@
 	       <tbody>
                   <% @snortAlertRecs.each do |rec| %>
                      <tr>
-                        <td><%= link_to sid, "http://www.snortid.com/snortid.asp?QueryId=#{sid}", :target => "_blank" %></td>
+                        <td><%= link_to rec.sigid, "http://www.snortid.com/snortid.asp?QueryId=#{rec.sigid}", :target => "_blank" %></td>
                         <td><%= rec.time %></td>
 
                         <% case rec['priority']
