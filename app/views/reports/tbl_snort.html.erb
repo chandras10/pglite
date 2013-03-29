@@ -8,7 +8,7 @@
                                  :header_link  => "#" }
          %>
          <div class="box-content">
-            <table class="table table-striped table-bordered bootstrap-datatable datatable">
+            <table id="dataTable" class="table table-striped table-bordered bootstrap-datatable">
                <thead>
 	          <tr>
 	             <th>Snort ID</th>
@@ -20,7 +20,19 @@
 	   	       <th>MAC (src) </th>
                 <th>MAC (dst) </th>
 	          </tr>
-	       </thead>   
+	       </thead>  
+                  <tfoot>
+                                <tr>
+                            <th rowspan="1" colspan="1"></th>
+                            <th rowspan="1" colspan="1"></th>
+                            <th rowspan="1" colspan="1"></th>
+                            <th rowspan="1" colspan="1"></th>
+                            <th rowspan="1" colspan="1"></th>
+                            <th rowspan="1" colspan="1"></th>
+                            <th rowspan="1" colspan="1"></th>
+                            <th rowspan="1" colspan="1"></th>
+          </tr>
+         </tfoot> 
 	       <tbody>
                   <% @snortAlertRecs.each do |rec| %>
                      <tr>
@@ -41,3 +53,27 @@
       </div> <!-- box span12 -->
    </div><!-- row-fluid sortable -->
 </div><!-- content ends -->
+
+<script type="text/javascript">
+//datatable
+$(document).ready(function() {
+  var oTable = $('#dataTable').dataTable({
+      "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span12'i><'span12 center'p>>",
+      "bJQueryUI": true,
+      "sPaginationType": "bootstrap",
+      "oLanguage": {
+      "sSearch": "Search all columns: ",
+      "sLengthMenu": "_MENU_ records per page"
+      }
+    } );
+
+/* Add a select menu for each TH element in the table footer */
+  $("tfoot th").each( function ( i ) {
+    this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i) );
+    $('select', this).change( function () {
+      oTable.fnFilter( $(this).val(), i );
+    } );
+  } );
+
+});
+</script>
