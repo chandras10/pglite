@@ -179,7 +179,7 @@ function docReady(){
  *           bool:bIgnoreEmpty - optional - if set to false empty values are not filtered from the result array
  * Author:   Benedikt Forchhammer <b.forchhammer /AT\ mind2.de>
  */
-$.fn.dataTableExt.oApi.fnGetColumnData = function ( oSettings, iColumn, bUnique, bFiltered, bIgnoreEmpty ) {
+$.fn.dataTableExt.oApi.fnGetColumnData = function ( oSettings, iColumn, shtmlCode, bUnique, bFiltered, bIgnoreEmpty ) {
 	// check that we have a column id
 	if ( typeof iColumn == "undefined" ) return new Array();
 	
@@ -191,6 +191,9 @@ $.fn.dataTableExt.oApi.fnGetColumnData = function ( oSettings, iColumn, bUnique,
 	
 	// by default we do not wany to include empty values
 	if ( typeof bIgnoreEmpty == "undefined" ) bIgnoreEmpty = true;
+
+        // Does the table column have some embedded HTML, then strip it
+        if ( typeof shtmlCode == "undefined" ) shtmlCode = "";
 	
 	// list of rows which we're going to loop through
 	var aiRows;
@@ -203,17 +206,23 @@ $.fn.dataTableExt.oApi.fnGetColumnData = function ( oSettings, iColumn, bUnique,
 	// set up data array	
 	var asResultData = new Array();
 	
-	var re = new RegExp("<span \s*class=.*>(.*)</span>");
+	var colorLabelRE = new RegExp("<span \s*class=.*>(.*)</span>");
+	var hyperlinkRE = new RegExp("<a \s*.*>(.*)</a>");
+        var re;
+        if (shtmlCode != "") re = new RegExp(shtmlCode);
+
 	for (var i=0,c=aiRows.length; i<c; i++) {
 		iRow = aiRows[i];
 		var aData = this.fnGetData(iRow);
 		var sValue = aData[iColumn];
 		
 		//HACK to take of colored label column values like the SNORT priority labels
-		var matches = sValue.match(re);
-		if ((matches != null) && (matches[1] != null)) {
+                if (shtmlCode != "") {
+		   var matches = sValue.match(re);
+		   if ((matches != null) && (matches[1] != null)) {
 			sValue = matches[1].trim();
-		}
+		   } 
+                }
 
 		// ignore empty values?
 		if (bIgnoreEmpty == true && sValue.length == 0) continue;

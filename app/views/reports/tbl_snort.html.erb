@@ -81,8 +81,22 @@ $(document).ready(function() {
     } );
 
 /* Add a select menu for each TH element in the table footer */
+   var sColorLabel = "<span \s*class=.*>(.*)</span>";
+   var hyperlinkLabel = "<a \s*.*>(.*)</a>";
+
   $("tfoot th").each( function ( i ) {
-    this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i) );
+    switch(i)
+    {
+      case 0:
+        this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, hyperlinkLabel) );
+        break;
+      case 2:
+        this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, sColorLabel) );
+        break;
+      default: 
+        this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i) );
+    }
+
     $('select', this).change( function () {
       oTable.fnFilter( $(this).val(), i );
     } );
