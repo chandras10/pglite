@@ -79,7 +79,7 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
 	             <tbody>
                <% hashDevices.each do | device, arrayTotals | %>                     
                   <tr>
-                     <td><%= device %></td>
+                     <td><%= link_to device,  :action => "device_details", :device => device %></td>
                      <td><%= arrayTotals[0] %></td>
                      <td><%= arrayTotals[1] %></td>
                      <td><%= arrayTotals.reduce(:+) %></td>

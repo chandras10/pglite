@@ -8,12 +8,10 @@ class ReportsController < ApplicationController
   end
 
   def tbl_inventory
+    @deviceinfos = Deviceinfo.scoped
+
     deviceclass = params[:deviceclass]
-    if deviceclass.nil?
-       @deviceinfos = Deviceinfo.all
-    else
-       @deviceinfos = Deviceinfo.find(:all, :conditions => ["deviceclass = ?", deviceclass])
-    end
+    @deviceinfos = @deviceinfos.where("deviceclass = ?", deviceclass) if deviceclass.present?
   end
  
   # Total bandwidth dashboard showing b/w usage across all internal servers...
@@ -33,11 +31,14 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
+    #today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+    today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+
     @IpstatRecs = Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 destip as ip, deviceid as device, 
                                 sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                       # where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                      where("timestamp >= ?", "2013-02-01").
+                      where("timestamp >= ?", today).
                       group(:time, :destip, :deviceid).order(:destip)
 
     @IpstatRecs.each do |rec |
@@ -88,11 +89,14 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
+    #today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+    today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+
     @IpstatRecs= Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 destport as destport, deviceid as device, 
                                 sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                       # where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                      where("timestamp >= ? AND destip = ?", "2013-02-01", params[:server_ip]).
+                      where("timestamp >= ? AND destip = ?", today, params[:server_ip]).
                       group(:time, :destport, :deviceid).order(:destport)
 
     @IpstatRecs.each do |rec |
@@ -133,7 +137,8 @@ class ReportsController < ApplicationController
     @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
 
     #today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
-    today = Time.mktime(2013, 03, 18).to_i;
+    today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+
     snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
                                 priority as priority, sigid as sigid, message as message").
                         where("timestamp >= ?", today).
@@ -143,7 +148,6 @@ class ReportsController < ApplicationController
     @hashSnortAlerts = Hash.new
 
     snortAlertRecs.each do |rec|
-      #rec_priority = @priorityLabels[rec['priority']-1]
       rec_priority = rec['priority'];
 
       arrayData = @hashTimeIntervalData[rec_priority]
@@ -151,7 +155,8 @@ class ReportsController < ApplicationController
          arrayData = @hashTimeIntervalData[rec_priority] = Array.new(24, 0)
       end
 
-      recTime = rec['time'].split[1].to_i
+      hour = rec['time'].split[1] if !rec['time'].nil?
+      recTime = if hour.nil? then 0 else hour.to_i end
       arrayData[recTime] += 1
 
       arrayData = @hashSnortAlerts[rec['sigid']]
@@ -168,16 +173,90 @@ class ReportsController < ApplicationController
   
   def tbl_snort
         @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
-
 #        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
-         today = Time.mktime(2013, 03, 18).to_i;
-        @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', datetime(timestamp, 'unixepoch')) as time, 
-                                          priority as priority, sigid as sigid, message as message, 
-                                          protocol as protocol, srcip as srcip, srcport as srcport, 
-                                          destip as dstip, destport as dstport,
-                                          srcmac as srcmac, dstmac as dstmac").
-                                  where("timestamp >= ?", today).
-                                  order(:priority, :sigid)
+        today = Time.mktime(2013, 03, 18).to_i #TODO: DELETEME after testing
+
+        # Do we need filter the records based on selected device?
+        macid = params[:device]
+        if (macid.nil?) then
+           @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', datetime(timestamp, 'unixepoch')) as time, 
+                                             priority as priority, sigid as sigid, message as message, 
+                                             protocol as protocol, srcip as srcip, srcport as srcport, 
+                                             destip as dstip, destport as dstport,
+                                             srcmac as srcmac, dstmac as dstmac").
+                                     where("timestamp >= ?", today).
+                                     order(:priority, :sigid)
+        else
+           @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', datetime(timestamp, 'unixepoch')) as time, 
+                                             priority as priority, sigid as sigid, message as message, 
+                                             protocol as protocol, srcip as srcip, srcport as srcport, 
+                                             destip as dstip, destport as dstport,
+                                             srcmac as srcmac, dstmac as dstmac").
+                                     where("timestamp >= ? AND (srcmac = ? OR dstmac = ?)", today, macid, macid).
+                                     order(:priority, :sigid)
+        end
 
   end
+
+  def device_details
+    macid = params[:device]
+    if (macid.nil? || macid.empty?) then return end
+   
+    @devicedetails = Deviceinfo.find(:all, :conditions => ["macid = ?", macid])
+   
+    #We get an array of database records from find(). In the ideal world, there should only be one deviceinfo record for a given MAC id.
+    if (!@devicedetails.nil?) then
+      @devicedetails = @devicedetails.first
+    end
+
+    this_year = Time.mktime(Time.now.year, 01, 01).to_i 
+    #find all the Snort alerts
+    @snortAlertRecs = Alertdb.select("datetime(timestamp, 'unixepoch') as time, 
+                                      priority as priority, sigid as sigid, message as message, 
+                                      protocol as protocol, srcip as srcip, srcport as srcport, 
+                                      destip as dstip, destport as dstport,
+                                      srcmac as srcmac, dstmac as dstmac").
+                              where("timestamp >= ? AND (srcmac = ? OR dstmac = ?)", this_year, macid, macid).
+                              order(:priority, :sigid)
+
+    #
+    # Create a hashmap of  record counts, grouped by "MONTH" and then grouped by "PRIORITY".
+    # NOTE: This wonderful ruby code (it is legible code) is credited to this 
+    # link: http://stackoverflow.com/questions/5639921/group-a-ruby-array-of-dates-by-month-and-year-into-a-hash
+    #
+    @hashSnortAlerts = Hash[ @snortAlertRecs.group_by { |a| a["time"][5..6] }.map { |month, recs|
+                              [month, recs.group_by {|a| a["priority"] } ]
+                             }
+                           ]
+
+    
+    #
+    # Get all the CVE notices for the given device
+    cveAlertRecs = DviVuln.joins(:vulnerability).
+                            where("vuln_id = vulnerability.id AND mac = ?", macid).select("mac, vuln_id, vulnerability.cvss_score, vulnerability.last_modify_date as date")
+
+
+    @hashCveAlerts = cveAlertRecs.group_by { |a| a["date"][5..6]  }
+  
+  end #device_details 
+
+  def tbl_vulnerability
+    #
+    # Get all the CVE notices
+
+    # Do we need filter the records based on selected device?
+    macid = params[:device]
+    if (macid.nil?) then
+       @cveAlertRecs = DviVuln.joins(:vulnerability).
+                               where("vuln_id = vulnerability.id").
+                               select("mac, vuln_id, vulnerability.cvss_score as score, vulnerability.last_modify_date as date, summary").
+                               order(:score)
+    else
+       @cveAlertRecs = DviVuln.joins(:vulnerability).
+                               where("vuln_id = vulnerability.id AND mac = ?", macid).
+                               select("mac, vuln_id, vulnerability.cvss_score as score, vulnerability.last_modify_date as date, summary").
+                               order(:score)
+    end
+  end
+
 end

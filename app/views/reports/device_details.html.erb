@@ -1,0 +1,230 @@
+<%
+monthArray=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+snortCountByMonthByPriority = Hash[@hashSnortAlerts.sort.map do |month, records|
+                                      cntValues = Array.new(4, 0) # One counter for each Snort Priority
+                                      records.sort.reverse.map {|priority, recs| cntValues[priority-1] = recs.count}
+                                      [month.to_i - 1, cntValues]
+                                   end] if !@hashSnortAlerts.nil?
+
+cveCountByMonthByScore = Hash[@hashCveAlerts.sort.map do |month, records|
+                                 # 
+                                 # CVE score is used to bucket the record into one of these four:
+                                 #  0-3,  4-5, 6-9, 10 (Highest)
+                                 cntValues = Array.new(4, 0) 
+                                 records.each do |r|
+                                    score = r.cvss_score.to_i
+                                    if    score.between?(0, 3) then cntValues[0] += 1
+                                    elsif score.between?(4, 5) then cntValues[1] += 1
+                                    elsif score.between?(6, 9) then cntValues[2] += 1
+                                    elsif score == 10          then cntValues[3] += 1
+                                    end
+                                 end
+                                 [month.to_i - 1, cntValues]
+                             end] if !@hashCveAlerts.nil?
+
+
+monthwiseSnortTotals = Array.new(12)
+12.times do |i|
+    snortCounters = snortCountByMonthByPriority[i]
+    if (snortCounters.nil?) then snortCounters = Array.new(4,0) end
+    monthwiseSnortTotals[i] = snortCounters
+end
+
+monthwiseCveTotals = Array.new(12)
+12.times do |i|
+    cveCounters = cveCountByMonthByScore[i]
+    if (cveCounters.nil?) then cveCounters = Array.new(4,0) end
+    monthwiseCveTotals[i] = cveCounters
+end
+
+%>
+
+<div id="content" class="span10">
+<!-- content starts -->
+         
+   <div class="row-fluid sortable">    
+      <div class="box span12">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Device Details",
+                                 :header_link  => "#" }
+         %>
+
+         <div class="box-content">
+            <h3>MAC ID: &nbsp;&nbsp;&nbsp; &nbsp; <%= @devicedetails.macid %></h3>
+            <br>
+            <div>
+               <div class="span4">
+                  <table class="table table-bordered table-striped">
+                     <tr>
+                        <td colspan="2"><h4>Attributes</h4></td>
+                     </tr>
+                     <tr>
+                        <td><h6>IP:</h6></td>
+                        <td><span class="btn btn-medium"><%= @devicedetails.ipaddr %></span></td>
+                     </tr>
+                     <tr>
+                        <td><h6>Used by:</h6></td>
+                        <td><span class="btn btn-medium">
+                              <%= if !(@devicedetails.groupname.nil? || @devicedetails.groupname.empty?) then 
+                                      @devicedetails.groupname + "\\" + @devicedetails.username 
+                                  else 
+                                      @devicedetails.username
+                                  end
+                              %>
+                            </span></td>
+                     </tr>
+                     <tr>
+                        <td><h6>Type:</h6></td>
+                        <td><span class="btn btn-medium"><%= @devicedetails.devicetype %></span></td>
+                     </tr>
+                     <tr>
+                        <td><h6>Operating System:</h6></td>
+                        <td><span class="btn btn-medium"><%= "#{@devicedetails.operatingsystem} #{@devicedetails.osversion}"  %></span></td>
+                     </tr>
+                  </table>
+               </div>
+               <div class="span4">
+                  <table class="table table-bordered table-striped">
+                     <tr>
+                        <td colspan="2"><h4>Security</h4></td>
+                     </tr>
+                     <tr>
+                        <td><h6>Device Vulnerability Index (DVI): </h6></td>
+                        <td><% dvi_text = ""
+                               dvi = if @devicedetails.dvi.nil? then -1 else (@devicedetails.dvi.to_f * 10) end
+                               btnClass = "btn btn-medium"
+                               if    dvi.between?(0, 3)   then  btnClass += "" 
+                               elsif dvi.between?(4, 5)   then  btnClass += " btn-success "
+                               elsif dvi.between?(6, 9)   then  btnClass += " btn-warning "
+                               elsif dvi == 10            then  btnClass += " btn-danger "
+                               end
+                            %>
+                            <a href="#" class="<%= btnClass %>" data-rel="popover" data-content="0: Not vulnerable ---- 1: Highly Vulnerable" title="DVI"><%= @devicedetails.dvi %></a>
+                        </td>
+                     </tr>
+                     <tr>
+                        <td><h6>CVE Notices:</h6></td>
+                        <td><span class="btn btn-medium"><%= if @devicedetails.dvivulns.nil? then 0 else @devicedetails.dvivulns.count end %></span></td>
+                     </tr>
+                     <tr>
+                        <td><h6>Snort Alerts:</h6></td>
+                        <td><span class="btn btn-medium"><%= if @snortAlertRecs.nil? then 0 else @snortAlertRecs.count end %></span></td>
+                     </tr>
+                  </table>
+               </div>
+         </div> <!-- box-content -->
+      </div> <!-- box span12 -->
+   </div> <!-- row-fluid -->
+   <div "row-fluid box span12">
+         <div class="box span6">
+              <%= render :partial => 'layouts/title_bar_icons',
+                         :locals => { :header_title => "Snort Alerts",
+                         :header_link  => "#" }
+              %>
+              <div class="box-content">
+                 <%= link_to raw("<div><canvas id='snort_barchart'>[No canvas support]</canvas></div>"), 
+                                 :action => "tbl_snort", :device => @devicedetails.macid %>
+              </div>
+         </div>    
+
+         <div class="box span6">
+              <%= render :partial => 'layouts/title_bar_icons',
+                         :locals => { :header_title => "Vulnerability Notices",
+                         :header_link  => "#" }
+              %>
+              <div class="box-content">
+                 <%= link_to raw("<div><canvas id='vulnerability_barchart'>[No canvas support]</canvas></div>"), 
+                                 :action => "tbl_vulnerability", :device => @devicedetails.macid %>
+              </div>
+         </div>    
+   </div>
+
+   <script type="text/javascript">
+        
+        window.onload = function ()
+        {
+
+            //resize the canvas appropriately
+            document.body.onresize = function () {
+              var snortBarCanvas = document.getElementById('snort_barchart');
+              snortBarCanvas.width = snortBarCanvas.parentNode.clientWidth;
+
+              var cveBarCanvas = document.getElementById('vulnerability_barchart');
+              cveBarCanvas.width = cveBarCanvas.parentNode.clientWidth;
+
+            }
+
+            document.body.onresize();
+
+            var snortBar = new RGraph.Bar('snort_barchart', <%= monthwiseSnortTotals %>);
+            snortBar.Set('chart.background.grid.autofit.numvlines', 12);
+            //snortBar.Set('chart.background.grid.autofit.numhlines', 5);
+            snortBar.Set('grouping', 'stacked');
+            
+            snortBar.Set('labels', <%=raw monthArray %>);
+            snortBar.Set('key', ['Very Low', 'Low', 'Med', 'High']);
+            snortBar.Set('key.position.gutter.boxed', true);
+            snortBar.Set('key.position', 'gutter');
+            snortBar.Set('key.background', 'rgb(255,255,255)');
+            snortBar.Set('colors', ['#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5', 'red', 'black']);
+            snortBar.Set('shadow', true);
+            snortBar.Set('shadow.blur', 15);
+            snortBar.Set('shadow.offsetx', 0);
+            snortBar.Set('shadow.offsety', 0);
+            snortBar.Set('shadow.color', '#aaa');
+            snortBar.Set('noyaxis', true);
+            snortBar.Set('strokestyle', 'rgba(0,0,0,0)');
+            snortBar.Set('background.grid.vlines', false);
+            snortBar.Set('background.grid.border', false); 
+
+            snortBar.ondraw = function (obj)
+            {
+               for (var i=0; i<obj.coords.length; ++i) {
+                    obj.context.fillStyle = 'black';
+
+                    if (obj.data_arr[i] > 0) {
+                       RGraph.Text(obj.context, 'Verdana', 10, obj.coords[i][0] + (obj.coords[i][2] / 2), obj.coords[i][1] + (obj.coords[i][3] / 2),obj.data_arr[i].toString(),'center', 'center', null,null,null,true);
+                    }
+               }
+            }
+
+            RGraph.Effects.Fade.In(snortBar, {'duration': 500, 'frames': 10});
+
+
+            var cveBar = new RGraph.Bar('vulnerability_barchart', <%= monthwiseCveTotals %>);
+            cveBar.Set('chart.background.grid.autofit.numvlines', 12);
+            //cveBar.Set('chart.background.grid.autofit.numhlines', 5);
+            cveBar.Set('grouping', 'stacked');
+            
+            cveBar.Set('labels', <%=raw monthArray %>);
+            cveBar.Set('key', ['Low', 'Med', 'High', 'Fatal']);
+            cveBar.Set('key.position.gutter.boxed', true);
+            cveBar.Set('key.position', 'gutter');
+            cveBar.Set('key.background', 'rgb(255,255,255)');
+            cveBar.Set('colors', ['#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5', 'red', 'black']);
+            cveBar.Set('shadow', true);
+            cveBar.Set('shadow.blur', 15);
+            cveBar.Set('shadow.offsetx', 0);
+            cveBar.Set('shadow.offsety', 0);
+            cveBar.Set('shadow.color', '#aaa');
+            cveBar.Set('noyaxis', true);
+            cveBar.Set('strokestyle', 'rgba(0,0,0,0)');
+            cveBar.Set('background.grid.vlines', false);
+            cveBar.Set('background.grid.border', false); 
+
+            cveBar.ondraw = function (obj)
+            {
+               for (var i=0; i<obj.coords.length; ++i) {
+                    obj.context.fillStyle = 'black';
+
+                    if (obj.data_arr[i] > 0) {
+                       RGraph.Text(obj.context, 'Verdana', 10, obj.coords[i][0] + (obj.coords[i][2] / 2), obj.coords[i][1] + (obj.coords[i][3] / 2),obj.data_arr[i].toString(),'center', 'center', null,null,null,true);
+                    }
+               }
+            }
+            cveBar.Set('hmargin.grouped', 1);
+
+            RGraph.Effects.Fade.In(cveBar, {'duration': 500, 'frames': 10});
+
+        }
+</script>

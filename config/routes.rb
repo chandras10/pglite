@@ -15,6 +15,9 @@ Pglite::Application.routes.draw do
 
   match '/tbl_snort', to: 'reports#tbl_snort'
   match '/dash_snort', to: 'reports#dash_snort'
+  match '/tbl_vulnerability', to: 'reports#tbl_vulnerability'
+
+  match '/device_details', to: 'reports#device_details'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

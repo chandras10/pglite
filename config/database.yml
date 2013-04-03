@@ -32,10 +32,18 @@ stat_db:
 #
 snortalert_db:
   adapter: sqlite3
-  database: /usr/local/var/alertlistner/snortalert.db
+  database: /usr/local/var/pglite/deviceInfo.db
   pool: 5
   timeout: 5000
 
+#
+# DVI Database
+#
+vulnerability_db:
+  adapter: sqlite3
+  database: /usr/local/var/pglite/deviceInfo.db
+  pool: 5
+  timeout: 5000
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".

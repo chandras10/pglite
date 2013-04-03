@@ -40,11 +40,11 @@
                      <tr>
                         <td><%= deviceinfo.username %></td>
                         <td><%= deviceinfo.ipaddr %></td>
-                        <td><%= deviceinfo.macid %></td>
+                        <td><%= link_to deviceinfo.macid, :action=> "device_details", :device => deviceinfo.macid %></td>
                         <td><%= deviceinfo.deviceclass %></td>
                         <td><%= deviceinfo.devicetype %></td>
                         <td><%= deviceinfo.operatingsystem %></td>
-                        <td><!-- TODO: Need Srinivas's inputs here --></td>
+                        <td><%= deviceinfo.DVI %></td>
                         <td><%= deviceinfo.created_at %></td>
                         <td><%= deviceinfo.updated_at %></td>
                      </tr>
@@ -72,7 +72,11 @@ $(document).ready(function() {
 
 /* Add a select menu for each TH element in the table footer */
   $("tfoot th").each( function ( i ) {
-    this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i) );
+    if (i == 2) {
+      this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, true) );
+    } else {
+      this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i) );
+    }
     $('select', this).change( function () {
       oTable.fnFilter( $(this).val(), i );
     } );
