@@ -23,7 +23,7 @@ deviceinfo_db:
 #
 stat_db:
   adapter: sqlite3
-  database: /usr/local/var/pglite/stat.db
+  database: /usr/local/var/pglite/deviceInfo.db
   pool: 5
   timeout: 5000
 

@@ -12,27 +12,26 @@
                <thead>
 	          <tr>
 	             <th>Username</th>
-		          <th>IP Address</th>
-                <th>MAC ID</th>
-                <th>Device Class</th>
-                <th>Device Type </th>
-		          <th>Operating System</th>
-	   	       <th>DVI</th>
-                <th>First Seen</th>
-                <th>Last Seen</th>
+		           <th>IP Address</th>
+               <th>Device</th>
+               <th>Device Class</th>
+               <th>Device Type </th>
+		           <th>Operating System</th>
+	   	         <th>DVI</th>
+               <th>Jailbroken</th>
+               <th>Last Seen</th>
 	          </tr>
 	       </thead>   
          <tfoot>
-                                <tr>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
+            <tr>
+               <th rowspan="1" colspan="1"></th>
+               <th rowspan="1" colspan="1"></th>
+               <th rowspan="1" colspan="1"></th>
+               <th rowspan="1" colspan="1"></th>
+               <th rowspan="1" colspan="1"></th>
+               <th rowspan="1" colspan="1"></th>
+               <th rowspan="1" colspan="1"></th>
+               <th rowspan="1" colspan="1"></th>
           </tr>
          </tfoot>
 	       <tbody>
@@ -44,8 +43,8 @@
                         <td><%= deviceinfo.deviceclass %></td>
                         <td><%= deviceinfo.devicetype %></td>
                         <td><%= deviceinfo.operatingsystem %></td>
-                        <td><%= deviceinfo.DVI %></td>
-                        <td><%= deviceinfo.created_at %></td>
+                        <td><%= sprintf("%.2f", deviceinfo.DVI) %></td>
+                        <td><%= if ((deviceinfo.weight & 0x00FF0000) > 0) then "Yes" else "No" end %></td>
                         <td><%= deviceinfo.updated_at %></td>
                      </tr>
                   <% end %>

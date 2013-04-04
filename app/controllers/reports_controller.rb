@@ -31,15 +31,26 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    #today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
-    today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
 
-    @IpstatRecs = Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
-                                destip as ip, deviceid as device, 
-                                sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                      # where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                      where("timestamp >= ?", today).
-                      group(:time, :destip, :deviceid).order(:destip)
+    if (params[:device].nil?) then
+       @IpstatRecs = Ipstat.joins(:deviceinfo).
+                            select("strftime('%Y-%m-%d %H', timestamp) as time, 
+                                    destip as ip, deviceid as device, 
+                                    sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                            where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
+                            #where("timestamp >= ?", today).
+                            group(:time, :destip, :deviceid).order(:destip)
+    else 
+       # all bandwidth records for a specific device
+       @IpstatRecs = Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
+                                    destip as ip, deviceid as device, 
+                                    sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                            where("timestamp >= ? AND deviceid = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:device]).
+                            #where("timestamp >= ? AND deviceid = ?", today, params[:device]). #DELETEME after testing
+                            group(:time, :destip).order(:destip)
+    end
 
     @IpstatRecs.each do |rec |
 
@@ -60,13 +71,15 @@ class ReportsController < ApplicationController
        arrayData[0] += rec['inbytes']
        arrayData[1] += rec['outbytes']
 
-       # Update the Hashmap holding total in/out bytes counters for each device (or client)
-       arrayData = @hashDeviceTotals[rec['device']]
-       if arrayData.nil? then
-          arrayData = @hashDeviceTotals[rec['device']] = Array.new(2, 0)
+       if (params[:device].nil?) then
+          # Update the Hashmap holding total in/out bytes counters for each device (or client)
+          arrayData = @hashDeviceTotals[rec['device']]
+          if arrayData.nil? then
+             arrayData = @hashDeviceTotals[rec['device']] = Array.new(2, 0)
+          end
+          arrayData[0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
+          arrayData[1] += rec['inbytes']
        end
-       arrayData[0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
-       arrayData[1] += rec['inbytes']
 
     end # For each Ipstat record...
 
@@ -89,14 +102,14 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    #today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
-    today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
 
-    @IpstatRecs= Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
+    @IpstatRecs= Ipstat.joins(:deviceinfo).select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 destport as destport, deviceid as device, 
                                 sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                      # where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                      where("timestamp >= ? AND destip = ?", today, params[:server_ip]).
+                      where("timestamp >= ? AND destip = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:server_ip]).
+                      #where("timestamp >= ? AND destip = ?", today, params[:server_ip]). # DELETEME after testing
                       group(:time, :destport, :deviceid).order(:destport)
 
     @IpstatRecs.each do |rec |
@@ -136,8 +149,8 @@ class ReportsController < ApplicationController
 
     @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
 
-    #today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
-    today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
 
     snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
                                 priority as priority, sigid as sigid, message as message").
@@ -173,8 +186,8 @@ class ReportsController < ApplicationController
   
   def tbl_snort
         @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
-#        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
-        today = Time.mktime(2013, 03, 18).to_i #TODO: DELETEME after testing
+        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+        #today = Time.mktime(2013, 03, 18).to_i #TODO: DELETEME after testing
 
         # Do we need filter the records based on selected device?
         macid = params[:device]
@@ -237,6 +250,16 @@ class ReportsController < ApplicationController
 
 
     @hashCveAlerts = cveAlertRecs.group_by { |a| a["date"][5..6]  }
+
+    #
+    # Get the consumed bandwidth details for this device
+    dash_bw
+
+    #
+    # Get all the apps for this device
+    @appList = Browserversion.select("browsername as app, version")
+                             .where("macid = ?", macid)
+                             .order(:browsername)
   
   end #device_details 
 
