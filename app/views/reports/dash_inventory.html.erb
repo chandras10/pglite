@@ -27,19 +27,19 @@
       <a data-rel="tooltip" title="Total number of unique devices detected so far." 
          class="well span3 top-block" href="/tbl_inventory">
          <span class="icon32 icon-red icon-web"></span>
-	 <div>Total Devices</div>
-	 <div><%= @deviceinfos.count %></div>
-	 <span class="notification green">
-            <%= @deviceinfos.count { |x| x.created_at >= today } %>
+	       <div>Total Devices</div>
+	       <div><%= @deviceinfos.count %></div>
+	       <span class="notification green">
+            <%= @deviceinfos.select{ |x| x.updated_at >= today }.count %>
          </span>
       </a>
 
       <a data-rel="tooltip" title="Total number of unique users detected." 
          class="well span3 top-block" href="/tbl_inventory">
          <span class="icon32 icon-green icon-users"></span>
-	 <div>Total Users</div>
-	 <div><%= Deviceinfo.count(:username, :conditions => "username <> ''", :distinct => true) %></div>
-	 <span class="notification green">
+	       <div>Total Users</div>
+	       <div><%= Deviceinfo.count(:username, :conditions => "username <> ''", :distinct => true) %></div>
+	       <span class="notification green">
             <%= @deviceinfos.select{ |x| x.created_at >= today }.uniq{|x|x.username}.count %>
          </span>
       </a>
@@ -47,17 +47,26 @@
       <a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." 
          class="well span3 top-block" href="/dash_bw">
          <span class="icon32 icon-blue icon-briefcase-new"></span>
-	 <div>Assets</div>
-	 <div><%= Ipstat.select(:destip).uniq.length %></div>
-	 <span class="notification">0</span>
+	       <div>Assets</div>
+	       <div><%= Ipstat.select(:destip).uniq.length %></div>
+	       <span class="notification">0</span>
       </a>
 				
       <a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." 
-         class="well span3 top-block" href="#">
-	 <span class="icon32 icon-color icon-alert"></span>
-	 <div>Security Alerts</div>
-	 <div><%= Alertdb.count %></div>
-	 <span class="notification red">0</span>
+         class="well span3 top-block" href="/tbl_snort">
+	       <span class="icon32 icon-color icon-alert"></span>
+	       <div>Security Alerts</div>
+	       <div><%= (if !@snortAlertRecs.nil? then @snortAlertRecs.count else 0 end) + (if !@cveAlertRecs.nil? then @cveAlertRecs.count else 0 end) %></div>
+	       <span class="notification red">
+            <%= 
+               snortCountToday = cveCountToday = 0
+               snortCountToday = @snortAlertRecs.select{ |x| x.time >= today }.count if !@snortAlertRecs.nil? 
+               cveCountToday = @cveAlertRecs.select{|x| x.date >= today}.count if !@cveAlertRecs.nil?
+
+               snortCountToday +  cveCountToday          
+
+            %>
+         </span>
       </a>
 
       <!-- Summary counters - END -->
@@ -142,23 +151,23 @@
      document.body.onresize();
 
      var hbar = new RGraph.HBar('dev_type_pie', <%= hashDeviceType.values %>);
-     hbar.Set('chart.labels.above', true);
-     hbar.Set('chart.vmargin', 15); 
-     hbar.Set('chart.labels', <%=raw hashDeviceType.keys %>);
-     hbar.Set('chart.background.grid', false);
-     hbar.Set('chart.strokestyle', 'rgba(0,0,0,0)'); 
-     hbar.Set('chart.colors', ['#8B0000', '#FF8C00', '#00008B', '#7FFF00', '#9400D3', '#A52A2A', '#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
-     hbar.Set('chart.colors.sequential', true);
-     hbar.Set('chart.labels.above.decimals', 0);
-     hbar.Set('chart.xlabels', false);
-     hbar.Set('chart.noxaxis', true);
-     hbar.Set('chart.noxtickmarks', true);
-     hbar.Set('chart.noytickmarks', true); 
-     hbar.Set('chart.gutter.left', (document.getElementById('devinfo_os_hbar').width * 0.3));
+     hbar.Set('labels.above', true);
+     hbar.Set('vmargin', 15); 
+     hbar.Set('labels', <%=raw hashDeviceType.keys %>);
+     hbar.Set('background.grid', false);
+     hbar.Set('strokestyle', 'rgba(0,0,0,0)'); 
+     hbar.Set('colors', ['#8B0000', '#FF8C00', '#00008B', '#7FFF00', '#9400D3', '#A52A2A', '#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
+     hbar.Set('colors.sequential', true);
+     hbar.Set('labels.above.decimals', 0);
+     hbar.Set('xlabels', false);
+     hbar.Set('noxaxis', true);
+     hbar.Set('noxtickmarks', true);
+     hbar.Set('noytickmarks', true); 
+     hbar.Set('gutter.left', (document.getElementById('devinfo_os_hbar').width * 0.3));
 
      if (!RGraph.isOld()) {
-        hbar.Set('chart.tooltips', <%=raw hashDeviceType.keys %>);
-        hbar.Set('chart.tooltips.event', 'onmousemove');
+        hbar.Set('tooltips', <%=raw hashDeviceType.keys %>);
+        hbar.Set('tooltips.event', 'onmousemove');
 
         RGraph.Effects.HBar.Grow(hbar);
      } else {
@@ -166,27 +175,27 @@
      } 
 
      var pie = new RGraph.Pie('devinfo_os_hbar', data);
-     //pie.Set('chart.colors', ['#8B0000', '#FF8C00', '#00008B', '#7FFF00', '#9400D3', '#A52A2A', '#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
-     pie.Set('chart.colors', ['Gradient(lightskyblue:#EC0033)','Gradient(lightskyblue:#A0D300)','Gradient(lightskyblue:#FFCD00)','Gradient(lightskyblue:#00B869)','Gradient(lightskyblue:#999)','Gradient(lightskyblue:#FF7300)','Gradient(lightskyblue:#004CB0)']);
-     pie.Set('chart.strokestyle', 'white');
-     pie.Set('chart.linewidth', 3);
-     pie.Set('chart.text.size', 6);
-     pie.Set('chart.text.font', "Comic Sans");
-     pie.Set('chart.exploded', 7);
-     pie.Set('chart.shadow', false);
-     pie.Set('chart.shadow.offsetx', 2);
-     pie.Set('chart.shadow.offsety', 2);
-     pie.Set('chart.shadow.blur', 3);
-     pie.Set('chart.shadow.color', '#bbb');
-     pie.Set('chart.labels.ingraph', true);
-     pie.Set('chart.labels.position', 'gutter');
-     pie.Set('chart.tooltips', labels);
-     pie.Set('chart.tooltips.event', 'onmousemove');
+     //pie.Set('colors', ['#8B0000', '#FF8C00', '#00008B', '#7FFF00', '#9400D3', '#A52A2A', '#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
+     pie.Set('colors', ['Gradient(lightskyblue:#EC0033)','Gradient(lightskyblue:#A0D300)','Gradient(lightskyblue:#FFCD00)','Gradient(lightskyblue:#00B869)','Gradient(lightskyblue:#999)','Gradient(lightskyblue:#FF7300)','Gradient(lightskyblue:#004CB0)']);
+     pie.Set('strokestyle', 'white');
+     pie.Set('linewidth', 3);
+     pie.Set('text.size', 6);
+     pie.Set('text.font', "Comic Sans");
+     pie.Set('exploded', 7);
+     pie.Set('shadow', false);
+     pie.Set('shadow.offsetx', 2);
+     pie.Set('shadow.offsety', 2);
+     pie.Set('shadow.blur', 3);
+     pie.Set('shadow.color', '#bbb');
+     pie.Set('labels.ingraph', true);
+     pie.Set('labels.position', 'gutter');
+     pie.Set('tooltips', labels);
+     pie.Set('tooltips.event', 'onmousemove');
 
      for (var i=0; i< labels.length; i++) {
        labels[i] = labels[i] + ' ' + roundNumber(data[i]/total*100, 0) + '%';
      }
-     pie.Set('chart.labels.ingraph.specific', labels);
+     pie.Set('labels.ingraph.specific', labels);
      
 
      RGraph.Effects.Pie.RoundRobin(pie);

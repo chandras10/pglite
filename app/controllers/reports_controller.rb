@@ -6,6 +6,11 @@ class ReportsController < ApplicationController
 
   def dash_inventory
     @deviceinfos = Deviceinfo.scoped
+
+    tbl_vulnerability
+
+    tbl_snort
+    
   end
 
   def tbl_inventory
