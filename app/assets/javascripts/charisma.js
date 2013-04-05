@@ -174,12 +174,14 @@ function docReady(){
  * Returns:  array string: 1d data array 
  * Inputs:   object:oSettings - dataTable settings object. This is always the last argument past to the function
  *           int:iColumn - the id of the column to extract the data from
+ *           bHtmlCode - If some column has embedded HTML (like labels, buttons) then setting this flag will strip out the HTML around the value.
+ *           bIgnoreColumn - if set, then this column's selection box will be empty (useful for date columns or columns with too many values)
  *           bool:bUnique - optional - if set to false duplicated values are not filtered out
  *           bool:bFiltered - optional - if set to false all the table data is used (not only the filtered)
  *           bool:bIgnoreEmpty - optional - if set to false empty values are not filtered from the result array
  * Author:   Benedikt Forchhammer <b.forchhammer /AT\ mind2.de>
  */
-$.fn.dataTableExt.oApi.fnGetColumnData = function ( oSettings, iColumn, bHtmlCode, bUnique, bFiltered, bIgnoreEmpty ) {
+$.fn.dataTableExt.oApi.fnGetColumnData = function ( oSettings, iColumn, bHtmlCode, bIgnoreColumn, bUnique, bFiltered, bIgnoreEmpty ) {
 	// check that we have a column id
 	if ( typeof iColumn == "undefined" ) return new Array();
 	
@@ -195,9 +197,12 @@ $.fn.dataTableExt.oApi.fnGetColumnData = function ( oSettings, iColumn, bHtmlCod
     // Does the table column have some embedded HTML, then strip it
 	if (typeof bHtmlCode == "undefined") bHtmlCode = false;
 
+    // Ignore columns which have unique values for all (or most) rows. Examples: generated/created date etc.
+	if (typeof bIgnoreColumn == "undefined") bIgnoreColumn = false;
+
 	// list of rows which we're going to loop through
 	var aiRows;
-	
+
 	// use only filtered rows
 	if (bFiltered == true) aiRows = oSettings.aiDisplay; 
 	// use all rows
@@ -206,7 +211,9 @@ $.fn.dataTableExt.oApi.fnGetColumnData = function ( oSettings, iColumn, bHtmlCod
 	// set up data array	
 	var asResultData = new Array();
 	
-    
+
+	if (bIgnoreColumn == true) return asResultData;
+	    
 	var htmlRE = new RegExp("<.*>(.*)</.*>"); //Strips out HTML code around the column value
     var re;
     if (bHtmlCode == true) re = new RegExp(htmlRE);

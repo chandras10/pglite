@@ -1,10 +1,11 @@
 class ReportsController < ApplicationController
  
   def login
+     #TODO
   end
 
   def dash_inventory
-    @deviceinfos = Deviceinfo.all
+    @deviceinfos = Deviceinfo.scoped
   end
 
   def tbl_inventory
@@ -197,7 +198,7 @@ class ReportsController < ApplicationController
                                              protocol as protocol, srcip as srcip, srcport as srcport, 
                                              destip as dstip, destport as dstport,
                                              srcmac as srcmac, dstmac as dstmac").
-                                     where("timestamp >= ?", today).
+                                     #where("timestamp >= ?", today).
                                      order(:priority, :sigid)
         else
            @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', datetime(timestamp, 'unixepoch')) as time, 
@@ -205,7 +206,8 @@ class ReportsController < ApplicationController
                                              protocol as protocol, srcip as srcip, srcport as srcport, 
                                              destip as dstip, destport as dstport,
                                              srcmac as srcmac, dstmac as dstmac").
-                                     where("timestamp >= ? AND (srcmac = ? OR dstmac = ?)", today, macid, macid).
+                                     #where("timestamp >= ? AND (srcmac = ? OR dstmac = ?)", today, macid, macid).
+                                     where("(srcmac = ? OR dstmac = ?)", macid, macid).
                                      order(:priority, :sigid)
         end
 

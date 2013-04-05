@@ -90,6 +90,9 @@ $(document).ready(function() {
       case 0:
         this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, true) );
         break;
+      case 1:
+        this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, false, true) );
+        break;
       case 2:
         this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, true) );
         break;

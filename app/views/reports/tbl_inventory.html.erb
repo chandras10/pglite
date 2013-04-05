@@ -32,6 +32,7 @@
                <th rowspan="1" colspan="1"></th>
                <th rowspan="1" colspan="1"></th>
                <th rowspan="1" colspan="1"></th>
+               <th rowspan="1" colspan="1"></th>
           </tr>
          </tfoot>
 	       <tbody>
@@ -71,11 +72,19 @@ $(document).ready(function() {
 
 /* Add a select menu for each TH element in the table footer */
   $("tfoot th").each( function ( i ) {
-    if (i == 2) {
-      this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, true) );
-    } else {
-      this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i) );
-    }
+    switch (i)
+    {
+       case 2:
+              this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, true, true /* dont generate combobox values for Macid */) );
+              break;
+       case 8:
+              this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, false, true /* dont generate combobox values for Last seen date */) );
+              break;
+       default:
+              this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i) );
+              break;
+    }   
+
     $('select', this).change( function () {
       oTable.fnFilter( $(this).val(), i );
     } );

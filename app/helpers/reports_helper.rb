@@ -17,4 +17,20 @@ module ReportsHelper
   		end
   	end
   end  
+
+  #
+  # Bandwidth data will be shown in M/K/bytes depending on the variable value below.
+  #  2 ** 0 = one byte; 1K = 2 ** 10;  1M = 2 ** 20
+  # 
+  $BW_MEASURE = 2 ** 10
+
+  def bandwidth_label
+      label = "(bytes)"
+      if ($BW_MEASURE > 1000000) then
+         label = "(Mbytes)"
+      elsif ($BW_MEASURE > 1000) then
+         label = "(Kbytes)"
+      end
+  end
+
 end
