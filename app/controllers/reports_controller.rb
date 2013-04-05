@@ -37,24 +37,24 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
-    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
+    #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
     if (params[:device].nil?) then
        @IpstatRecs = Ipstat.joins(:deviceinfo).
                             select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                     destip as ip, deviceid as device, 
                                     sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                            where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                            #where("timestamp >= ?", today).
+                            #where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
+                            where("timestamp >= ?", today).
                             group(:time, :destip, :deviceid).order(:destip)
     else 
        # all bandwidth records for a specific device
        @IpstatRecs = Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                     destip as ip, deviceid as device, 
                                     sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                            where("timestamp >= ? AND deviceid = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:device]).
-                            #where("timestamp >= ? AND deviceid = ?", today, params[:device]). #DELETEME after testing
+                            #where("timestamp >= ? AND deviceid = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:device]).
+                            where("timestamp >= ? AND deviceid = ?", today, params[:device]). 
                             group(:time, :destip).order(:destip)
     end
 
@@ -108,14 +108,14 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
-    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
+    #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
     @IpstatRecs= Ipstat.joins(:deviceinfo).select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 destport as destport, deviceid as device, 
                                 sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                      where("timestamp >= ? AND destip = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:server_ip]).
-                      #where("timestamp >= ? AND destip = ?", today, params[:server_ip]). # DELETEME after testing
+                      #where("timestamp >= ? AND destip = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:server_ip]).
+                      where("timestamp >= ? AND destip = ?", today, params[:server_ip]).
                       group(:time, :destport, :deviceid).order(:destport)
 
     @IpstatRecs.each do |rec |
