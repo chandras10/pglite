@@ -155,7 +155,7 @@ class ReportsController < ApplicationController
 
     @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
     #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
 
     snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
@@ -192,7 +192,7 @@ class ReportsController < ApplicationController
   
   def tbl_snort
         @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
-        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i # Epoch time of today at 00:00:00 hours
+        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
         #today = Time.mktime(2013, 03, 18).to_i #TODO: DELETEME after testing
 
         # Do we need filter the records based on selected device?
@@ -229,7 +229,7 @@ class ReportsController < ApplicationController
       @devicedetails = @devicedetails.first
     end
 
-    this_year = Time.mktime(Time.now.year, 01, 01).to_i 
+    this_year = Time.mktime(Time.now.year, 01, 01) 
     #find all the Snort alerts
     @snortAlertRecs = Alertdb.select("datetime(timestamp, 'unixepoch') as time, 
                                       priority as priority, sigid as sigid, message as message, 
