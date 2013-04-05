@@ -52,7 +52,7 @@
                         <% when 4 %>
                               <td><span class='label label-info'> Very Low </span></td>
                         <% else %>
-                              <td>rec['priority']</td>
+                              <td><span class='label'><%=rec['priority'] %></span></td>
                         <% end %>
 
                         <td><%= rec.protocol %></td>
@@ -88,13 +88,12 @@ $(document).ready(function() {
     switch(i)
     {
       case 0:
+      case 2:
+      case 3:
         this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, true) );
         break;
       case 1:
         this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, false, true) );
-        break;
-      case 2:
-        this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, true) );
         break;
       default: 
         this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i) );

@@ -189,7 +189,8 @@
      pie.Set('shadow.color', '#bbb');
      pie.Set('labels.ingraph', true);
      pie.Set('labels.position', 'gutter');
-     pie.Set('tooltips', labels);
+
+     pie.Set('tooltips', <%=raw hashOperatingSystem.keys %>);
      pie.Set('tooltips.event', 'onmousemove');
 
      for (var i=0; i< labels.length; i++) {
