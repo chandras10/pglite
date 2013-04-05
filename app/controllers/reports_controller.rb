@@ -37,8 +37,8 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
-    #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
+    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
 
     if (params[:device].nil?) then
        @IpstatRecs = Ipstat.joins(:deviceinfo).
@@ -108,8 +108,8 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
-    #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
+    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
 
     @IpstatRecs= Ipstat.joins(:deviceinfo).select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 destport as destport, deviceid as device, 
