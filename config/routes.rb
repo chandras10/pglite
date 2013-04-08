@@ -19,6 +19,9 @@ Pglite::Application.routes.draw do
 
   match '/device_details', to: 'reports#device_details'
 
+  match '/500', to: 'errors#internal_error'
+  match '/404', to: 'errors#internal_error'
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 

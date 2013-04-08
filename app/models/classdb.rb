@@ -1,6 +1,6 @@
 class Classdb < ActiveRecord::Base
   establish_connection "snortalert_db"
-  set_table_name "classdb"
+  self.table_name = "classdb"
 
   attr_accessible :classid, :classname, :description
 

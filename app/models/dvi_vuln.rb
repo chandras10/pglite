@@ -1,7 +1,6 @@
 class DviVuln < ActiveRecord::Base
   establish_connection "vulnerability_db"
-  set_table_name "dvi_vuln"
-
+  self.table_name = "dvi_vuln"
   attr_accessible :mac, :vuln_id
 
   belongs_to :deviceinfo, :class_name => "Deviceinfo", :foreign_key => "mac", :primary_key => "macid"

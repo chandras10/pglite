@@ -66,6 +66,8 @@ module Pglite
     config.assets.version = '1.0'
 
     config.assets.paths << Rails.root.join("app", "assets", "font")
+
+    config.exceptions_app = self.routes
   end
 
 end

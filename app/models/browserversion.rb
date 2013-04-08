@@ -1,6 +1,6 @@
 class Browserversion < ActiveRecord::Base
   establish_connection "deviceinfo_db"
-  set_table_name "browserversion"
+  self.table_name = "browserversion"
 
   attr_accessible :macid, :browsername, :version
   

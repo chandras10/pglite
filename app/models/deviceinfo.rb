@@ -19,7 +19,7 @@
 
 class Deviceinfo < ActiveRecord::Base
   establish_connection "deviceinfo_db"
-  set_table_name "deviceinfo"
+  self.table_name = "deviceinfo"
 
   attr_accessible  :macid, :devicetype, :deviceclass, :groupname, :ipaddr, :location, :operatingsystem, :osversion, :username, :DVI, :weight, :created_at, :updated_at
 

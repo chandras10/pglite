@@ -65,15 +65,19 @@
 		<title>Error</title>
 	</head>
 	<body>
-		
 		<p class="error-code">
-			500
+			<%= @status %>
 		</p>
-		<p class="not-found">Not<br/>Found</p>
+		<p class="not-found">Internal Error</p>
 		<div class="clear"></div>
+		<div class="box content">
+
+			<br/><br/><%= "Error: #{@exception.message}" %><br/><br/>
+
+		</div>
+
 		<div class="content">
-			The page your are looking for is not found.
-			<br/><a href="/">Home</a>
+			<a href="/">Home</a>
 		</div>
 	</body>
 </html>
