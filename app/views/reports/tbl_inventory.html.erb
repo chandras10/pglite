@@ -17,6 +17,7 @@
                <th>Device Class</th>
                <th>Device Type </th>
 		           <th>Operating System</th>
+               <th>OS Version</th>
 	   	         <th>DVI</th>
                <th>Jailbroken</th>
                <th>Last Seen</th>
@@ -24,6 +25,7 @@
 	       </thead>   
          <tfoot>
             <tr>
+               <th rowspan="1" colspan="1"></th>
                <th rowspan="1" colspan="1"></th>
                <th rowspan="1" colspan="1"></th>
                <th rowspan="1" colspan="1"></th>
@@ -44,6 +46,7 @@
                         <td><%= deviceinfo.deviceclass %></td>
                         <td><%= deviceinfo.devicetype %></td>
                         <td><%= deviceinfo.operatingsystem %></td>
+                        <td><%= deviceinfo.osversion %></td>
                         <td><%= sprintf("%.2f", deviceinfo.DVI) if !deviceinfo.DVI.empty? %></td>
                         <td><%= if ((deviceinfo.weight & 0x00FF0000) > 0) then "Yes" else "No" end %></td>
                         <td><%= deviceinfo.updated_at %></td>
@@ -77,7 +80,7 @@ $(document).ready(function() {
        case 2:
               this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, true, true /* dont generate combobox values for Macid */) );
               break;
-       case 8:
+       case 9:
               this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, false, true /* dont generate combobox values for Last seen date */) );
               break;
        default:
