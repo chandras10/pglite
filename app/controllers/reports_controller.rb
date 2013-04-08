@@ -158,7 +158,7 @@ class ReportsController < ApplicationController
     today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
     #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
 
-    snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
+    snortAlertRecs = Alertdb.joins(:deviceinfo).select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
                                 priority as priority, sigid as sigid, message as message").
                         where("timestamp >= ?", today).
                         order(:priority, :sigid)
