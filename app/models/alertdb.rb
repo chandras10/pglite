@@ -10,5 +10,5 @@ class Alertdb < ActiveRecord::Base
   # assumption here is that there could other devices in the network which are taking care of dropping those packets before it
   # reaches the device.
   # 
-  belongs_to :deviceinfo, :class_name => "Deviceinfo", :foreign_key => "deviceid", :primary_key => "srcmac"
+  belongs_to :deviceinfo, :class_name => "Deviceinfo", :foreign_key => "srcmac", :primary_key => "macid"
 end
