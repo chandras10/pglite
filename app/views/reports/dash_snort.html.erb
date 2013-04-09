@@ -2,10 +2,10 @@
 
 # Move the hashmap values (in circular fashion) so that the current time 
 # is always the last one on the rightmost edge of the graph
-  currentTime = Time.now.strftime("%H").to_i 
-  @hashTimeIntervalData.each do |i, arrayTotals|
-    arrayTotals.rotate!(currentTime+1)
-  end
+#  currentTime = Time.now.strftime("%H").to_i 
+#  @hashTimeIntervalData.each do |i, arrayTotals|
+#    arrayTotals.rotate!(currentTime+1)
+#  end
 
   arrayBarGraphTotals = Array.new(24, 0)
   24.times do |i|
