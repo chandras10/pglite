@@ -96,7 +96,7 @@
             bar.Set('chart.background.grid.autofit.numvlines', 24);
             bar.Set('chart.background.grid.autofit.numhlines', 5);
             bar.Set('labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
-            bar.Set('key', <%=raw @hashTimeIntervalData.keys %>);
+            bar.Set('key', <%=raw @hashTimeIntervalData.keys.map {|k| if (k > 1 && !@priorityLabels[k-1].nil?) then @priorityLabels[k-1] else 'Unknown' end } %>);
             bar.Set('key.position.gutter.boxed', true);
             bar.Set('key.position', 'gutter');
             bar.Set('key.background', 'rgb(255,255,255)');
