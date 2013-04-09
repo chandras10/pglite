@@ -158,7 +158,7 @@ class ReportsController < ApplicationController
     today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
     #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
 
-    snortAlertRecs = Alertdb.joins(:deviceinfo).select("strftime('%Y-%m-%d %H', datetime(timestamp, 'unixepoch')) as time, 
+    snortAlertRecs = Alertdb.joins(:deviceinfo).select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 priority as priority, sigid as sigid, message as message").
                         where("timestamp >= ?", today).
                         order(:priority, :sigid)
@@ -198,7 +198,7 @@ class ReportsController < ApplicationController
         # Do we need filter the records based on selected device?
         macid = params[:device]
         if (macid.nil?) then
-           @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', datetime(timestamp, 'unixepoch')) as time, 
+           @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', timestamp) as time, 
                                              priority as priority, sigid as sigid, message as message, 
                                              protocol as protocol, srcip as srcip, srcport as srcport, 
                                              destip as dstip, destport as dstport,
@@ -206,7 +206,7 @@ class ReportsController < ApplicationController
                                      #where("timestamp >= ?", today).
                                      order(:priority, :sigid)
         else
-           @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', datetime(timestamp, 'unixepoch')) as time, 
+           @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', timestamp) as time, 
                                              priority as priority, sigid as sigid, message as message, 
                                              protocol as protocol, srcip as srcip, srcport as srcport, 
                                              destip as dstip, destport as dstport,
@@ -231,7 +231,7 @@ class ReportsController < ApplicationController
 
     this_year = Time.mktime(Time.now.year, 01, 01) 
     #find all the Snort alerts
-    @snortAlertRecs = Alertdb.select("datetime(timestamp, 'unixepoch') as time, 
+    @snortAlertRecs = Alertdb.select("timestamp as time, 
                                       priority as priority, sigid as sigid, message as message, 
                                       protocol as protocol, srcip as srcip, srcport as srcport, 
                                       destip as dstip, destport as dstport,

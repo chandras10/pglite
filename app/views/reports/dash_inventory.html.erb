@@ -40,7 +40,7 @@
 	       <div>Total Users</div>
 	       <div><%= Deviceinfo.count(:username, :conditions => "username <> ''", :distinct => true) %></div>
 	       <span class="notification green">
-            <%= @deviceinfos.select{ |x| x.created_at >= today }.uniq{|x|x.username}.count %>
+            <%= @deviceinfos.select{ |x| ((x.username != '') &&  (x.created_at >= today)) }.uniq{|x|x.username}.count %>
          </span>
       </a>
 
@@ -189,8 +189,7 @@
      pie.Set('shadow.color', '#bbb');
      pie.Set('labels.ingraph', true);
      pie.Set('labels.position', 'gutter');
-
-     pie.Set('tooltips', <%=raw hashOperatingSystem.keys %>);
+     pie.Set('tooltips', labels);
      pie.Set('tooltips.event', 'onmousemove');
 
      for (var i=0; i< labels.length; i++) {
