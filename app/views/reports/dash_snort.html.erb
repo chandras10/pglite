@@ -2,10 +2,10 @@
 
 # Move the hashmap values (in circular fashion) so that the current time 
 # is always the last one on the rightmost edge of the graph
-#  currentTime = Time.now.strftime("%H").to_i 
-#  @hashTimeIntervalData.each do |i, arrayTotals|
+  currentTime = Time.now.strftime("%H").to_i 
+  @hashTimeIntervalData.each do |i, arrayTotals|
 #    arrayTotals.rotate!(currentTime+1)
-#  end
+  end
 
   arrayBarGraphTotals = Array.new(24, 0)
   24.times do |i|
@@ -14,7 +14,6 @@
     	arrayBarGraphTotals[i] << value[i]
     end
   end
-
 %>
 
 <!-- content starts -->
@@ -96,7 +95,7 @@
             bar.Set('chart.background.grid.autofit.numvlines', 24);
             bar.Set('chart.background.grid.autofit.numhlines', 5);
             bar.Set('labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
-            bar.Set('key', <%=raw @hashTimeIntervalData.keys.map {|k| if (k > 1 && !@priorityLabels[k-1].nil?) then @priorityLabels[k-1] else 'Unknown' end } %>);
+            bar.Set('key', <%=raw @hashTimeIntervalData.keys.map {|k| if (k > 0 && !@priorityLabels[k-1].nil?) then @priorityLabels[k-1] else 'Unknown' end } %>);
             bar.Set('key.position.gutter.boxed', true);
             bar.Set('key.position', 'gutter');
             bar.Set('key.background', 'rgb(255,255,255)');

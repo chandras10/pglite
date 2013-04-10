@@ -155,8 +155,8 @@ class ReportsController < ApplicationController
 
     @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
-    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
+    #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
     snortAlertRecs = Alertdb.joins(:deviceinfo).select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 priority as priority, sigid as sigid, message as message").
@@ -192,8 +192,8 @@ class ReportsController < ApplicationController
   
   def tbl_snort
         @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
-        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
-        #today = Time.mktime(2013, 03, 18).to_i #TODO: DELETEME after testing
+        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
+        #today = Time.mktime(2013, 03, 18) #TODO: DELETEME after testing
 
         # Do we need filter the records based on selected device?
         macid = params[:device]
