@@ -37,15 +37,16 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
-    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
+    #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
     if (params[:device].nil?) then
-       @IpstatRecs = Ipstat.joins(:deviceinfo).
-                            select("strftime('%Y-%m-%d %H', timestamp) as time, 
+       detectedDevicesIDs = Deviceinfo.select(:macid)
+       @IpstatRecs = Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                     destip as ip, deviceid as device, 
                                     sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                             #where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
+                            where(:deviceid => detectedDevicesIDs). # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
                             where("timestamp >= ?", today).
                             group(:time, :destip, :deviceid).order(:destip)
     else 
@@ -108,13 +109,15 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day).to_i
-    #today = Time.mktime(2013, 03, 21).to_i #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
+    #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
-    @IpstatRecs= Ipstat.joins(:deviceinfo).select("strftime('%Y-%m-%d %H', timestamp) as time, 
+    detectedDevicesIDs = Deviceinfo.select(:macid)
+    @IpstatRecs= Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 destport as destport, deviceid as device, 
                                 sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                       #where("timestamp >= ? AND destip = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:server_ip]).
+                      where(:deviceid => detectedDevicesIDs). # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
                       where("timestamp >= ? AND destip = ?", today, params[:server_ip]).
                       group(:time, :destport, :deviceid).order(:destport)
 
@@ -158,8 +161,10 @@ class ReportsController < ApplicationController
     today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
     #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
-    snortAlertRecs = Alertdb.joins(:deviceinfo).select("strftime('%Y-%m-%d %H', timestamp) as time, 
+    detectedDevicesIDs = Deviceinfo.select(:macid)
+    snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 priority as priority, sigid as sigid, message as message").
+                        where(:srcmac => detectedDevicesIDs). # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
                         where("timestamp >= ?", today).
                         order(:priority, :sigid)
 
