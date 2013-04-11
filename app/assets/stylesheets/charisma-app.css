@@ -1,3 +1,9 @@
+@font-face {
+  font-family: 'Transformers';
+  src:url('Transformers.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
 
 select{
 background-color:#fff;
@@ -342,8 +348,8 @@ margin-right:-2px;
 margin-left:-2px;
 }
 .brand{
-font-family: 'Shojumaru', cursive, Arial, serif; 
-font-size: 33px !important;
+font-family: 'Transformers', cursive, Arial, serif; 
+font-size: 53px !important;
 letter-spacing:2px;
 text-shadow:1px 1px 5px rgba(0, 0, 0, 0.5);
 /*width:166px;*/

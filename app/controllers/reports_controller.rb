@@ -42,12 +42,19 @@ class ReportsController < ApplicationController
 
     if (params[:device].nil?) then
        detectedDevicesIDs = Deviceinfo.select(:macid)
+       if !detectedDevicesIDs.nil? then # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
+          detectedDevicesIDs = detectedDevicesIDs.map {|d| d.macid}
+          detectedDevicesIDs = detectedDevicesIDs.to_s
+          detectedDevicesIDs = detectedDevicesIDs.sub('[', '(').sub(']', ')')
+       else
+          detectedDevicesIDs = ""
+       end
+
        @IpstatRecs = Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                     destip as ip, deviceid as device, 
                                     sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                             #where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                            where(:deviceid => detectedDevicesIDs). # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
-                            where("timestamp >= ?", today).
+                            where("deviceid IN #{detectedDevicesIDs} AND timestamp >= ?", today).
                             group(:time, :destip, :deviceid).order(:destip)
     else 
        # all bandwidth records for a specific device
@@ -113,12 +120,18 @@ class ReportsController < ApplicationController
     #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
     detectedDevicesIDs = Deviceinfo.select(:macid)
+    if !detectedDevicesIDs.nil? then # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
+       detectedDevicesIDs = detectedDevicesIDs.map {|d| d.macid}
+       detectedDevicesIDs = detectedDevicesIDs.to_s
+       detectedDevicesIDs = detectedDevicesIDs.sub('[', '(').sub(']', ')')
+    else
+       detectedDevicesIDs = ""
+    end
     @IpstatRecs= Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 destport as destport, deviceid as device, 
                                 sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                       #where("timestamp >= ? AND destip = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:server_ip]).
-                      where(:deviceid => detectedDevicesIDs). # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
-                      where("timestamp >= ? AND destip = ?", today, params[:server_ip]).
+                      where("deviceid IN #{detectedDevicesIDs} AND timestamp >= ? AND destip = ?", today, params[:server_ip]).
                       group(:time, :destport, :deviceid).order(:destport)
 
     @IpstatRecs.each do |rec |
@@ -162,10 +175,16 @@ class ReportsController < ApplicationController
     #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
     detectedDevicesIDs = Deviceinfo.select(:macid)
+    if !detectedDevicesIDs.nil? then # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
+       detectedDevicesIDs = detectedDevicesIDs.map {|d| d.macid}
+       detectedDevicesIDs = detectedDevicesIDs.to_s
+       detectedDevicesIDs = detectedDevicesIDs.sub('[', '(').sub(']', ')')
+    else
+       detectedDevicesIDs = ""
+    end
     snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H', timestamp) as time, 
                                 priority as priority, sigid as sigid, message as message").
-                        where(:srcmac => detectedDevicesIDs). # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
-                        where("timestamp >= ?", today).
+                        where("srcmac IN #{detectedDevicesIDs} AND timestamp >= ?", today).
                         order(:priority, :sigid)
 
     @hashTimeIntervalData = Hash.new
