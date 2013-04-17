@@ -9,9 +9,9 @@
 
   @deviceinfos.each do |devinfo|
     
-    devinfo.devicetype = "Unknown" if devinfo.devicetype.empty?
-    devinfo.deviceclass = "Unknown" if devinfo.deviceclass.empty?
-    devinfo.operatingsystem = "Unknown" if devinfo.operatingsystem.empty?
+    devinfo.devicetype = "Unknown" if (devinfo.devicetype.nil? || devinfo.devicetype.empty?)
+    devinfo.deviceclass = "Unknown" if (devinfo.deviceclass.nil? || devinfo.deviceclass.empty?)
+    devinfo.operatingsystem = "Unknown" if (devinfo.operatingsystem.nil? || devinfo.operatingsystem.empty?)
 
     hashDeviceType[devinfo.devicetype] += 1
     hashDeviceClass[devinfo.deviceclass] += 1

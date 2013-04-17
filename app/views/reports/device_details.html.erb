@@ -111,7 +111,7 @@ hashServers = Hash[@hashServerTotals.sort_by {|key, value| value.reduce(:+)}.rev
                      <tr>
                         <td><h6>Device Vulnerability Index (DVI): </h6></td>
                         <td><% dvi_text = ""
-                               dvi = if (!@devicedetails.nil? && !@devicedetails.DVI.nil?) then  (@devicedetails.DVI.to_f * 10) else -1 end
+                               dvi = if (!@devicedetails.nil? && !@devicedetails.dvi.nil?) then  (@devicedetails.dvi.to_f * 10) else -1 end
                                btnClass = "btn btn-medium"
                                if    dvi.between?(0, 3)   then  btnClass += "" 
                                elsif dvi.between?(4, 5)   then  btnClass += " btn-success "
@@ -119,7 +119,7 @@ hashServers = Hash[@hashServerTotals.sort_by {|key, value| value.reduce(:+)}.rev
                                elsif dvi == 10            then  btnClass += " btn-danger "
                                end
                             %>
-                            <a href="#" class="<%= btnClass %>" data-rel="popover" data-content="0: Not vulnerable ---- 1: Highly Vulnerable" title="DVI"><%= @devicedetails.DVI if !@devicedetails.nil? %></a>
+                            <a href="#" class="<%= btnClass %>" data-rel="popover" data-content="0: Not vulnerable ---- 1: Highly Vulnerable" title="DVI"><%= @devicedetails.dvi if !@devicedetails.nil? %></a>
                         </td>
                      </tr>
                      <tr>
@@ -133,14 +133,14 @@ hashServers = Hash[@hashServerTotals.sort_by {|key, value| value.reduce(:+)}.rev
                      <tr>
                         <td><h6>Jailbroken:</h6></td>
                         <td><% 
-                               dvi = if !@devicedetails.nil? && ((@devicedetails.weight & 0x00FF0000) > 0) then 1 else 0 end
-                               if (dvi > 0) then
+                               jailbroke = if !@devicedetails.nil? && ((@devicedetails.weight & 0x00FF0000) > 0) then 1 else 0 end
+                               if (jailbroke > 0) then
                                   btnClass = "btn btn-medium btn-danger"
                                else
                                   btnClass = "btn btn-medium"
                                end
                             %>
-                            <a href="#" class="<%= btnClass %>" ><%= if (dvi > 0) then "Yes" else "No" end %></a>
+                            <a href="#" class="<%= btnClass %>" ><%= if (jailbroke > 0) then "Yes" else "No" end %></a>
                         </td>
                      </tr>
                   </table>

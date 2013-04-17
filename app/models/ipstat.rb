@@ -1,5 +1,4 @@
 class Ipstat < ActiveRecord::Base
-  establish_connection "stat_db"
   self.table_name = "ipstat"
   attr_accessible :timestamp, :deviceid, :destip, :destport, :inbytes, :outbytes
   

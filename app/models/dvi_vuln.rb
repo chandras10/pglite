@@ -1,5 +1,4 @@
 class DviVuln < ActiveRecord::Base
-  establish_connection "vulnerability_db"
   self.table_name = "dvi_vuln"
   attr_accessible :mac, :vuln_id
 

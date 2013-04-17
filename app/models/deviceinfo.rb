@@ -18,10 +18,9 @@
 #
 
 class Deviceinfo < ActiveRecord::Base
-  establish_connection "deviceinfo_db"
   self.table_name = "deviceinfo"
 
-  attr_accessible  :macid, :devicetype, :deviceclass, :groupname, :ipaddr, :location, :operatingsystem, :osversion, :username, :DVI, :weight, :created_at, :updated_at
+  attr_accessible  :macid, :devicetype, :deviceclass, :groupname, :ipaddr, :location, :operatingsystem, :osversion, :username, :dvi, :weight, :created_at, :updated_at
 
   has_many :dvivulns, :class_name => "DviVuln", :foreign_key => "mac", :primary_key => "macid"
 

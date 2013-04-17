@@ -41,29 +41,21 @@ class ReportsController < ApplicationController
     #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
     if (params[:device].nil?) then
-       detectedDevicesIDs = Deviceinfo.select(:macid)
-       if !detectedDevicesIDs.nil? then # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
-          detectedDevicesIDs = detectedDevicesIDs.map {|d| d.macid}
-          detectedDevicesIDs = detectedDevicesIDs.to_s
-          detectedDevicesIDs = detectedDevicesIDs.sub('[', '(').sub(']', ')')
-       else
-          detectedDevicesIDs = ""
-       end
-
-       @IpstatRecs = Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
+       @IpstatRecs = Ipstat.joins(:deviceinfo).
+                            select("to_char(timestamp, 'YYYY-MM-DD HH'), timestamp) as time, 
                                     destip as ip, deviceid as device, 
                                     sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                             #where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                            where("deviceid IN #{detectedDevicesIDs} AND timestamp >= ?", today).
+                            where("timestamp >= ?", today).
                             group(:time, :destip, :deviceid).order(:destip)
     else 
        # all bandwidth records for a specific device
-       @IpstatRecs = Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
+       @IpstatRecs = Ipstat.select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
                                     destip as ip, deviceid as device, 
                                     sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                             #where("timestamp >= ? AND deviceid = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:device]).
                             where("timestamp >= ? AND deviceid = ?", today, params[:device]). 
-                            group(:time, :destip).order(:destip)
+                            group(:time, :destip, :deviceid).order(:destip)
     end
 
     @IpstatRecs.each do |rec |
@@ -119,19 +111,12 @@ class ReportsController < ApplicationController
     today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
     #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
-    detectedDevicesIDs = Deviceinfo.select(:macid)
-    if !detectedDevicesIDs.nil? then # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
-       detectedDevicesIDs = detectedDevicesIDs.map {|d| d.macid}
-       detectedDevicesIDs = detectedDevicesIDs.to_s
-       detectedDevicesIDs = detectedDevicesIDs.sub('[', '(').sub(']', ')')
-    else
-       detectedDevicesIDs = ""
-    end
-    @IpstatRecs= Ipstat.select("strftime('%Y-%m-%d %H', timestamp) as time, 
+    @IpstatRecs= Ipstat.joins(:deviceinfo).
+                        select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
                                 destport as destport, deviceid as device, 
                                 sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                       #where("timestamp >= ? AND destip = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:server_ip]).
-                      where("deviceid IN #{detectedDevicesIDs} AND timestamp >= ? AND destip = ?", today, params[:server_ip]).
+                      where("timestamp >= ? AND destip = ?", today, params[:server_ip]).
                       group(:time, :destport, :deviceid).order(:destport)
 
     @IpstatRecs.each do |rec |
@@ -174,17 +159,10 @@ class ReportsController < ApplicationController
     today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
     #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
 
-    detectedDevicesIDs = Deviceinfo.select(:macid)
-    if !detectedDevicesIDs.nil? then # TODO: Remove this when we move to Postgres or some other standard RDBMS from SQLite
-       detectedDevicesIDs = detectedDevicesIDs.map {|d| d.macid}
-       detectedDevicesIDs = detectedDevicesIDs.to_s
-       detectedDevicesIDs = detectedDevicesIDs.sub('[', '(').sub(']', ')')
-    else
-       detectedDevicesIDs = ""
-    end
-    snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H', timestamp) as time, 
+    snortAlertRecs = Alertdb.joins(:deviceinfo).
+                        select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
                                 priority as priority, sigid as sigid, message as message").
-                        where("srcmac IN #{detectedDevicesIDs} AND timestamp >= ?", today).
+                        where("timestamp >= ?", today).
                         order(:priority, :sigid)
 
     @hashTimeIntervalData = Hash.new
@@ -222,7 +200,7 @@ class ReportsController < ApplicationController
         # Do we need filter the records based on selected device?
         macid = params[:device]
         if (macid.nil?) then
-           @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', timestamp) as time, 
+           @snortAlertRecs = Alertdb.select("to_char(timestamp, 'YYYY-MM-DD HH:MI:SS') as time, 
                                              priority as priority, sigid as sigid, message as message, 
                                              protocol as protocol, srcip as srcip, srcport as srcport, 
                                              destip as dstip, destport as dstport,
@@ -230,7 +208,7 @@ class ReportsController < ApplicationController
                                      #where("timestamp >= ?", today).
                                      order(:priority, :sigid)
         else
-           @snortAlertRecs = Alertdb.select("strftime('%Y-%m-%d %H:%M:%S', timestamp) as time, 
+           @snortAlertRecs = Alertdb.select("to_char(timestamp, 'YYYY-MM-DD HH:MI:SS') as time, 
                                              priority as priority, sigid as sigid, message as message, 
                                              protocol as protocol, srcip as srcip, srcport as srcport, 
                                              destip as dstip, destport as dstport,

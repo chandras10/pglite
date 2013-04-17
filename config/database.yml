@@ -1,49 +1,9 @@
-# SQLite version 3.x
-#   gem install sqlite3
-#
-#   Ensure the SQLite 3 gem is defined in your Gemfile
-#   gem 'sqlite3'
 development:
-  adapter: sqlite3
-  database: db/development.sqlite3
-  pool: 5
-  timeout: 5000
-
-#
-# Device Inventory database
-#
-deviceinfo_db:
-  adapter: sqlite3
-  database: /usr/local/var/pglite/deviceInfo.db
-  pool: 5
-  timeout: 5000
-
-#
-# Database holding bandwidth usage information of BYODs
-#
-stat_db:
-  adapter: sqlite3
-  database: /usr/local/var/pglite/deviceInfo.db
-  pool: 5
-  timeout: 5000
-
-#
-# Snort Alerts
-#
-snortalert_db:
-  adapter: sqlite3
-  database: /usr/local/var/pglite/deviceInfo.db
-  pool: 5
-  timeout: 5000
-
-#
-# DVI Database
-#
-vulnerability_db:
-  adapter: sqlite3
-  database: /usr/local/var/pglite/deviceInfo.db
-  pool: 5
-  timeout: 5000
+  adapter: postgresql
+  database: pglitedb
+  host: 192.168.10.250
+  username: pguser
+  password: pguser
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -55,7 +15,8 @@ test:
   timeout: 5000
 
 production:
-  adapter: sqlite3
-  database: db/production.sqlite3
-  pool: 5
-  timeout: 5000
+  adapter: postgresql
+  database: pglitedb
+  host: 192.168.10.250
+  username: pguser
+  password: pguser
