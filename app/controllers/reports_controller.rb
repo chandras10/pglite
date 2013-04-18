@@ -42,7 +42,7 @@ class ReportsController < ApplicationController
 
     if (params[:device].nil?) then
        @IpstatRecs = Ipstat.joins(:deviceinfo).
-                            select("to_char(timestamp, 'YYYY-MM-DD HH'), timestamp) as time, 
+                            select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
                                     destip as ip, deviceid as device, 
                                     sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                             #where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
