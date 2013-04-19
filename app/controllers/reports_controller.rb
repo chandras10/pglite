@@ -255,7 +255,7 @@ class ReportsController < ApplicationController
     #
     # Get all the CVE notices for the given device
     cveAlertRecs = DviVuln.joins(:vulnerability).
-                            where("vuln_id = vulnerability.id AND mac = ?", macid).select("mac, vuln_id, vulnerability.cvss_score, vulnerability.last_modify_date as date")
+                            where("mac = ?", macid).select("mac, vuln_id, vulnerability.cvss_score, vulnerability.last_modify_date as date")
 
 
     @hashCveAlerts = cveAlertRecs.group_by { |a| a["date"][5..6]  }
@@ -280,12 +280,11 @@ class ReportsController < ApplicationController
     macid = params[:device]
     if (macid.nil?) then
        @cveAlertRecs = DviVuln.joins(:vulnerability).
-                               where("vuln_id = vulnerability.id").
                                select("mac, vuln_id, vulnerability.cvss_score as score, vulnerability.last_modify_date as date, summary").
                                order(:score)
     else
        @cveAlertRecs = DviVuln.joins(:vulnerability).
-                               where("vuln_id = vulnerability.id AND mac = ?", macid).
+                               where("mac = ?", macid).
                                select("mac, vuln_id, vulnerability.cvss_score as score, vulnerability.last_modify_date as date, summary").
                                order(:score)
     end
