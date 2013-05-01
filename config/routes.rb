@@ -19,6 +19,9 @@ Pglite::Application.routes.draw do
 
   match '/device_details', to: 'reports#device_details'
 
+  match '/policy', to: 'configuration#create_policy', :via => :post
+  match '/policy', to: 'configuration#show_policy', :via => :get
+
   match '/500', to: 'errors#internal_error'
   match '/404', to: 'errors#internal_error'
 

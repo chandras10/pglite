@@ -258,6 +258,8 @@ class ReportsController < ApplicationController
                             where("mac = ?", macid).select("mac, vuln_id, vulnerability.cvss_score, vulnerability.last_modify_date as date")
 
 
+    #
+    #TODO: Right now, we are grouping by MONTH only. We will have to consider YEAR as well.
     @hashCveAlerts = cveAlertRecs.group_by { |a| a["date"][5..6]  }
 
     #

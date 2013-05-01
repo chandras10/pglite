@@ -1,0 +1,15 @@
+
+<h1>SHOW POLICY</h1>
+
+<form action="/policy" method="POST">
+	<input type="hidden" id="policy_json"  value="" />
+	<button type="submit" class="btn btn-primary">SAVE</button>
+</form>
+
+<script>
+$('form button[type=submit]').click( function() {
+   $('#policy_json').val('THIS IS WORKING');
+   alert($('#policy_json').val());
+});
+
+</script>

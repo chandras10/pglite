@@ -1,0 +1,18 @@
+<h1>POLICY</h1>
+
+<h3> Policy saved at: <%= @policyXMLFile %> </h3><br/>
+
+<%
+   file = File.read(@policyXMLFile)
+
+   pipe = File.new("my_pipe", "w")
+   pipe.write(file)
+   pipe.close
+
+%>
+
+<%= file %>
+
+<form action="/policy" method="GET">
+	<button type="submit" class="btn btn-primary">BACK</button>
+</form>
