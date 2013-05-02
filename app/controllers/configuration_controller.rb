@@ -4,18 +4,33 @@ require 'builder'
 class ConfigurationController < ApplicationController
 
   def show_policy
-  	#
-  	# Constants
-  	#
-  	@sourceChoices = [
-        	            ['Device Class',  ['Desktop/Laptop', 'MobileDevice'] ],
-        	            ['Device Type',   ['iPad', 'iPhone', 'Android', 'Nokia5800', 'Windows 7'] ],
-        	            ['Operating System', ['iOS', 'Android', 'Windows', 'Linux'] ],
-        	            ['User Role', [ 'Employee', 'Manager', 'Guest'] ],
-        	            ['User', ['chandra.m', 'sachin.s', 'srinivas.g', 'jagadeesh.mr'] ],
-        	            ['Location', [ 'i7Net', 'GuestNet'] ]
-        	         ]
-  	@destinationChoices = ["IP Address", "IP SubNet", "Port", "Range of Ports"]
+
+    #
+    # Currently, we are hardcoding the choices that user can make on what is a "Source"/"Destination" for a given policy rule.
+    # SOURCE is basically one of the following types. On selecting a "type", the user will be presented with some suggestions
+    # that are pulled out of the database for that attribute. For example, if "Operating System" is picked from the dropdown, then the user
+    # will be given choices like ["Android", "iOS", "Linux"] depending what is stored in the database for the detected devices. User has
+    # the freedom to pick one of these values or enter a new value too.
+    #
+    sourceChoiceTypes = ['Device Class', 'Device Type', 'Operating System', 'User Role', 'User', 'Location']
+    attrList = ["deviceclass", "devicetype", "operatingsystem", "groupname", "username", "location"]
+    srcChoicesHash = Hash.new
+    attrList.each { |i| srcChoicesHash[i] = Array.new }
+    detectedDevices = Deviceinfo.all
+    detectedDevices.each do |record|
+       attrList.each do |attr|
+           srcChoicesHash[attr] << record[attr] if !record[attr].empty?
+       end
+    end
+
+    @sourceChoices = Array.new
+    for i in 0..(sourceChoiceTypes.length-1) 
+        @sourceChoices << [sourceChoiceTypes[i], srcChoicesHash[attrList[i]].uniq{|a| a.lstrip}]
+    end
+
+    @destinationChoices = ["IP Address", "IP SubNet", "Port", "Range of Ports"]
+
+    
   end
 
   def create_policy
