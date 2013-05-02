@@ -148,5 +148,8 @@ class ConfigurationController < ApplicationController
     file.write(policyXML.target!)
     file.close
 
+    # Alert PG to now install the generated policy file
+    system("#{Rails.configuration.peregrine_pgguard_alert_cmd}")
+
   end
 end

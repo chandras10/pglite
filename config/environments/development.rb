@@ -38,5 +38,7 @@ Pglite::Application.configure do
   # Peregrine Guard Policy file residence
   config.peregrine_policyfile = "/tmp/pg_policy.xml"
   config.peregrine_policyfile_dtd = "/usr/local/etc/pgguard/pg_policy.dtd"
+  config.peregrine_pgguard_pidfile = "/usr/local/var/pgguard/pgguard.pid"
+  config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"
 
 end
