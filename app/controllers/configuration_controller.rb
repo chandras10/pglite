@@ -46,7 +46,7 @@ class ConfigurationController < ApplicationController
 
     		case type
     		   when "DeviceClass"
-    		      sourceHash[ref] = {"type"=>"DeviceClass", "attrName"=>"name", "attrValue"=>value, "attrNeg"=>negation}
+    		      sourceHash[ref] = {"type"=>"DeviceClass", "attrName"=>"class", "attrValue"=>value, "attrNeg"=>negation}
     		   when "DeviceType"
     		   	  sourceHash[ref] = {"type"=>"DeviceType", "attrName"=>"type", "attrValue"=>value, "attrNeg"=>negation}
     		   when "OperatingSystem"
@@ -95,8 +95,9 @@ class ConfigurationController < ApplicationController
     end # next Rule
 
     policyXML = Builder::XmlMarkup.new(:indent => 1)
-    policyXML.instruct! :xml, :version => "1.1", :encoding => "US-ASCII"
-    
+    policyXML.instruct! :xml, :version => "1.0", :encoding => "US-ASCII"
+    policyXML.declare! :DOCTYPE, :FWPolicy, :SYSTEM, Rails.configuration.peregrine_policyfile_dtd
+
     # Enumerate all the sources and destinations as FWObject nodes
     policyXML.FWPolicy do
     	sourceHash.each do |id, value|
@@ -125,14 +126,14 @@ class ConfigurationController < ApplicationController
         ruleCounter=0
         policyXML.Policy do
            @policyJSON.each do |rule|
-        	   policyXML.PolicyRule("position"=>"#{ruleCounter}", "id"=>"Rule#{ruleCounter+1}", "log"=>rule['log'], "action"=>rule['action']) {
+        	   policyXML.PolicyRule("position"=>"#{ruleCounter}", "id"=>"Rule#{ruleCounter+1}", "log"=>rule['log'].capitalize, "action"=>rule['action'].downcase) {
                    ruleArray[ruleCounter]['sources'].each do |source|
-                   	   policyXML.Src("neg"=>sourceHash[source]['attrNeg']) {
+                   	   policyXML.Src("neg"=>sourceHash[source]['attrNeg'].capitalize) {
                    	   	  policyXML.ObjectRef("ref"=>source)
                    	   }
                    end
                    ruleArray[ruleCounter]['destinations'].each do |dest|
-                   	   policyXML.Dst("neg"=>destHash[dest]['attrNeg']) {
+                   	   policyXML.Dst("neg"=>destHash[dest]['attrNeg'].capitalize) {
                    	   	  policyXML.ObjectRef("ref"=>dest)
                    	   }
                    end
@@ -144,7 +145,7 @@ class ConfigurationController < ApplicationController
     end
 
     file = File.new(Rails.configuration.peregrine_policyfile, "w")
-    file.write(policyXML)
+    file.write(policyXML.target!)
     file.close
 
   end

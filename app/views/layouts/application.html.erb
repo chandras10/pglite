@@ -36,7 +36,124 @@
 </head>
 <body>
 
+<!-- topbar starts -->
+<div class="navbar">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <div class="top-nav nav-collapse">
+          <ul class="nav">
+            <li> <%= link_to "http://www.i7nw.com/products/peregrine-lite/", :target => "_blank" do
+                        image_tag("i7logo.png", :class=>"logo",:alt=> "Peregrine Guard Logo")
+                     end
+                 %>
+            </li>
+            <li> <% 10.times do |i| %>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp 
+                 <% end %>
+            </li>
+            <li>
+              <span class="brand">Peregrine Guard</span>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+</div>
+	<!-- topbar ends -->
+		<div class="container-fluid">
+		<div class="row-fluid">
+				
+			<!-- left menu starts -->
+			<div class="span2 main-menu-span">
+				<div class="well nav-collapse sidebar-nav">
+					<ul class="nav nav-tabs nav-stacked main-menu">
+						<li class="nav-header hidden-tablet">Dashboards</li>
+						<li><a class="ajax-link" href="/dash_inventory"><i class="icon-bar-chart"></i><span class="hidden-tablet"> Inventory</span></a></li>
+						<li><a class="ajax-link" href="/dash_bw"><i class="icon-dashboard"></i><span class="hidden-tablet"> Bandwidth</span></a></li>
+						<li><a class="ajax-link" href="/dash_snort"><i class="icon-eye-open"></i><span class="hidden-tablet"> Intrusion Detection (IDS)</span></a></li>
+            <li><a class="ajax-link" href="/tbl_vulnerability"><i class="icon-warning-sign"></i><span class="hidden-tablet"> Vulnerability Database</span></a></li>
+
+						<li class="nav-header hidden-tablet">Configuration</li>
+            <li><a class="ajax-link" href="/policy"><i class="icon-tasks"></i><span class="hidden-tablet"> Policy Editor</span></a></li>
+					</ul>
+				</div><!--/.well -->
+			</div><!--/span-->
+			<!-- left menu ends -->
+			
+			<noscript>
+				<div class="alert alert-block span10">
+					<h4 class="alert-heading">Warning!</h4>
+					<p>You need to have <a href="http://en.wikipedia.org/wiki/JavaScript" target="_blank">JavaScript</a> enabled to use this site.</p>
+				</div>
+			</noscript>
+			
 <%= yield %>
+              </div> <!-- row-fluid -->
+              <div class="modal hide fade" id="myModal">
+                        <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">Ã/button>
+                                <h3>Settings</h3>
+                        </div>
+                        <div class="modal-body">
+                                <p>Here settings can be configured...</p>
+                        </div>
+                        <div class="modal-footer">
+                                <a href="#" class="btn" data-dismiss="modal">Close</a>
+                                <a href="#" class="btn btn-primary">Save changes</a>
+                        </div>
+                </div>
+
+                <footer>
+                        <p class="pull-left">&copy; <a href="http://www.i7nw.com" target="_blank">i7 Networks Pvt Ltd.</a> 2013</p>
+                        <p style="text-align: right; font-size: 70%">Powered by: <a href="http://usman.it/free-responsive-admin-template" target=_blank>Charisma</a>, <a href="http://www.rgraph.net" target=_blank>RGraph</a></p>
+                </footer>
+
+           </div> <!-- container-fluid -->
+
+
+
+<%= javascript_include_tag "jquery-1.7.2.min" %>
+<%= javascript_include_tag "jquery-ui-1.8.21.custom.min" %>
+<%= javascript_include_tag "bootstrap-transition" %>
+<%= javascript_include_tag "bootstrap-alert" %>
+<%= javascript_include_tag "bootstrap-modal" %>
+<%= javascript_include_tag "bootstrap-dropdown" %>
+<%= javascript_include_tag "bootstrap-scrollspy" %>
+<%= javascript_include_tag "bootstrap-tab" %>
+<%= javascript_include_tag "bootstrap-tooltip" %>
+<%= javascript_include_tag "bootstrap-popover" %>
+<%= javascript_include_tag "bootstrap-button" %>
+<%= javascript_include_tag "bootstrap-collapse" %>
+<%= javascript_include_tag "bootstrap-carousel" %>
+<%= javascript_include_tag "bootstrap-typeahead" %>
+<%= javascript_include_tag "bootstrap-tour" %>
+<%= javascript_include_tag "jquery.cookie" %>
+<%= javascript_include_tag "fullcalendar.min.js" %>
+<%= javascript_include_tag "jquery.dataTables.min" %>
+<%= javascript_include_tag "excanvas" %>
+<%= javascript_include_tag "RGraph.common.core" %>
+<%= javascript_include_tag "RGraph.common.dynamic" %>
+<%= javascript_include_tag "RGraph.common.tooltips" %>
+<%= javascript_include_tag "RGraph.common.effects" %>
+<%= javascript_include_tag "RGraph.common.key" %>
+<%= javascript_include_tag "RGraph.pie" %>
+<%= javascript_include_tag "RGraph.hbar" %>
+<%= javascript_include_tag "RGraph.bar" %>
+<%= javascript_include_tag "RGraph.line" %>
+<%= javascript_include_tag "jquery.chosen.min" %>
+<%= javascript_include_tag "jquery.uniform.min" %>
+<%= javascript_include_tag "jquery.colorbox.min" %>
+<%= javascript_include_tag "jquery.cleditor.min" %>
+<%= javascript_include_tag "jquery.noty" %>
+<%= javascript_include_tag "jquery.elfinder.min" %>
+<%= javascript_include_tag "jquery.raty.min" %>
+<%= javascript_include_tag "jquery.iphone.toggle" %>
+<%= javascript_include_tag "jquery.autogrow-textarea" %>
+<%= javascript_include_tag "jquery.uploadify-3.1.min" %>
+<!-- history.js for cross-browser state change on ajax -->
+<%= javascript_include_tag "jquery.history" %>
+<%= javascript_include_tag "jquery.smart_autocomplete" %>
+<%= javascript_include_tag "charisma" %>
 
 <!-- %= debug(params) if Rails.env.development? % -->
 </body>

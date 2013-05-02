@@ -37,5 +37,6 @@ Pglite::Application.configure do
 
   # Peregrine Guard Policy file residence
   config.peregrine_policyfile = "/tmp/pg_policy.xml"
+  config.peregrine_policyfile_dtd = "/usr/local/etc/pgguard/pg_policy.dtd"
 
 end
