@@ -34,4 +34,8 @@ Pglite::Application.configure do
 
   # Expands the lines which load the assets
   config.assets.debug = true
+
+  # Peregrine Guard Policy file residence
+  config.peregrine_policyfile = "/tmp/pg_policy.xml"
+
 end

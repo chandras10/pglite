@@ -8,7 +8,7 @@ class ConfigurationController < ApplicationController
   	# Constants
   	#
   	@sourceChoices = [
-        	            ['Device Name',  ['Desktop/Laptop', 'MobileDevice'] ],
+        	            ['Device Class',  ['Desktop/Laptop', 'MobileDevice'] ],
         	            ['Device Type',   ['iPad', 'iPhone', 'Android', 'Nokia5800', 'Windows 7'] ],
         	            ['Operating System', ['iOS', 'Android', 'Windows', 'Linux'] ],
         	            ['User Role', [ 'Employee', 'Manager', 'Guest'] ],
@@ -45,8 +45,8 @@ class ConfigurationController < ApplicationController
             srcRefs << ref
 
     		case type
-    		   when "DeviceName"
-    		      sourceHash[ref] = {"type"=>"DeviceName", "attrName"=>"name", "attrValue"=>value, "attrNeg"=>negation}
+    		   when "DeviceClass"
+    		      sourceHash[ref] = {"type"=>"DeviceClass", "attrName"=>"name", "attrValue"=>value, "attrNeg"=>negation}
     		   when "DeviceType"
     		   	  sourceHash[ref] = {"type"=>"DeviceType", "attrName"=>"type", "attrValue"=>value, "attrNeg"=>negation}
     		   when "OperatingSystem"
@@ -109,7 +109,14 @@ class ConfigurationController < ApplicationController
     			if (value['type'] == "IPv4Subnet") then
     				value['attrValue'] =~ /(.*)\/(.*)/
     				policyXML.tag!(value['type'], 'address'=>$1, 'netmask'=>$2)
-    			else
+    			elsif (value['type'] == "PortRange") then
+    				portsArray = value['attrValue'].split(/,/)
+    				policyXML.PortList do
+    					portsArray.each do |port|
+    						policyXML.Port("port"=> port.lstrip)
+    					end
+    			    end
+    		    else
     			   policyXML.tag!(value['type'], value['attrName']=>value['attrValue'])
     			end
     		}
@@ -136,9 +143,9 @@ class ConfigurationController < ApplicationController
 
     end
 
-    @policyXMLFile = "my_xml_data_file.xml"
-    file = File.new(@policyXMLFile, "w")
+    file = File.new(Rails.configuration.peregrine_policyfile, "w")
     file.write(policyXML)
     file.close
+
   end
 end
