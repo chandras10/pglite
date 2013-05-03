@@ -110,7 +110,7 @@ class ConfigurationController < ApplicationController
     end # next Rule
 
     policyXML = Builder::XmlMarkup.new(:indent => 1)
-    policyXML.instruct! :xml, :version => "1.0", :encoding => "US-ASCII"
+    policyXML.instruct! :xml, :version => "1.0", :encoding => "ISO-8859-1"
     policyXML.declare! :DOCTYPE, :FWPolicy, :SYSTEM, Rails.configuration.peregrine_policyfile_dtd
 
     # Enumerate all the sources and destinations as FWObject nodes
