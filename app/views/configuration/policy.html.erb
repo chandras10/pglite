@@ -17,6 +17,18 @@
                "port"        => {"label" => "Service", "icon" => "icon-screenshot" },
                "portrange"   => {"label" => "Service Group", "icon" => "icon-certificate" }
     }
+
+    #
+    # Given an objectRef, return the object
+    #
+    def findObject(ref) 
+        @fwObjects.values.each do | fwObj |
+            if (fwObj["id"] == ref) then
+                return fwObj
+            end
+        end
+    end
+
 %>
 
   <style type="text/css">
@@ -56,7 +68,7 @@
 
      #splitterContainer {
         /*background: #999;*/
-        height:   100%;
+        height:   95%;
         width:    90%;
         margin:   5px auto;
         padding: 0 0px;
@@ -157,19 +169,21 @@
 
             <div id="accordion">
                 <% objLabels.keys.sort.each do | type | %>
-                <h3><%= objLabels[type] %></h3>
+                <h3><%= objLabels[type]["label"] %></h3>
                 <div>
                     <!-- controls for creating new object values -->
                     <button class="btn btn-mini btn-primary new-object-btn"><i class="icon-plus icon-white"></i></button>
                     <input type="text" class="new-object-input-fld" style="display:none">
 
                     <ol class="dd-list objectList list">
-                       <% if !(@fwObjects[type].nil? || @fwObjects[type].empty?) then
-                              @fwObjects[type].each do | obj | 
+                       <% if !(@fwObjects.nil?) then
+                        logger.debug("Chandra " + @fwObjects.keys.to_s)
+                              @fwObjects.keys.each do | key |
+                                  if (@fwObjects[key]["type"] == type) then 
                        %>
-                       <li class="dd-item" id="<%= obj["id"] %>">
+                       <li class="dd-item" id="<%= key %>">
                            <div class="btn-group dd-handle">
-                               <button class="btn btn-small"><i class="icon-star"></i><%= obj["value"]  %></button>
+                               <button class="btn btn-small"><i class="<%= objLabels[type]["icon"] %>" ></i>  <%= @fwObjects[key]["value"]  %></button>
                                <button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
                                <ul class="dropdown-menu">
                                    <li class="dropdown-edit-option"><a><i class="icon-edit"></i> Edit</a></li>
@@ -178,14 +192,15 @@
                                </ul>
                            </div>
                        </li>
-                       <% end %> <!-- for each value of a given object type -->
+                       <%         end %> <!-- Objectref type matches current type -->
+                       <% end %> <!-- for each Objectref -->
                        <% end %> <!-- are there any objects for this type? -->
                     </ol>
                 </div>
                 <% end %> <!-- for each object type -->
             </div> <!-- accordion -->
-
         </div> <!-- leftPane -->
+
         <div id="rightPane" class="pane ui-layout-center">
             <div class="dd-list rules list">
                 <div class="ruleHeader">
@@ -240,30 +255,89 @@
                 </div> <!-- end of ruleTemplate -->
 
                 <div class="ruleList">
-                <div class="rule dd3-item dd-item">
+                <% @fwRules.each do | fwRule | %>
+                <div class="rule dd3-item dd-item" id="<%= fwRule["id"] %>">
                     <div class="dd-handle dd3-handle"></div>
                     <div class="dd3-content" style="padding-left: 0px; padding-top: 0px">
                         <table style="width:100%"><tr>
                             <td style="width:35%">
                                 <ol class="sources dd-list list2 list">
-                                    <li><div class="dd-handle">Any</div></li>
+                                    <% fwRule["sources"].each do | src |
+                                          src["references"].each do | objRef |
+                                             if (objRef == "Any") then 
+                                    %>
+                                    <li id="<%= objRef %>"><div class="dd-handle"><%= objRef %></div></li>
+                                    <%       else  
+                                                obj = @fwObjects[objRef] 
+                                                type = obj["type"]
+                                                value = obj["value"]
+                                                value = "NOT " + value if (src["neg"] == "true")
+                                    %>
+                                    <li class="dd-item" id="<%= objRef %>">
+                                        <div class="btn-group dd-handle">
+                                            <button class="btn btn-small"><i class="<%= objLabels[type]["icon"] %>" ></i>  <%= value  %></button>
+                                            <button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+                                            <ul class="dropdown-menu">
+                                                <li class="dropdown-edit-option"><a><i class="icon-edit"></i> Negate</a></li>
+                                                <li class="divider"></li>
+                                                <li class="dropdown-delete-option"><a><i class="icon-remove"></i> Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <%       end  %> <!-- Reference is not ANY, its a valid Objectref -->
+                                    <%    end %> <!-- for each Objectref in a given SOURCE -->
+                                    <% end %> <!-- for each source -->
                                 </ol>                              
                             </td>
                             <td style="width:35%">
                                 <ol class="destinations dd-list list2 list">
-                                    <li><div class="dd-handle">Any</div></li>
+                                    <% fwRule["destinations"].each do | dst | 
+                                          dst["references"].each do | objRef | 
+                                             if (objRef == "Any") then 
+                                    %>
+                                    <li id="<%= objRef %>"><div class="dd-handle"><%= objRef %></div></li>
+                                    <%       else  
+                                                obj = @fwObjects[objRef]
+                                                type = obj["type"]
+                                                value = obj["value"]
+                                                value = "NOT " + value if (dst["neg"] == "true")
+                                    %>
+                                    <li class="dd-item" id="<%= objRef %>">
+                                        <div class="btn-group dd-handle">
+                                            <button class="btn btn-small"><i class="<%= objLabels[type]["icon"] %>" ></i>  <%= value  %></button>
+                                            <button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+                                            <ul class="dropdown-menu">
+                                                <li class="dropdown-edit-option"><a><i class="icon-edit"></i> Negate</a></li>
+                                                <li class="divider"></li>
+                                                <li class="dropdown-delete-option"><a><i class="icon-remove"></i> Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <%       end  %> <!-- Reference is not ANY, its a valid Objectref -->
+                                    <%    end %> <!-- for each Objectref in a given DESTINATION -->
+                                    <% end %> <!-- for each destination -->
                                 </ol>                              
                             </td>
                             <td style="width:10%; padding-left: 5px">
                                 <div class="accessToggler">
+                                    <% if (fwRule["action"] == "allow") then %>
                                     <h3>ALLOW</h3>
                                     <h3 style="display:none">DENY</h3>
+                                    <% else %>
+                                    <h3 style="display:none">ALLOW</h3>
+                                    <h3>DENY</h3>
+                                    <% end %>
                                 </div>                                  
                             </td>
                             <td style="width:10%; padding-left: 5px">
                                 <div class="loggingToggler">
+                                    <% if (fwRule["log"] == "true") then %>
+                                    <img class="icon32 icon-blue icon-check" ></img>
+                                    <img class="icon32 icon-blue icon-remove" style="display:none"></img>
+                                    <% else %>
                                     <img class="icon32 icon-blue icon-check" style="display:none"></img>
                                     <img class="icon32 icon-blue icon-remove"></img>
+                                    <% end %>
                                 </div>                                  
                             </td>
                             <td>
@@ -272,39 +346,8 @@
                         </tr></table>
                     </div>
                 </div> <!-- end of rule -->
+                <% end %> <!-- for each rule in the policy file -->
 
-                <div class="rule dd3-item dd-item">
-                    <div class="dd-handle dd3-handle"></div>
-                    <div class="dd3-content" style="padding-left: 0px; padding-top: 0px">
-                        <table style="width:100%"><tr>
-                            <td style="width:35%">
-                                <ol class="sources dd-list list2 list">
-                                    <li><div class="dd-handle">Any</div></li>
-                                </ol>                              
-                            </td>
-                            <td style="width:35%">
-                                <ol class="destinations dd-list list2 list">
-                                    <li><div class="dd-handle">Any</div></li>
-                                </ol>                              
-                            </td>
-                            <td style="width:10%; padding-left: 5px">
-                                <div class="accessToggler">
-                                    <h3>ALLOW</h3>
-                                    <h3 style="display:none">DENY</h3>
-                                </div>                                  
-                            </td>
-                            <td style="width:10%; padding-left: 5px">
-                                <div class="loggingToggler">
-                                    <img class="icon32 icon-blue icon-check" style="display:none"></img>
-                                    <img class="icon32 icon-blue icon-remove"></img>
-                                </div>                                  
-                            </td>
-                            <td>
-                                <span class="icon32 icon-color icon-trash" onclick="removePolicyRule(1)"></span>
-                            </td>                             
-                        </tr></table>
-                    </div>
-                </div> <!-- end of rule -->
             </div> <!-- ruleList -->
 
             </div> <!-- rules -->

@@ -23,9 +23,7 @@ class ConfigurationController < ApplicationController
            obj.attributes["value"] = obj.attributes["value"].gsub(" or ", ", ")
         end
 
-
-        @fwObjects[objType] = Array.new if @fwObjects[objType].nil?
-        @fwObjects[objType] << {"id" => obj.attributes["id"], "value" => obj.attributes["value"]}
+        @fwObjects[obj.attributes["id"]] = {"type" => objType, "value" => obj.attributes["value"]}
     end
 
     @fwRules = Array.new
