@@ -1,7 +1,76 @@
 require 'json'
 require 'builder'
+require 'rexml/document'
 
 class ConfigurationController < ApplicationController
+
+  include REXML
+
+  def policy
+
+
+    file = File.new(Rails.configuration.peregrine_policyfile)
+    xmldoc = Document.new(file)
+
+    @fwObjects = Hash.new
+    xmldoc.elements.each("FWPolicy/FWObject") do |obj|
+        objType = obj.attributes["type"].downcase
+
+        if (objType == "portlist") then 
+           objType = "portrange"
+        elsif (objType == "ipv4list") then
+           objType = "ipv4"
+           obj.attributes["value"] = obj.attributes["value"].gsub(" or ", ", ")
+        end
+
+
+        @fwObjects[objType] = Array.new if @fwObjects[objType].nil?
+        @fwObjects[objType] << {"id" => obj.attributes["id"], "value" => obj.attributes["value"]}
+    end
+
+    @fwRules = Array.new
+    xmldoc.elements.each("FWPolicy/Policy/PolicyRule") do |rule|
+        sourceArray = Array.new
+        rule.elements.each("Src") do |src|
+            #
+            # Each source node could have one or more Object references
+            #
+            objArray = Array.new
+            src.elements.each("ObjectRef") do |objRef|
+                 objArray << objRef.attributes["ref"]
+            end
+
+            sourceArray << { "neg" => src.attributes["neg"].downcase,  "references" => objArray }
+        end
+        sourceArray << {"references" => ["Any"]} if (sourceArray.empty?)
+
+        destArray = Array.new
+        rule.elements.each("Dst") do |dst|
+            #
+            # Each Destination node could have one or more Object references
+            #
+            objArray = Array.new
+            dst.elements.each("ObjectRef") do |objRef|
+                 objArray << objRef.attributes["ref"]
+            end
+
+            destArray << { "neg" => dst.attributes["neg"].downcase,  "references" => objArray }
+        end
+        destArray << {"references" => ["Any"]} if (destArray.empty?)
+
+        @fwRules << {
+                      "id" => rule.attributes["id"],
+                      "position" => rule.attributes["position"],
+                      "sources" => sourceArray,
+                      "destinations" => destArray,
+                      "log" => rule.attributes["log"].downcase,
+                      "action" => rule.attributes["action"].downcase
+        }
+
+
+    end
+
+  end #policy
 
   def show_policy
 

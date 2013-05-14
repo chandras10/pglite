@@ -21,6 +21,7 @@ Pglite::Application.routes.draw do
 
   match '/policy', to: 'configuration#create_policy', :via => :post
   match '/policy', to: 'configuration#show_policy', :via => :get
+  match '/newpolicy', to: 'configuration#policy', :via => :get
 
   match '/500', to: 'errors#internal_error'
   match '/404', to: 'errors#internal_error'

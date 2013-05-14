@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE FWPolicy SYSTEM "/usr/local/etc/pgguard/pg_policy.dtd">
+<FWPolicy>
+ <FWObject id="fwobject_1" type="OSName" value="iOS"/>
+ <FWObject id="fwobject_2" type="PortRange" value="10-40"/>
+ <FWObject id="fwobject_3" type="PortList" value="10, 20, 30, 40"/>
+ <FWObject id="fwobject_4" type="IPv4List" value="192.168.10.210 or 192.168.10.211 or 192.168.10.212 or 192.168.10.213"/>
+ <FWObject id="fwobject_5" type="Port" value="20"/>
+ <FWObject id="fwobject_6" type="IPv4Subnet" value="192.168.0.0/16"/>
+ <FWObject id="fwobject_7" type="IPv4" value="192.168.10.218"/>
+ <Policy>
+  <PolicyRule position="0" id="Rule1" log="False" action="reject">
+   <Src neg="False">
+    <ObjectRef ref="fwobject_1"/>
+   </Src>
+   <Dst neg="False">
+    <ObjectRef ref="fwobject_3"/>
+    <ObjectRef ref="fwobject_4"/>
+    <ObjectRef ref="fwobject_5"/>
+    <ObjectRef ref="fwobject_6"/>
+    <ObjectRef ref="fwobject_7"/>
+    <ObjectRef ref="fwobject_2"/>
+   </Dst>
+  </PolicyRule>
+ </Policy>
+</FWPolicy>
