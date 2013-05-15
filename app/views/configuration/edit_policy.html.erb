@@ -138,7 +138,7 @@
 <div class="box span10" style="height:80%; width:80%; overflow:hidden;">
     <div class="box-header well">
         <h2><i class="icon-info-sign"></i> Policy Editor</h2>
-        <form class="pull-right" action="/newpolicy" method="POST">
+        <form class="pull-right" action="/policy" method="POST">
             <fieldset>
                 <input type="hidden" id="policy_json" name="policy_json" value="" />
                 <a class="btn btn-primary" id="newRuleBtn" 
@@ -447,7 +447,6 @@
         var parent = item.parent();
         var value = $('.btn:first', item).text();
         var width = $('.btn:first', item).width();
-        //alert($('.btn:first', item).text());
         $('.list').enableSelection();
         item.replaceWith('<input id="valueEditor" value='+value+' class="dd-handle" type="text">').width(width);
         oldObject.text = value;
@@ -554,6 +553,63 @@
      $(".loggingToggler").live('click', function() {
         $(this).find('img').toggle();
      });
+
+
+     /*
+      * Parse the HTML page and create the policy JSON
+      */
+
+     function getObjectsInRule(list) {
+        return $('li.dd-item', list).map(function(k, v) {
+           var $objRef = $(this).attr("id");
+           var value = $('button:first', this).text().trim() || "";
+
+           return { ref: $objRef, negation: ((value.indexOf("NOT ") !== -1) ? "true" : "false") }
+        }).get();
+     }
+
+     $('form a[type=submit]').click( function() {
+
+        var objectsArray = new Array();
+        $('#accordion h3').each(function() {
+           var objType = $(this).attr('class').split(" ").shift();
+           var $div = $(this).next();
+
+           $('.dd-item', $div).each(function() {
+               var valueText = $('button:first', this).text().trim() || "";
+               if ((objType == "ipv4") && (valueText.indexOf(",") > 0)) {
+                   valueText = valueText.replace(/,/g, " or ");
+                   objType = "ipv4list";
+               } else if ((objType == "portrange") && (valueText.indexOf(",") > 0)) {
+                   objType = "portlist"
+               }
+
+               var obj = {
+                           id: $(this).attr('id').trim(),
+                           type: objType,
+                           value: valueText
+               };
+
+               objectsArray.push(obj);
+           });
+        });
+
+        var policy_rules = $('.ruleList .rule').map(function(key, value) {
+           return {
+                    position: ++key,
+                    id: $(this).attr('id').trim(),
+                    sources: getObjectsInRule($('.sources.list', this)),
+                    destinations: getObjectsInRule($('.destinations.list', this)),
+                    action: $('.accessToggler h3:visible').text(),
+                    log:  ($('.loggingToggler img:visible').attr('class').indexOf('icon-check') !== -1) ? "true" : "false"
+                 }
+        }).get();
+
+        var policy = {objects: objectsArray, rules: policy_rules};
+        $('#policy_json').val(JSON.stringify(policy));;
+        $(this).closest('form').submit();
+     });
+
 
 
   }); /* document.ready() */
