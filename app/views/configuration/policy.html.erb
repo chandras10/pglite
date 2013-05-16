@@ -223,12 +223,12 @@
                         <table style="width:100%"><tr>
                             <td style="width:35%">
                                 <ol class="sources dd-list list2 list">
-                                    <li><div class="dd-handle">Any</div></li>
+                                    <li class="dd-item"><div class="dd-handle">Any</div></li>
                                 </ol>                              
                             </td>
                             <td style="width:35%">
                                 <ol class="destinations dd-list list2 list">
-                                    <li><div class="dd-handle">Any</div></li>
+                                    <li class="dd-item"><div class="dd-handle">Any</div></li>
                                 </ol>                              
                             </td>
                             <td style="width:10%; padding-left: 5px">
@@ -262,7 +262,7 @@
                                           src["references"].each do | objRef |
                                              if (objRef == "Any") then 
                                     %>
-                                    <li id="<%= objRef %>"><div class="dd-handle"><%= objRef %></div></li>
+                                    <li class="dd-item" id="<%= objRef %>"><div class="dd-handle"><%= objRef %></div></li>
                                     <%       else  
                                                 obj = @fwObjects[objRef] 
                                                 type = obj["type"]
@@ -291,7 +291,7 @@
                                           dst["references"].each do | objRef | 
                                              if (objRef == "Any") then 
                                     %>
-                                    <li id="<%= objRef %>"><div class="dd-handle"><%= objRef %></div></li>
+                                    <li class="dd-item" id="<%= objRef %>"><div class="dd-handle"><%= objRef %></div></li>
                                     <%       else  
                                                 obj = @fwObjects[objRef]
                                                 type = obj["type"]

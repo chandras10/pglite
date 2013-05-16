@@ -57,7 +57,6 @@ class ConfigurationController < ApplicationController
 
             sourceArray << { "neg" => src.attributes["neg"].downcase,  "references" => objArray }
         end
-        sourceArray << {"references" => ["Any"]} if (sourceArray.empty?)
 
         destArray = Array.new
         rule.elements.each("Dst") do |dst|
@@ -104,10 +103,18 @@ class ConfigurationController < ApplicationController
                          "location" => "Location"
                       }
 
+    #
+    # These data structures, below, are used to format the screen after saving the policy file.
+    # Basically, the saved policy is redisplayed...
+    #
     @fwObjects = Hash.new
     @fwRules = Array.new
 
 
+    #
+    # Assumption: JSON objected POSTed will always have a valid policy structure with at least one rule and
+    # at least one source and destination ("ANY" could be the value, too)
+    #
     policyJSON = JSON.parse params[:policy_json]
 
     policyXML = Builder::XmlMarkup.new(:indent => 1)
@@ -170,14 +177,18 @@ class ConfigurationController < ApplicationController
     # Alert PG to now install the generated policy file
     system("#{Rails.configuration.peregrine_pgguard_alert_cmd}")
 
-    @fwRules << {
-                      "id" => "Rule1",
-                      "position" => "0",
-                      "sources" => [{"references" => ["Any"]}],
-                      "destinations" => [{"references" => ["Any"]}],
-                      "log" => "false",
-                      "action" => "allow"
-   }
+#    @fwRules << {
+#                      "id" => "Rule1",
+#                      "position" => "0",
+#                      "sources" => [{"references" => ["Any"]}],
+#                      "destinations" => [{"references" => ["Any"]}],
+#                      "log" => "false",
+#                      "action" => "allow"
+#   }
+
+    #
+    # redisplay the saved policy file
+    #
     render :edit_policy
   end
 

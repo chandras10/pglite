@@ -258,12 +258,30 @@
                         <table style="width:100%"><tr>
                             <td style="width:35%">
                                 <ol class="sources dd-list list2 list">
-                                    <% fwRule["sources"].each do | src |
-                                          src["references"].each do | objRef |
-                                             if (objRef == "Any") then 
-                                    %>
-                                    <li id="<%= objRef %>"><div class="dd-handle"><%= objRef %></div></li>
-                                    <%       else  
+                                    <% 
+                                       #
+                                       # Just add "ANY", if:
+                                       #      - Source list is empty OR
+                                       #      - One of the sources references "ANY". In this case all other object references are discarded
+                                       #
+
+                                       bNoSources = fwRule["sources"].empty?
+                                       if (!bNoSources) then
+                                          fwRule["sources"].each do |src|
+                                             if (src["references"].include? "obj_ANY") then
+                                                bNoSources = true
+                                                break
+                                             end
+                                          end
+                                       end
+
+                                       if (bNoSources == true) then %>
+                                    <li class="dd-item" id="obj_ANY"><div class="dd-handle">Any</div></li>
+                                    <% else %>
+                                    <!-- Keep the default ANY, hidden if there are sources. This is made visible if all sources are deleted by the user -->
+                                    <li class="dd-item" id="obj_ANY" style="display:none"><div class="dd-handle">Any</div></li>                                    
+                                    <%    fwRule["sources"].each do | src |
+                                             src["references"].each do | objRef |
                                                 obj = @fwObjects[objRef] 
                                                 type = obj["type"]
                                                 value = obj["value"]
@@ -271,7 +289,7 @@
                                     %>
                                     <li class="dd-item" id="<%= objRef %>">
                                         <div class="btn-group dd-handle">
-                                            <button class="btn btn-small"><i class="<%= objLabels[type]["icon"] %>" ></i>  <%= value  %></button>
+                                            <button class="btn btn-small"><i class="<%= objLabels[type]["icon"] if !type.empty? %>" ></i>  <%= value  %></button>
                                             <button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
                                             <ul class="dropdown-menu">
                                                 <li class="dropdown-edit-option"><a><i class="icon-edit"></i> Negate</a></li>
@@ -280,19 +298,37 @@
                                             </ul>
                                         </div>
                                     </li>
-                                    <%       end  %> <!-- Reference is not ANY, its a valid Objectref -->
-                                    <%    end %> <!-- for each Objectref in a given SOURCE -->
-                                    <% end %> <!-- for each source -->
+                                    <%       end %> <!-- for each Objectref in a given SOURCE -->
+                                    <%    end %> <!-- for each source -->
+                                    <% end %> <!-- source list is not empty -->
                                 </ol>                              
                             </td>
                             <td style="width:35%">
                                 <ol class="destinations dd-list list2 list">
-                                    <% fwRule["destinations"].each do | dst | 
-                                          dst["references"].each do | objRef | 
-                                             if (objRef == "Any") then 
-                                    %>
-                                    <li id="<%= objRef %>"><div class="dd-handle"><%= objRef %></div></li>
-                                    <%       else  
+                                    <%
+                                       #
+                                       # Just add "ANY", if:
+                                       #      - Source list is empty OR
+                                       #      - One of the sources references "ANY". In this case all other object references are discarded
+                                       #
+
+                                       bNoDests = fwRule["destinations"].empty?
+                                       if (!bNoDests) then
+                                          fwRule["destinations"].each do |dst|
+                                             if (dst["references"].include? "obj_ANY") then
+                                                bNoDests = true
+                                                break
+                                             end
+                                          end
+                                       end
+
+                                       if (bNoDests == true) then %>
+                                    <li class="dd-item" id="obj_ANY"><div class="dd-handle">Any</div></li>
+                                    <% else %>
+                                    <!-- Keep the default ANY, hidden if there are destinations. This is made visible if all destinations are deleted by the user -->
+                                    <li class="dd-item" id="obj_ANY" style="display:none"><div class="dd-handle">Any</div></li>                                    
+                                    <%    fwRule["destinations"].each do | dst | 
+                                             dst["references"].each do | objRef | 
                                                 obj = @fwObjects[objRef]
                                                 type = obj["type"]
                                                 value = obj["value"]
@@ -309,9 +345,9 @@
                                             </ul>
                                         </div>
                                     </li>
-                                    <%       end  %> <!-- Reference is not ANY, its a valid Objectref -->
-                                    <%    end %> <!-- for each Objectref in a given DESTINATION -->
-                                    <% end %> <!-- for each destination -->
+                                    <%       end %> <!-- for each Objectref in a given DESTINATION -->
+                                    <%    end %> <!-- for each destination -->
+                                    <% end %> <!-- destination list is not empty -->
                                 </ol>                              
                             </td>
                             <td style="width:10%; padding-left: 5px">
@@ -428,6 +464,7 @@
      $('#accordion .new-object-input-fld').live('keyup', function(event) {
         if (event.which == 13) {
            var newItem = $('#itemTemplate').clone(true);
+           newItem.attr('id', 'obj_' + Date.now()); //Set a unique id for the new object
            $('.btn:first', newItem).text($(this).val());
            $(this).val('').hide();
            $(this).parent().find('ol').append(newItem);
@@ -497,7 +534,27 @@
 
      //Delete the selected object
      $('#accordion .objectList .dd-item .dropdown-delete-option').live('click', function() {
-        $(this).closest('.dd-item').remove();
+        var $deleteObj = $(this).closest('.dd-item');
+
+        //Remove the object references in source/destination of the policy rules
+        $('.ruleList .rule').each(function() {
+            $('.sources.list li.dd-item[:visible]', this).each(function() {
+                 if ($(this).attr('id') == $deleteObj.attr('id')) {
+                     $('.dropdown-delete-option', this).click();
+                 }
+            });
+
+            $('.destinations.list li.dd-item[:visible]', this).each(function() {
+                 if ($(this).attr('id') == $deleteObj.attr('id')) {
+                     $('.dropdown-delete-option', this).click();
+                 }
+            });
+
+        });
+
+        <%= @fwObjects.delete('$deleteObj.attr("id")') %>
+        $deleteObj.remove();
+
      });
 
 
@@ -530,18 +587,15 @@
 
      //Handler for "Delete" menu option, for each source/destination object
      $('.rule .dropdown-delete-option').live('click', function() {
-        var objlist = $(this).closest('.list2');
+        var $objlist = $(this).closest('.list2');
 
-        if (objlist.children().size() == 2) {
-           objlist.children().each(function(i) {
-              if ($(this).text() == 'Any') {
-                 $(this).show();
-              } else {
-                 $(this).remove();
-              }
-           });
-        } else {
-           $(this).closest('.dd-item').remove();
+        $(this).closest('.dd-item').remove();
+
+        //
+        // activate the default "Any" if there are no sources/destinations anymore...
+        //
+        if ($('li.dd-item:visible', $objlist).length == 0) {
+            $('li.dd-item', $objlist).show();
         }
 
      }); //Delete object handler
@@ -560,17 +614,24 @@
       */
 
      function getObjectsInRule(list) {
-        return $('li.dd-item', list).map(function(k, v) {
-           var $objRef = $(this).attr("id");
+        return $('li.dd-item:visible', list).map(function(k, v) {
+           var objRef = $(this).attr("id");
            var value = $('button:first', this).text().trim() || "";
+           
+           return { ref: objRef, negation: ((value.indexOf("NOT ") !== -1) ? "true" : "false") }
 
-           return { ref: $objRef, negation: ((value.indexOf("NOT ") !== -1) ? "true" : "false") }
         }).get();
      }
 
      $('form a[type=submit]').click( function() {
 
         var objectsArray = new Array();
+
+        //
+        // Default object - ANY
+        //
+        objectsArray.push({id: 'obj_ANY', type: '', value: 'ANY'});
+
         $('#accordion h3').each(function() {
            var objType = $(this).attr('class').split(" ").shift();
            var $div = $(this).next();
