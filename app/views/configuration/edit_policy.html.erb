@@ -46,9 +46,12 @@
         box-sizing: inherit; -moz-box-sizing: inherit;
      }
 
-     #accordion .dd-handle:hover { border: 1px solid #ccc; color: #2ea8e5; background: #fff; }
+     #accordion .dd-handle:hover { border: 1px solid #ccc; color: #C4DCFB; background: #fff; }
 
      #accordion .ui-accordion-content { padding: 0;}
+
+     .placeholder-highlight  { border: 1px solid #C4DCFB; background: #C4F8FB 50% 50% repeat-x; color: #363636; }
+
 
      .dd-item { font-size: 11px; text-align: left;}
 
@@ -223,12 +226,12 @@
                         <table style="width:100%"><tr>
                             <td style="width:35%">
                                 <ol class="sources dd-list list2 list">
-                                    <li><div class="dd-handle">Any</div></li>
+                                    <li class="dd-item" id="obj_ANY"><div class="dd-handle">Any</div></li>
                                 </ol>                              
                             </td>
                             <td style="width:35%">
                                 <ol class="destinations dd-list list2 list">
-                                    <li><div class="dd-handle">Any</div></li>
+                                    <li class="dd-item" id="obj_ANY"><div class="dd-handle">Any</div></li>
                                 </ol>                              
                             </td>
                             <td style="width:10%; padding-left: 5px">
@@ -244,7 +247,7 @@
                                 </div>                                  
                             </td>
                             <td>
-                                <span class="icon32 icon-color icon-trash" onclick="removePolicyRule(1)"></span>
+                                <span class="icon32 icon-color icon-trash"></span>
                             </td>                             
                         </tr></table>
                     </div>
@@ -392,18 +395,20 @@
 
   $(document).ready(function () {
      $('#splitterContainer').layout();
-     $("#accordion").accordion({icons: null, heightStyle: "content"});
+     $('#accordion').accordion({icons: null});
+     $('#accordion').accordion( "option", "autoHeight", false );
 
    $('.objectList').sortable({
-        connectWith: ".list2",
+        connectWith: '.list2',
         tolerance: 'pointer',
-        placeholder: "ui-state-highlight",
+        placeholder: 'placeholder-highlight', //"ui-state-highlight",
         stop: function(event, ui) {
                $('#splitterContainer').find('#tmp').remove();
         },
         start: function(event, ui) {
             $('#splitterContainer').append("<ul id='tmp'></ul>");
             $('#splitterContainer').find('#tmp').append(ui.item);
+            ui.placeholder.height(ui.item.height());
         }
      }).disableSelection();
 
@@ -465,8 +470,11 @@
         if (event.which == 13) {
            var newItem = $('#itemTemplate').clone(true);
            newItem.attr('id', 'obj_' + Date.now()); //Set a unique id for the new object
-           $('.btn:first', newItem).text($(this).val());
+           $('.btn:first', newItem).append(" " + $(this).val());
+
+           //Clear the edit field and hide it
            $(this).val('').hide();
+
            $(this).parent().find('ol').append(newItem);
            newItem.show();
            $('.list').disableSelection();
@@ -497,7 +505,7 @@
      $('#valueEditor').live('keyup', oldObject, function(event) {
         if (event.which == 13) {
            var newItem = $('#itemTemplate').clone(true);
-           $('.btn:first', newItem).text($(this).val());
+           $('.btn:first', newItem).append(" " + $(this).val());
            oldObject.text = $(this).val();
            $(this).replaceWith(newItem);
            newItem.show();
@@ -513,7 +521,7 @@
      $('#valueEditor').live('blur', oldObject, function(event) {
         var item = $(this).parent();
         var newItem = $('#itemTemplate').clone(true);
-        $('.btn:first', newItem).text(oldObject.text);
+        $('.btn:first', newItem).append(" " + oldObject.text);
         $(this).val('').hide();
         item.replaceWith(newItem);
         newItem.show();
@@ -565,13 +573,10 @@
 
      $('#newRuleBtn').click(function() {
         var newRule = $('#newRuleTemplate').clone(true);
-        newRule.removeAttr('id');
-        newRule.attr('display', 'block');
+        newRule.attr('id', 'Rule_' + Date.now());
 
         //Insert the new rule as the first one, just after the HEADER row
         $('.ruleList').prepend(newRule);
-        newRule.sortable({connectWith: '.objectList', });
-        $('.ruleList').sortable('refresh');
 
         newRule.show();
 
@@ -600,14 +605,28 @@
 
      }); //Delete object handler
 
-     $(".accessToggler").live('click', function() {
+     $('.accessToggler').live('click', function() {
         $(this).find('h3').toggle();
      });
 
-     $(".loggingToggler").live('click', function() {
+     $('.loggingToggler').live('click', function() {
         $(this).find('img').toggle();
      });
 
+     $('.rule .icon-trash').live('click', function() {
+
+        var $deleteRule = $(this).closest('.rule');
+        <%= @fwRules.delete('$deleteRule.attr("id")') %>
+        $deleteRule.remove();
+
+        /*
+         * There should be at least one rule in the policy. 
+         * if after deletion, there is none then add the default rule
+         */
+        if ($('.ruleList .rule').length == 0) {
+            $('#newRuleBtn').click();
+        }
+     });
 
      /*
       * Parse the HTML page and create the policy JSON
