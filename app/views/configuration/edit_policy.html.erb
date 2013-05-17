@@ -143,6 +143,8 @@
         <h2><i class="icon-info-sign"></i> Policy Editor</h2>
         <form class="pull-right" action="/policy" method="POST">
             <fieldset>
+                <!-- HACK -->
+                <input type="hidden" id="new_rule" name="new_rule" value="" />
                 <input type="hidden" id="policy_json" name="policy_json" value="" />
                 <a class="btn btn-primary" id="newRuleBtn" 
                     title="Creates a new rule and adds it as the topmost one." data-rel="tooltip"><i class="icon-chevron-right icon-white"></i> New Rule</a>
@@ -393,6 +395,9 @@
 
   <script type="text/javascript">
 
+  //Decide when to save the document
+  var bDirty = false;
+
   $(document).ready(function () {
      $('#splitterContainer').layout();
      $('#accordion').accordion({icons: null});
@@ -401,32 +406,20 @@
    $('.objectList').sortable({
         connectWith: '.list2',
         tolerance: 'pointer',
-        placeholder: 'placeholder-highlight', //"ui-state-highlight",
-        stop: function(event, ui) {
-               $('#splitterContainer').find('#tmp').remove();
-        },
+        placeholder: 'placeholder-highlight',
+        appendTo: 'body',
+        helper: 'clone',
         start: function(event, ui) {
-            $('#splitterContainer').append("<ul id='tmp'></ul>");
-            $('#splitterContainer').find('#tmp').append(ui.item);
             ui.placeholder.height(ui.item.height());
         }
      }).disableSelection();
-
-     /* OLD CODE
-     $('.objectList').sortable({
-        connectWith: ".list2",
-        tolerance: 'pointer',
-     }).disableSelection();
-  */
   
 
      $('.list').disableSelection();
-     //Left Pane - ObjectList
-  
+
+     //Left Pane - ObjectList  
      $('.objectList').bind('sortstop', function(event, ui) {
         var idx = $('.list2').children().index($(ui.item[0]))-1;
-        if (idx < 0) { idx = 2; }
-
         var elm = $(ui.item[0]).clone(true),
             list = $('.list2').children(':eq('+idx+')');
 
@@ -451,6 +444,7 @@
         list.after(elm);
         $(this).sortable('cancel');
 
+        bDirty = true;
      });
 
      //Adding new objects
@@ -478,6 +472,8 @@
            $(this).parent().find('ol').append(newItem);
            newItem.show();
            $('.list').disableSelection();
+
+           bDirty = true;
         }
      });
 
@@ -512,6 +508,7 @@
            $('.list').disableSelection();
 
            editMode = "";
+           bDirty = true;
         }
      });
 
@@ -560,8 +557,9 @@
 
         });
 
-        <%= @fwObjects.delete('$deleteObj.attr("id")') %>
         $deleteObj.remove();
+
+        bDirty = true;
 
      });
 
@@ -569,16 +567,21 @@
      //Policy Rules (right side pane)
      //$('.rules' ).sortable({ items: '> div:not(.ruleHeader)'}).disableSelection();
      $('.ruleList' ).sortable().disableSelection();
-     $( ".rule .list" ).sortable({ containment: 'parent'}).disableSelection(); //Prevent drag-n-drop from one rule to another
+     $( ".rule .list2" ).sortable({ containment: 'parent'}).disableSelection(); //Prevent drag-n-drop from one rule to another
 
      $('#newRuleBtn').click(function() {
-        var newRule = $('#newRuleTemplate').clone(true);
+/*        var newRule = $('#newRuleTemplate').clone(true);
         newRule.attr('id', 'Rule_' + Date.now());
 
         //Insert the new rule as the first one, just after the HEADER row
         $('.ruleList').prepend(newRule);
 
-        newRule.show();
+        newRule.show();*/
+
+        //HACK!!!!!
+        $('#new_rule').val('y');
+        bDirty = true;
+        $('form a[type=submit]').click();
 
      });
 
@@ -587,7 +590,15 @@
         var item = $(this).closest('.btn-group');
         var html = $('.btn:first', item).html();
         var text = $('.btn:first', item).text();
-        $('.btn:first', item).html(html.replace(text, ' <b>NOT</b> '+text));
+
+        if (text.indexOf("NOT ") >= 0) {
+            $('.btn:first > b', item).remove();
+        } else {
+            $('.btn:first', item).html(html.replace(text, ' <b>NOT</b> ' + text));
+        }
+
+        bDirty = true;
+
      });
 
      //Handler for "Delete" menu option, for each source/destination object
@@ -603,14 +614,18 @@
             $('li.dd-item', $objlist).show();
         }
 
+        bDirty = true;
+
      }); //Delete object handler
 
      $('.accessToggler').live('click', function() {
         $(this).find('h3').toggle();
+        bDirty = true;
      });
 
      $('.loggingToggler').live('click', function() {
         $(this).find('img').toggle();
+        bDirty = true;
      });
 
      $('.rule .icon-trash').live('click', function() {
@@ -626,6 +641,8 @@
         if ($('.ruleList .rule').length == 0) {
             $('#newRuleBtn').click();
         }
+
+        bDirty = true;
      });
 
      /*
@@ -643,6 +660,19 @@
      }
 
      $('form a[type=submit]').click( function() {
+
+        //
+        // Save only if the user has changed something
+        //
+        if (bDirty == false) {
+           return;
+        } else {
+           bDirty = false; //reset
+        }
+
+        /*
+         * Save the modified policy...
+         */
 
         var objectsArray = new Array();
 
@@ -680,8 +710,8 @@
                     id: $(this).attr('id').trim(),
                     sources: getObjectsInRule($('.sources.list', this)),
                     destinations: getObjectsInRule($('.destinations.list', this)),
-                    action: $('.accessToggler h3:visible').text(),
-                    log:  ($('.loggingToggler img:visible').attr('class').indexOf('icon-check') !== -1) ? "true" : "false"
+                    action: $('.accessToggler h3:visible', this).html(),
+                    log:  ($('.loggingToggler img:visible', this).attr('class').indexOf('icon-check') !== -1) ? "true" : "false"
                  }
         }).get();
 

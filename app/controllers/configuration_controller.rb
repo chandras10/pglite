@@ -18,8 +18,8 @@ class ConfigurationController < ApplicationController
         @fwRules << {
                       "id" => "Rule1",
                       "position" => "0",
-                      "sources" => [{"references" => ["Any"]}],
-                      "destinations" => [{"references" => ["Any"]}],
+                      "sources" => [],
+                      "destinations" => [],
                       "log" => "false",
                       "action" => "allow"
         }
@@ -138,6 +138,7 @@ class ConfigurationController < ApplicationController
        
        policyXML.Policy do
           policyJSON["rules"].each do |rule|
+             logger.debug("ACTION = #{rule['action']}")
              sourceArray = Array.new
              destArray = Array.new
 
@@ -161,30 +162,58 @@ class ConfigurationController < ApplicationController
                       "position" => rule["position"],
                       "sources" => sourceArray,
                       "destinations" => destArray,
-                      "log" => rule["log"],
-                      "action" => rule["action"]
+                      "log" => rule["log"].downcase,
+                      "action" => rule["action"].downcase
              }
 
           end
        end
     end
 
-    #file = File.new(Rails.configuration.peregrine_policyfile, "w")
-    file = File.new("/tmp/chandra.xml", "w")
+    #
+    # HACK - Just to get the new rule addition working for now.
+    #
+    if (params[:new_rule] == "y") then
+       @fwRules.unshift({
+                      "id" => "Rule" + (1000 + Random.rand(100)).to_s,
+                      "position" => "0",
+                      "sources" => [],
+                      "destinations" => [],
+                      "log" => "false",
+                      "action" => "allow"
+        })
+        render :edit_policy
+        return
+
+    end
+
+    #
+    # Before saving, rotate the files. Keep at least N versions of the file backed up.
+    # N - could be defined in a config file
+    #
+    numOfBackups = 3
+    savedfilename = Rails.configuration.peregrine_policyfile
+    for i in (1..(numOfBackups-1))
+       version = numOfBackups - i
+       if (File.exists?(savedfilename+".#{version-1}")) then
+           File.rename(savedfilename+".#{version-1}", savedfilename+".#{version}")
+       end
+    end
+    #
+    # Rename current policy as version "0"
+    #
+    if (File.exists?(savedfilename)) then
+       File.rename(savedfilename, savedfilename+".0")
+    end
+    
+
+    file = File.new(Rails.configuration.peregrine_policyfile, "w")
     file.write(policyXML.target!)
     file.close
 
     # Alert PG to now install the generated policy file
     system("#{Rails.configuration.peregrine_pgguard_alert_cmd}")
 
-#    @fwRules << {
-#                      "id" => "Rule1",
-#                      "position" => "0",
-#                      "sources" => [{"references" => ["Any"]}],
-#                      "destinations" => [{"references" => ["Any"]}],
-#                      "log" => "false",
-#                      "action" => "allow"
-#   }
 
     #
     # redisplay the saved policy file
