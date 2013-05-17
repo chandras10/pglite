@@ -267,7 +267,8 @@
                                        #
                                        # Just add "ANY", if:
                                        #      - Source list is empty OR
-                                       #      - One of the sources references "ANY". In this case all other object references are discarded
+                                       #      - One of the sources references "ANY". In this case all other object references are discarded OR
+                                       #      - All the source references refer to non-existent objects (should happen only if someone manually edited the file in a wrong way)
                                        #
 
                                        bNoSources = fwRule["sources"].empty?
@@ -280,21 +281,30 @@
                                           end
                                        end
 
-                                       if (bNoSources == true) then %>
-                                    <li class="dd-item" id="obj_ANY"><div class="dd-handle">Any</div></li>
-                                    <% else %>
+                                       if (bNoSources == false) then 
+                                          bNoSources = true # reset the flag and set it to TRUE when you find a true reference (object exists)
+                                    %>
                                     <!-- Keep the default ANY, hidden if there are sources. This is made visible if all sources are deleted by the user -->
                                     <li class="dd-item" id="obj_ANY" style="display:none"><div class="dd-handle">Any</div></li>                                    
                                     <%    fwRule["sources"].each do | src |
                                              src["references"].each do | objRef |
                                                 obj = @fwObjects[objRef] 
+                                                if (obj.nil?) then
+                                                    #
+                                                    # If the object reference does not have a corresponding object, then skip adding it the rule.
+                                                    # This condition should happen only if someone has edited the policy outside the UI editor and made
+                                                    # a mistake. This IF condition is present to avoid a page crash.
+                                                    next
+                                                else
+                                                    bNoSources = false # even if one reference exists, then dont add ANY
+                                                end
                                                 type = obj["type"]
                                                 value = obj["value"]
                                                 value = "<b>NOT</b> " + value if (src["neg"] == "true")
                                     %>
                                     <li class="dd-item" id="<%= objRef %>">
                                         <div class="btn-group dd-handle">
-                                            <button class="btn btn-small"><i class="<%= objLabels[type]["icon"] if !type.empty? %>" ></i>  <%= value  %></button>
+                                            <button class="btn btn-small"><i class="<%= objLabels[type]["icon"] if (!type.empty? && !objLabels[type].nil?) %>" ></i>  <%= value  %></button>
                                             <button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
                                             <ul class="dropdown-menu">
                                                 <li class="dropdown-edit-option"><a><i class="icon-edit"></i> Negate</a></li>
@@ -306,6 +316,10 @@
                                     <%       end %> <!-- for each Objectref in a given SOURCE -->
                                     <%    end %> <!-- for each source -->
                                     <% end %> <!-- source list is not empty -->
+                                    <% if (bNoSources == true) then  %>
+                                    <li class="dd-item" id="obj_ANY"><div class="dd-handle">Any</div></li>
+                                    <% end %>
+
                                 </ol>                              
                             </td>
                             <td style="width:35%">
@@ -327,14 +341,23 @@
                                           end
                                        end
 
-                                       if (bNoDests == true) then %>
-                                    <li class="dd-item" id="obj_ANY"><div class="dd-handle">Any</div></li>
-                                    <% else %>
+                                       if (bNoDests == false) then 
+                                          bNoDests = true # reset the flag and set it to TRUE when you find a true reference (object exists)
+                                    %>
                                     <!-- Keep the default ANY, hidden if there are destinations. This is made visible if all destinations are deleted by the user -->
                                     <li class="dd-item" id="obj_ANY" style="display:none"><div class="dd-handle">Any</div></li>                                    
                                     <%    fwRule["destinations"].each do | dst | 
                                              dst["references"].each do | objRef | 
                                                 obj = @fwObjects[objRef]
+                                                if (obj.nil?) then
+                                                    #
+                                                    # If the object reference does not have a corresponding object, then skip adding it the rule.
+                                                    # This condition should happen only if someone has edited the policy outside the UI editor and made
+                                                    # a mistake. This IF condition is present to avoid a page crash.
+                                                    next
+                                                else
+                                                    bNoDests = false # even if one reference exists, then dont add ANY
+                                                end
                                                 type = obj["type"]
                                                 value = obj["value"]
                                                 value = "<b>NOT</b> " + value if (dst["neg"] == "true")
@@ -353,6 +376,9 @@
                                     <%       end %> <!-- for each Objectref in a given DESTINATION -->
                                     <%    end %> <!-- for each destination -->
                                     <% end %> <!-- destination list is not empty -->
+                                    <% if (bNoDests == true) then  %>
+                                    <li class="dd-item" id="obj_ANY"><div class="dd-handle">Any</div></li>
+                                    <% end %>
                                 </ol>                              
                             </td>
                             <td style="width:10%; padding-left: 5px">
