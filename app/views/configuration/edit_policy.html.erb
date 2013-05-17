@@ -399,11 +399,13 @@
   var bDirty = false;
 
   $(document).ready(function () {
+
+    //notifications
      $('#splitterContainer').layout();
      $('#accordion').accordion({icons: null});
      $('#accordion').accordion( "option", "autoHeight", false );
 
-   $('.objectList').sortable({
+     $('.objectList').sortable({
         connectWith: '.list2',
         tolerance: 'pointer',
         placeholder: 'placeholder-highlight',
