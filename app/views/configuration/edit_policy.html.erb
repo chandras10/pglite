@@ -290,7 +290,7 @@
                                                 obj = @fwObjects[objRef] 
                                                 type = obj["type"]
                                                 value = obj["value"]
-                                                value = "NOT " + value if (src["neg"] == "true")
+                                                value = "<b>NOT</b> " + value if (src["neg"] == "true")
                                     %>
                                     <li class="dd-item" id="<%= objRef %>">
                                         <div class="btn-group dd-handle">
@@ -337,11 +337,11 @@
                                                 obj = @fwObjects[objRef]
                                                 type = obj["type"]
                                                 value = obj["value"]
-                                                value = "NOT " + value if (dst["neg"] == "true")
+                                                value = "<b>NOT</b> " + value if (dst["neg"] == "true")
                                     %>
                                     <li class="dd-item" id="<%= objRef %>">
                                         <div class="btn-group dd-handle">
-                                            <button class="btn btn-small"><i class="<%= objLabels[type]["icon"] %>" ></i>  <%= value  %></button>
+                                            <button class="btn btn-small"><i class="<%= objLabels[type]["icon"] %>" ></i><%= value  %></button>
                                             <button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
                                             <ul class="dropdown-menu">
                                                 <li class="dropdown-edit-option"><a><i class="icon-edit"></i> Negate</a></li>
