@@ -96,7 +96,7 @@ class ConfigurationController < ApplicationController
                          "ipv4subnet" => "IPv4Subnet",
                          "ipv4" => "IPv4",
                          "deviceclass" => "DeviceClass",
-                         "devicetype" => "Device Type",
+                         "devicetype" => "DeviceType",
                          "osversion" => "OSVersion",
                          "username" => "UserName",
                          "userrole" => "UserRole",
