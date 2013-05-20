@@ -507,18 +507,19 @@
 
 
      //EDITing existing objects
-     var oldObject = { text: ""},
+     var oldObject = { id: "", text: ""},
          editMode="";
 
      //When EDIT menu option is clicked, replace the object with an Edit field, filled in with existing value.
      $('#accordion .objectList .dd-item .dropdown-edit-option').live('click', oldObject, function() {
-        var item = $(this).parent().parent();
-        var parent = item.parent();
+        var item = $(this).closest('.dd-item');
         var value = $('.btn:first', item).text();
         var width = $('.btn:first', item).width();
+        oldObject.id = item.attr('id') || 'obj_' + Date.now(); //If there is no id, then generate one
+        oldObject.text = value;
+
         $('.list').enableSelection();
         item.replaceWith('<input id="valueEditor" value='+value+' class="dd-handle" type="text">').width(width);
-        oldObject.text = value;
         editMode = "old";
         $('#valueEditor').focus();
      });
@@ -529,6 +530,7 @@
      $('#valueEditor').live('keyup', oldObject, function(event) {
         if (event.which == 13) {
            var newItem = $('#itemTemplate').clone(true);
+           newItem.attr('id', oldObject.id); 
            $('.btn:first', newItem).append(" " + $(this).val());
            oldObject.text = $(this).val();
            $(this).replaceWith(newItem);
@@ -622,7 +624,7 @@
         if (text.indexOf("NOT ") >= 0) {
             $('.btn:first > b', item).remove();
         } else {
-            $('.btn:first', item).html(html.replace(text, ' <b>NOT</b> ' + text));
+            $('.btn:first', item).html(html.replace(text, ' NOT ' + text));
         }
 
         bDirty = true;
@@ -707,7 +709,7 @@
         //
         // Default object - ANY
         //
-        objectsArray.push({id: 'obj_ANY', type: '', value: 'ANY'});
+        objectsArray.push({id: 'obj_ANY', type: 'any', value: 'ANY'});
 
         $('#accordion h3').each(function() {
            var objType = $(this).attr('class').split(" ").shift();
