@@ -434,7 +434,7 @@
 
     //notifications
      $('#splitterContainer').layout();
-     $('#accordion').accordion({ autoHeight: false });
+     $('#accordion').accordion({ icons: null, autoHeight: false });
 
      $('.objectList').sortable({
         connectWith: '.list2',
@@ -551,11 +551,12 @@
       * the changes and bring back the old object in full glory.
       */
      $('#valueEditor').live('blur', oldObject, function(event) {
-        var item = $(this).parent();
+        //var item = $(this).parent();
         var newItem = $('#itemTemplate').clone(true);
+        newItem.attr('id', oldObject.id); 
         $('.btn:first', newItem).append(" " + oldObject.text);
         $(this).val('').hide();
-        item.replaceWith(newItem);
+        $(this).replaceWith(newItem);
         newItem.show();
 
         editMode = "";
