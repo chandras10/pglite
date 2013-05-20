@@ -70,7 +70,6 @@ class ConfigurationController < ApplicationController
 
             destArray << { "neg" => dst.attributes["neg"].downcase,  "references" => objArray }
         end
-        destArray << {"references" => ["Any"]} if (destArray.empty?)
 
         @fwRules << {
                       "id" => rule.attributes["id"],
