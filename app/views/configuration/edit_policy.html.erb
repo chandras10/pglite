@@ -551,7 +551,6 @@
       * the changes and bring back the old object in full glory.
       */
      $('#valueEditor').live('blur', oldObject, function(event) {
-        //var item = $(this).parent();
         var newItem = $('#itemTemplate').clone(true);
         newItem.attr('id', oldObject.id); 
         $('.btn:first', newItem).append(" " + oldObject.text);
