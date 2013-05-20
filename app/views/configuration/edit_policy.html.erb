@@ -169,7 +169,7 @@
             </li>          
             <!-- template for a new accordion list item ends -->
 
-            <div id="accordion">
+            <div id="accordion" style="height=100%">
                 <% objLabels.keys.sort.each do | type | %>
                 <h3 class="<%=type%>"><%= objLabels[type]["label"] %></h3>
                 <div>
@@ -428,8 +428,8 @@
 
     //notifications
      $('#splitterContainer').layout();
-     $('#accordion').accordion({icons: null});
-     $('#accordion').accordion( "option", "autoHeight", false );
+     //$('#accordion').accordion({icons: null});
+     $('#accordion').accordion({ heightStyle: "fill" });
 
      $('.objectList').sortable({
         connectWith: '.list2',
