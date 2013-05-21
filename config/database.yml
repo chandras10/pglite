@@ -1,7 +1,7 @@
 development:
   adapter: postgresql
   database: pglitedb
-  host: localhost
+  host: 192.168.10.77
   username: pguser
   password: pguser
 

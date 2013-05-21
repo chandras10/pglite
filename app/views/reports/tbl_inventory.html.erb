@@ -47,7 +47,7 @@
                         <td><%= deviceinfo.devicetype %></td>
                         <td><%= deviceinfo.operatingsystem %></td>
                         <td><%= deviceinfo.osversion %></td>
-                        <td><%= sprintf("%.2f", deviceinfo.dvi) if !deviceinfo.dvi.empty? %></td>
+                        <td><%= deviceinfo.dvi %></td>
                         <td><%= if ((deviceinfo.weight & 0x00FF0000) > 0) then "Yes" else "No" end %></td>
                         <td><%= deviceinfo.updated_at %></td>
                      </tr>
