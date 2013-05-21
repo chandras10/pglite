@@ -699,11 +699,13 @@
         //
         // Save only if the user has changed something
         //
-        if (bDirty == false) {
+/*        if (bDirty == false) {
            return;
         } else {
            bDirty = false; //reset
-        }
+        } Lets worry about optimization later... */
+
+        bDirty = false;
 
         /*
          * Save the modified policy...

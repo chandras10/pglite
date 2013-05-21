@@ -348,8 +348,8 @@ margin-right:-2px;
 margin-left:-2px;
 }
 .brand{
-font-family: 'Transformers', cursive, Arial, serif; 
-font-size: 53px !important;
+font-family: Arial, 'Transformers', cursive, serif; 
+font-size: 20pt !important;
 letter-spacing:2px;
 text-shadow:1px 1px 5px rgba(0, 0, 0, 0.5);
 /*width:166px;*/
@@ -395,8 +395,6 @@ margin-left:10px;
 border-radius:0 0 10px 10px;
 -webkit-border-radius:0 0 10px 10px;
 -moz-border-radius:0 0 10px 10px;
-padding-top:5px; 
-padding-bottom:5px; 
 }
 div.dataTables_length select {
 width: 50px;
