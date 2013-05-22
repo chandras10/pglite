@@ -1,0 +1,720 @@
+<%
+    #
+    # Following labels are used in the left pane in a User readable form.
+    # NOTE: 
+    #   - ipv4list will be created when user provides a ipv4 value in the form of IP1, IP2, IP3 ... (comma separated values)
+    #   - Similarly portlist is created when user provides a csv value for "port"
+    #
+    objLabels = {
+               "deviceclass" => {"label" => "Device Class", "icon" => "icon-tags" },
+               "devicetype"  => {"label" => "Device Type",  "icon" => "icon-hdd" },
+               "osname"      => {"label" => "Operating System", "icon" => "icon-flag" },
+               "userrole"    => {"label" => "User Role", "icon" => "icon-star" },
+               "username"    => {"label" => "User", "icon" => "icon-user" },
+               "location"    => {"label" => "Location", "icon" => "icon-globe" },
+               "ipv4"        => {"label" => "IP Address", "icon" => "icon-tasks"  }, 
+               "ipv4subnet"  => {"label" => "IP Subnet", "icon" => "icon-calendar" },
+               "port"        => {"label" => "Service", "icon" => "icon-screenshot" },
+               "portrange"   => {"label" => "Service Group", "icon" => "icon-certificate" }
+    }
+
+    #
+    # identifier of the wildcard = "ANY". This was copied from the policy DTD for object type="Any"
+    #
+    objANY = "any_obj"
+
+%>
+
+  <style type="text/css">
+     html, body {
+        /*background: #666;*/
+        padding:  0;
+        margin:   0;
+        overflow: auto; /* when page gets too small */
+     }
+
+     body {
+        padding-bottom: 40px;
+        font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+        /*font-size: 62.5%;*/ 
+     }
+     .sidebar-nav {
+        padding: 9px 0;
+     }
+
+
+     .placeholder-highlight  { border: 1px solid #C4DCFB; background: #C4F8FB 50% 50% repeat-x; color: #363636; }
+
+     .rule { padding-bottom: 10px; }
+
+
+     #splitterContainer {
+        /*background: #999;*/
+        height:   95%;
+        width:    90%;
+        margin:   5px auto;
+        padding: 0 0px;
+        width:    100%;
+        overflow: auto;
+     }
+     .pane {
+        display:  none; /* will appear when layout inits */
+     }
+
+     #policyRuleHeader
+     {
+        font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+        margin: 0px;
+        text-align: center;
+        border-collapse: collapse;
+        width: 100%;
+     }
+
+     #policyRuleHeader th
+     {
+        font-size: 13px;
+        font-weight: bold;
+        padding: 0px;
+        background: #b9c9fe;
+        border-top: 4px solid #aabcfe;
+        border-bottom: 1px solid #fff;
+        color: #039;
+     }
+
+     /* NEW */
+     li { list-style: none;}
+
+     #accordion .ui-accordion-content { padding: 0;}
+     #accordion input {
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+     } 
+
+     .objBtn {
+        border-radius: 15px 15px 15px 15px;
+        background: none repeat scroll 0 0 #E9EAEE;
+        border: 2px solid #FFFFFF;
+        box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.5);
+        margin:5px;
+        padding: 5px 2px 2px 2px;
+        text-align: center;
+        /*text-indent: 5px;*/
+        width: 80%;
+        font-size: 10pt;
+        overflow: hidden;
+     } 
+
+     .rule {
+        min-height: 1em;
+        width: 100%;
+        border:1px solid black;
+        overflow-x:auto;
+        overflow-y:hidden;
+        white-space: nowrap;        
+     }    
+
+     .rule .handle {
+        vertical-align: middle;
+        display: inline-block;
+     }
+
+     .rule .references {
+        vertical-align: top;
+        display: inline-block;
+        border: 1px solid black;
+        font-size: 10pt;
+        overflow: auto;
+        width: 35%;
+     }
+
+     .rule .option {
+        vertical-align: middle;
+        display: inline-block;
+        text-align: right;
+        padding: 0px 5px 0px 5px;
+        /*font-size: 0pt;*/
+     }
+
+  </style>
+
+<div class="contextMenu" id="objectMenu" style="display:none">
+    <ul>
+        <li id="edit">Edit</li>
+        <li id="delete">Delete</li>
+    </ul>
+</div>
+<div class="contextMenu" id="objectRefMenu" style="display:none">
+    <ul>
+        <li id="qualify">Negate</li>
+        <li id="delete">Delete</li>
+    </ul>
+</div>
+
+<div class="box span10" style="height:80%; width:80%; overflow:hidden;">
+    <div class="box-header well">
+        <h2><i class="icon-info-sign"></i> Policy Editor</h2>
+        <form class="pull-right" action="/policy" method="POST">
+            <fieldset>
+                <input type="hidden" id="policy_json" name="policy_json" value="" />
+                <a class="btn btn-primary" id="newRuleBtn" 
+                    title="Creates a new rule and adds it as the topmost one." data-rel="tooltip"><i class="icon-chevron-right icon-white"></i> New Rule</a>
+                <a class="btn" id="saveBtn" type="submit"><i class="icon-download-alt"></i> Save</a>
+            </fieldset>
+        </form>
+    </div>
+
+    <div id="splitterContainer" class="box-content">
+        <div id="leftPane" class="pane ui-layout-west">
+            <!-- template for a new accordion list item -->
+            <li id="objectTemplate" class="object" style="display:none"><div class="objBtn"></div></li>          
+
+            <div id="accordion">
+                <% objLabels.keys.sort.each do | type | %>
+                <h3 class="<%=type%>"><%= objLabels[type]["label"] %></h3>
+                <div>
+                    <!-- controls for creating new object values -->
+                    <button class="btn btn-mini btn-primary new-object-btn"><i class="icon-plus icon-white"></i></button>
+                    <input type="text" class="new-object-input-fld" style="display:none">
+
+                    <ul class="objects">
+                    <% if !(@fwObjects.nil? || @fwObjects.empty?) then
+                          @fwObjects.keys.each do | key |
+                             if (@fwObjects[key]["type"] == type) then 
+                    %>
+                        <li class="object"><div id="<%= key %>" class="objBtn"><%= @fwObjects[key]["value"]  %></div></li>
+                    <%       end #Objectref type matches current type %>
+                    <%    end   #for each Objectref %>
+                    <% end  #are there any objects for this type? %>
+                    </ul>                
+                </div>
+                <% end # for each objectLabel... %>
+
+            </div> <!-- accordion -->
+        </div> <!-- leftPane -->
+
+        <div id="rightPane" class="pane ui-layout-center">
+            <div class="ruleHeader">
+                <table id="policyRuleHeader" style="width:100%"><tr style="text-align: center">
+                    <th><!--handle--></th>
+                    <th> Source </th>
+                    <th> Destination </th>
+                    <th> Action </th>
+                    <th> Logging </th>
+                    <th> Delete </th>                             
+                </tr></table>
+            </div> 
+            <!-- Rules start from here -->
+
+            <!-- rule template (hidden) used for creating new rules -->
+            <div class="rule" id="ruleTemplate" style="display:none"><table style="width:100%"><tr>
+                <td class="handle"><i class="icon32 icon-pin"></i></td>
+                <td class="sources references">
+                    <li class="object"><div id="<%= objANY %>" class="objBtn">Any</div></li>
+                </td>
+                <td class="destinations references">
+                    <li class="object"><div id="<%= objANY %>" class="objBtn">Any</div></li>
+                </td>
+                <td class="option accessToggler">
+                    <h3 style="display:none">ALLOW</h3>
+                    <h3>DENY</h3>
+                </td>
+                <td class="option loggingToggler">
+                    <img class="icon32 icon-blue icon-check" style="display:none"></img>
+                    <img class="icon32 icon-blue icon-remove"></img>
+                </td>
+                <td class="option"><span class="icon32 icon-color icon-close"></span></td>
+            </tr></table></div>
+            <!-- end of rule template -->
+
+            <div id="ruleList" class="ui-layout-center">
+                <% @fwRules.each do | fwRule | %>
+                <div class="rule" id="<%= fwRule["id"] %>"><table style="width:100%"><tr>
+                    <td class="handle"><i class="icon32 icon-pin"></i></td>
+                    <td class="sources references">
+                        <% 
+                            #
+                            # Just add "ANY", if:
+                            #      - Source list is empty OR
+                            #      - One of the sources references "ANY". In this case all other object references are discarded OR
+                            #      - All the source references refer to non-existent objects (should happen only if someone manually edited the file in a wrong way)
+                            #
+
+                            bNoSources = fwRule["sources"].empty?
+                            if (!bNoSources) then
+                                fwRule["sources"].each do |src|
+                                    if (src["references"].include? objANY) then
+                                        bNoSources = true
+                                        break
+                                    end
+                                end
+                            end
+
+                            if (bNoSources == false) then 
+                                bNoSources = true # reset the flag and set it to TRUE when you find a true reference (object exists)
+                        %>
+                        <!-- Keep the default ANY, hidden if there are sources. This is made visible if all sources are deleted by the user -->
+                            <li class="object" style="display:none"><div  id="<%= objANY %>" class="objBtn">Any</div></li>                                    
+                        <%      fwRule["sources"].each do | src |
+                                   src["references"].each do | objRef |
+                                      obj = @fwObjects[objRef] 
+                                      if (obj.nil?) then
+                                          #
+                                          # If the object reference does not have a corresponding object, then skip adding it the rule.
+                                          # This condition should happen only if someone has edited the policy outside the UI editor and made
+                                          # a mistake. This IF condition is present to avoid a page crash.
+                                          next
+                                      else
+                                          bNoSources = false # even if one reference exists, then dont add ANY
+                                      end
+                                      type = obj["type"]
+                        %>
+                            <li class="object">
+                                <div id="<%= objRef %>" class="objBtn">
+                                    <% if (src["neg"] == "true") then %><b> NOT </b><% end %>
+                                    <%= obj["value"] %>
+                                </div>
+                            </li>
+                        <%         end #for each Objectref in a given SOURCE %>
+                        <%      end #for each source %>
+                        <%  end #source list is not empty %>
+                        <% if (bNoSources == true) then  %>
+                            <li class="object"><div id="<%= objANY %>" class="objBtn">Any</div></li>
+                        <% end %>                            
+                    </td>
+                    <td class="destinations references">
+                        <% 
+                            #
+                            # Just add "ANY", if:
+                            #      - Destination list is empty OR
+                            #      - One of the destination references "ANY". In this case all other object references are discarded OR
+                            #      - All the destination references refer to non-existent objects (should happen only if someone manually edited the file in a wrong way)
+                            #
+
+                            bNoDests = fwRule["destinations"].empty?
+                            if (!bNoSources) then
+                                fwRule["destinations"].each do |dest|
+                                    if (dest["references"].include? objANY) then
+                                        bNoDests = true
+                                        break
+                                    end
+                                end
+                            end
+
+                            if (bNoDests == false) then 
+                                bNoDests = true # reset the flag and set it to TRUE when you find a true reference (object exists)
+                        %>
+                        <!-- Keep the default ANY, hidden if there are sources. This is made visible if all sources are deleted by the user -->
+                            <li class="object" style="display:none"><div  id="<%= objANY %>" class="objBtn">Any</div></li>                                    
+                        <%      fwRule["destinations"].each do | dest |
+                                   dest["references"].each do | objRef |
+                                      obj = @fwObjects[objRef] 
+                                      if (obj.nil?) then
+                                          #
+                                          # If the object reference does not have a corresponding object, then skip adding it the rule.
+                                          # This condition should happen only if someone has edited the policy outside the UI editor and made
+                                          # a mistake. This IF condition is present to avoid a page crash.
+                                          next
+                                      else
+                                          bNoDests = false # even if one reference exists, then dont add ANY
+                                      end
+                                      type = obj["type"]
+                        %>
+                            <li class="object">
+                                <div id="<%= objRef %>" class="objBtn">
+                                    <% if (dest["neg"] == "true") then %><b> NOT </b><% end %>
+                                    <%= obj["value"] %>
+                                </div>
+                            </li>
+                        <%         end #for each Objectref in a given DESTINATION %>
+                        <%      end #for each destination %>
+                        <%  end #destination list is not empty %>
+                        <% if (bNoDests == true) then  %>
+                            <li class="object"><div id="<%= objANY %>" class="objBtn">Any</div></li>
+                        <% end %>                            
+                    </td>
+                    <td class="option accessToggler">
+                        <% if (fwRule["action"] == "allow") then %>
+                            <h3>ALLOW</h3>
+                            <h3 style="display:none">DENY</h3>
+                        <% else %>
+                            <h3 style="display:none">ALLOW</h3>
+                            <h3>DENY</h3>
+                        <% end %>                        
+                    </td>
+                    <td class="option loggingToggler">
+                        <% if (fwRule["log"] == "true") then %>
+                            <img class="icon32 icon-blue icon-check" ></img>
+                            <img class="icon32 icon-blue icon-remove" style="display:none"></img>
+                        <% else %>
+                            <img class="icon32 icon-blue icon-check" style="display:none"></img>
+                            <img class="icon32 icon-blue icon-remove"></img>
+                        <% end %>                        
+                    </td>
+                    <td class="option"><span class="icon32 icon-color icon-close"></span></td>
+                </tr></table></div>
+                <% end #for each rule in the policy... %>
+            </div> <!-- ruleList -->
+        </div> <!-- rightPane -->
+    </div> <!-- SplitterContainer -->
+</div> <!-- main box -->
+
+
+  <script type="text/javascript">
+
+  //Decide when to save the document
+  var bDirty = false;
+  var oldObject = { id: "", text: ""};
+
+  $(document).ready(function () {
+
+     $('#accordion .object').draggable({
+         helper: 'clone',
+         connectToSortable: '.references'
+     });
+
+     $('#ruleList').sortable({
+         items: '.rule',
+         handle: '.handle',
+         placeholder: 'ph',
+         helper: 'original',
+         dropOnEmpty: true,
+         forcePlaceholderSize: true,
+         forceHelperSize: false,
+         receive: function (evt, ui) {
+            initReferences();
+            initObjects();
+         }
+     }).disableSelection();
+
+     //If an object is dropped in the policy rule, then hide the default "ANY" object on that rule.
+     function hideANYobject(o) {
+        var anyObj = $(o).find('#' + '<%= objANY %>');
+        if (typeof anyObj == 'undefined') return;
+        anyObj.parent().hide();
+     }
+
+     function initReferences() {
+         $('#ruleList .references').sortable('destroy');
+         $('#ruleList .references').sortable({
+            items: '.object',
+            placeholder: 'ph',
+            helper: 'original',
+            dropOnEmpty: true,
+            forcePlaceholderSize: true,
+            forceHelperSize: false,
+            receive: function (evt, ui) { bDirty = true; hideANYobject(evt.target); },
+         }).disableSelection();
+     }
+
+
+     function initObjects() {
+         $('#accordion .object').draggable('destroy');
+         $('#accordion .object').draggable({
+            helper: 'clone',
+            connectToSortable: '.rule .references'
+         });
+     }
+
+     //ContextMenu for objects on the left pane
+     $('.objBtn').live('mousedown', function(e, ui) {
+         //e.which: 1 == left mouse btn and 3 == right mouse button
+         if (e.which != 3) { return; } //Handle only right-button clicks...
+         
+         //Is this object part of a policy rule? If so, it is just a object reference.
+         var isObjRef = ($(this).closest('.rule').length == 0) ? false : true;
+         
+         if (isObjRef == true) {
+            $(this).contextMenu('objectRefMenu', {
+                bindings: {
+                   'qualify': function(o) { if ($(o).attr('id') != '<%= objANY %>' ) return qualifyObject(o) } ,
+                   'delete': function (o) { if ($(o).attr('id') != '<%= objANY %>' ) return deleteObject(o, isObjRef) }
+                },
+
+                itemStyle: {
+                   fontSize: '13px',
+                   fontFamily: 'Trebuchet MS, Arial',
+                   padding: '2px 2px 2px 10px',
+                   cursor: 'pointer',
+                   shadow: true
+                }
+            });
+
+         } else { //It is a policy object
+            $(this).contextMenu('objectMenu', {
+                bindings: {
+                   'edit': function(o) { return editObject(o, oldObject) } ,
+                   'delete': function (o) { return deleteObject(o, isObjRef) }
+                },
+
+                itemStyle: {
+                   fontSize: '13px',
+                   fontFamily: 'Trebuchet MS, Arial',
+                   padding: '2px 2px 2px 10px',
+                   cursor: 'pointer',
+                   shadow: true
+                }
+            });
+         }            
+
+     });
+
+     //Adding new objects
+     /* 
+      * Unhide the edit field to let the user enter the text for the new object being created.
+      */
+     $('#accordion .new-object-btn').live('click', function() {
+         $('#accordion .new-object-input-fld').show().focus();
+     });
+
+     $('#accordion .new-object-input-fld').live('blur', function(event) {
+         $('#accordion .new-object-input-fld').hide();
+     });
+
+     $('#accordion .new-object-input-fld').live('keyup', function(event) {
+         if (event.which != 13) return; //Handle only ENTER key
+       
+         //If there is no text, then force the user to enter it since it is mandatory to have a value for the object
+         if ($(this).val().length == 0) return;
+
+         var newItem = $('#objectTemplate').clone(true),
+             newObj = $('.objBtn', newItem);
+         newItem.removeAttr('id'); //remove #objectTemplate from the clone.
+         newObj.attr('id', 'obj_' + Date.now()); //Set a unique id for the new object
+         newObj.append(" " + $(this).val());
+
+         //Clear the edit field and hide it
+         $(this).val('').hide();
+
+         $(this).parent().find('.objects').append(newItem);
+         newItem.show();
+         bDirty = true;
+
+         initObjects();
+
+     });
+
+     //EDITing existing objects
+
+     //When EDIT menu option is clicked, replace the object with an Edit field, filled in with existing value.
+     function editObject(t, oldObject) {
+         var obj = $(t);
+         oldObject.id = obj.attr('id') || 'obj_' + Date.now(); //If there is no id, then generate one
+         oldObject.text = obj.text();
+
+         obj.replaceWith('<input id="valueEditor" value='+obj.text()+'  type="text">').width(obj.width());
+         $('#valueEditor').focus();
+     }
+
+     /* Save the edited value by adding a new object. This new object also deletes the Edit field, which was
+      * transient to let the user modify the object's value.
+      */
+     $('#valueEditor').live('keyup', oldObject, function(event) {
+        if (event.which != 13) return; //handle only ENTER key
+
+        //If there is no text, then force the user to enter it since it is mandatory to have a value for the object
+        if ($(this).val().length == 0) return;
+
+        var newItem = $('#objectTemplate').clone(true),
+            newObj = $('.objBtn', newItem);
+        newItem.removeAttr('id'); //remove #objectTemplate from the clone.
+        newObj.attr('id', oldObject.id); 
+        newObj.append(" " + $(this).val());
+        oldObject.text = $(this).val();
+        $(this).parent().replaceWith(newItem);
+        newItem.show();
+
+        bDirty = true;
+
+        initObjects();
+
+     });
+
+     /* In case the user clicks anywhere on the screen after entering the edit mode (without hitting the ENTER key), then discard the 
+      * the changes and bring back the old object in full glory.
+      */
+     $('#valueEditor').live('blur', oldObject, function(event) {
+        var newItem = $('#objectTemplate').clone(true),
+            newObj = $('.objBtn', newItem);
+        newItem.removeAttr('id'); //remove #objectTemplate from the clone.
+        newObj.attr('id', oldObject.id); 
+        newObj.append(" " + oldObject.text);
+        $(this).val('').hide();
+        $(this).replaceWith(newItem);
+        newItem.show();
+     });
+
+     //Delete the selected object
+     function deleteObject(o, isObjRef) {
+         var obj = $(o);
+         bDirty = true; 
+
+         if (isObjRef == true) {
+
+            //"ANY" default reference should be added, if there are no more references.
+            if (obj.closest('.references').find('li:visible').length == 1) {
+                obj.closest('.references').find('li').show(); //making the hidden "ANY" visible.
+            }
+            //This is just a reference in a policy rule, so just delete this instance.
+            obj.closest('li').remove();
+
+            return;
+         }
+
+         //Remove the object references in source/destination of the policy rules
+         var objID = obj.attr('id');
+         $('#ruleList .rule').each(function() {
+             $('.references .objBtn', this).each(function() {
+                console.log("obj = " + objID + " ID = " + $(this).attr('id') );
+                 if ($(this).attr('id') == objID) {
+                     deleteObject($(this), true);
+                 }
+             });
+         });
+
+         obj.closest('li').remove();
+     }
+
+     // This function will add boolean operators - NOT, greater/lesser than etc on the selected object
+     function qualifyObject(o) {
+         var obj = $(o);
+
+         if (obj.find('b').text().indexOf('NOT') > 0) {
+            obj.find('b').remove();
+         } else {
+            obj.prepend('<b style="font-size:1.25em"> NOT </b>');
+         }
+         
+         bDirty = true;
+     }
+
+     //Functions for manipulating policy rules and its objects.
+
+     //ALLOW/DENY the policy rule...
+     $('.accessToggler').live('click', function() {
+         $(this).find('h3').toggle();
+         bDirty = true;
+     });
+
+     //Should the policy rule be logged when passed or not.
+     $('.loggingToggler').live('click', function() {
+         $(this).find('img').toggle();
+         bDirty = true;
+     });
+
+     //Delete the selected policy rule
+     $('.rule .icon-close').live('click', function() {
+         var $deleteRule = $(this).closest('.rule');
+         $deleteRule.remove();
+
+         /*
+          * There should be at least one rule in the policy. 
+          * if after deletion, there is none then add the default rule
+          */
+         if ($('#ruleList .rule').length == 0) {
+            $('#newRuleBtn').click();
+         }
+
+         bDirty = true;
+     });
+
+     //Add a new rule
+     $('#newRuleBtn').click(function() {
+         var newRule = $('#ruleTemplate').clone(true);
+         newRule.attr('id', 'Rule_' + Date.now());
+         //Insert the new rule as the first one, just after the HEADER row
+         $('#ruleList').prepend(newRule);
+         newRule.show();
+
+         initReferences();
+
+         bDirty = true;
+     });
+
+
+     //Save the policy
+     /*
+      * Parse the HTML page and create the policy JSON
+      */
+
+     function getObjectsInRule(list) {
+         return $('li.object > .objBtn:visible', list).map(function(k, v) {
+            var objRef = $(this).attr("id");
+            var value = $(this).text().trim() || "";
+           
+            return { ref: objRef, negation: ((value.indexOf("NOT ") !== -1) ? "true" : "false") }
+
+         }).get();
+     }
+
+     $('form a[type=submit]').click( function() {
+
+        //
+        // Save only if the user has changed something
+        //
+        if (bDirty == false) {
+           alert('Nothing to save');
+           return;
+        }
+
+        bDirty = false;
+
+        /*
+         * Save the modified policy...
+         */
+
+        var objectsArray = new Array();
+        objectsArray.push({id: '<%= objANY %>', type: 'any', value: 'ANY'}); //Default object - ANY
+
+        $('#accordion h3').each(function() {
+           var objCategory = $(this).attr('class').split(" ").shift();
+           var $div = $(this).next();
+
+           $('.object > .objBtn', $div).each(function() {
+               var valueText = $(this).text().trim() || "";
+               if ((objCategory == "ipv4") && (valueText.indexOf(",") > 0)) {
+                   alert("ipv4 = " + valueText);
+                   valueText = valueText.replace(/,/g, " or ");
+                   objType = "ipv4list";
+               } else if ((objCategory == "portrange") && (valueText.indexOf(",") > 0)) {
+                   objType = "portlist"
+               } else {
+                   objType = objCategory
+               }
+
+
+               var obj = {
+                           id: $(this).attr('id').trim(),
+                           type: objType,
+                           value: valueText
+               };
+
+               objectsArray.push(obj);
+           });
+        });
+
+        var policy_rules = $('#ruleList .rule').map(function(key, value) {
+           return {
+                    position: ++key,
+                    id: $(this).attr('id').trim(),
+                    sources: getObjectsInRule($('.sources.references', this)),
+                    destinations: getObjectsInRule($('.destinations.references', this)),
+                    action: $('.accessToggler h3:visible', this).html(),
+                    log:  ($('.loggingToggler img:visible', this).attr('class').indexOf('icon-check') !== -1) ? "true" : "false"
+                 }
+        }).get();
+
+        var policy = {objects: objectsArray, rules: policy_rules};
+        $('#policy_json').val(JSON.stringify(policy));;
+        $(this).closest('form').submit();
+     });
+
+
+     //Initialization routines
+     initObjects();
+     initReferences();
+     $('#splitterContainer').layout();
+     $('#accordion').accordion({ icons: null, autoHeight: false });
+
+
+  }); /* document.ready() */
+
+  </script>

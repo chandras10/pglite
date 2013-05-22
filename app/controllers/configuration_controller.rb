@@ -6,6 +6,85 @@ class ConfigurationController < ApplicationController
 
   include REXML
 
+  def new_policy
+    default_ANY_ANY_rule = {
+                      "id" => "Rule1",
+                      "position" => "0",
+                      "sources" => [],
+                      "destinations" => [],
+                      "log" => "false",
+                      "action" => "allow"
+    }
+
+    @fwObjects = Hash.new
+    @fwRules = Array.new
+
+    if (!File.exist?(Rails.configuration.peregrine_policyfile)) then
+        #
+        # Missing policy file?
+        #
+        @fwRules << default_ANY_ANY_rule
+        return;
+    end
+
+    file = File.new(Rails.configuration.peregrine_policyfile)
+    xmldoc = Document.new(file)
+
+    xmldoc.elements.each("FWPolicy/FWObject") do |obj|
+        objType = obj.attributes["type"].downcase
+
+        if (objType == "portlist") then 
+           objType = "portrange"
+        elsif (objType == "ipv4list") then
+           objType = "ipv4"
+           obj.attributes["value"] = obj.attributes["value"].gsub(" or ", ", ")
+        end
+
+        @fwObjects[obj.attributes["id"]] = {"type" => objType, "value" => obj.attributes["value"]}
+    end
+
+    xmldoc.elements.each("FWPolicy/Policy/PolicyRule") do |rule|
+        sourceArray = Array.new
+        rule.elements.each("Src") do |src|
+            #
+            # Each source node could have one or more Object references
+            #
+            objArray = Array.new
+            src.elements.each("ObjectRef") do |objRef|
+                 objArray << objRef.attributes["ref"]
+            end
+
+            sourceArray << { "neg" => src.attributes["neg"].downcase,  "references" => objArray }
+        end
+
+        destArray = Array.new
+        rule.elements.each("Dst") do |dst|
+            #
+            # Each Destination node could have one or more Object references
+            #
+            objArray = Array.new
+            dst.elements.each("ObjectRef") do |objRef|
+                 objArray << objRef.attributes["ref"]
+            end
+
+            destArray << { "neg" => dst.attributes["neg"].downcase,  "references" => objArray }
+        end
+
+        @fwRules << {
+                      "id" => rule.attributes["id"],
+                      "position" => rule.attributes["position"],
+                      "sources" => sourceArray,
+                      "destinations" => destArray,
+                      "log" => rule.attributes["log"].downcase,
+                      "action" => rule.attributes["action"].downcase
+        }
+    end
+
+    if (@fwRules.empty?) then
+        @fwRules << default_ANY_ANY_rule
+    end
+  end
+
   def edit_policy
 
     @fwObjects = Hash.new
