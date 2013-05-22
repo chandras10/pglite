@@ -97,10 +97,16 @@
         margin:5px;
         padding: 5px 2px 2px 2px;
         text-align: center;
-        /*text-indent: 5px;*/
+        display: block;
         width: 80%;
         font-size: 10pt;
         overflow: hidden;
+     } 
+     .objBtn > i {
+        padding-right: 2%;
+        float: left;
+        border-right-style:dotted;
+        border-right-width: 1px;
      } 
 
      .rule {
@@ -138,25 +144,25 @@
 
 <div class="contextMenu" id="objectMenu" style="display:none">
     <ul>
-        <li id="edit">Edit</li>
-        <li id="delete">Delete</li>
+        <li id="edit"><i class="icon icon-color icon-edit"></i> Edit</li>
+        <li id="delete"><i class="icon icon-color icon-close"></i> Delete</li>
     </ul>
 </div>
 <div class="contextMenu" id="objectRefMenu" style="display:none">
     <ul>
-        <li id="qualify">Negate</li>
-        <li id="delete">Delete</li>
+        <li id="qualify"><i class="icon icon-color icon-cancel"></i> Negate</li>
+        <li id="delete"><i class="icon icon-color icon-close"></i> Delete</li>
     </ul>
 </div>
 
 <div class="box span10" style="height:80%; width:80%; overflow:hidden;">
     <div class="box-header well">
-        <h2><i class="icon-info-sign"></i> Policy Editor</h2>
+        <h2><i class="icon-edit"></i> Policy Editor</h2>
         <form class="pull-right" action="/policy" method="POST">
             <fieldset>
                 <input type="hidden" id="policy_json" name="policy_json" value="" />
                 <a class="btn btn-primary" id="newRuleBtn" 
-                    title="Creates a new rule and adds it as the topmost one." data-rel="tooltip"><i class="icon-chevron-right icon-white"></i> New Rule</a>
+                    title="Creates a new rule and adds it as the topmost one." data-rel="tooltip"><i class="icon-pencil icon-white"></i> New Rule</a>
                 <a class="btn" id="saveBtn" type="submit"><i class="icon-download-alt"></i> Save</a>
             </fieldset>
         </form>
@@ -165,7 +171,7 @@
     <div id="splitterContainer" class="box-content">
         <div id="leftPane" class="pane ui-layout-west">
             <!-- template for a new accordion list item -->
-            <li id="objectTemplate" class="object" style="display:none"><div class="objBtn"></div></li>          
+            <li id="objectTemplate" class="object" style="display:none"><div class="objBtn"><i class="icon-star-empty"></i></div></li>          
 
             <div id="accordion">
                 <% objLabels.keys.sort.each do | type | %>
@@ -180,7 +186,7 @@
                           @fwObjects.keys.each do | key |
                              if (@fwObjects[key]["type"] == type) then 
                     %>
-                        <li class="object"><div id="<%= key %>" class="objBtn"><%= @fwObjects[key]["value"]  %></div></li>
+                        <li class="object"><div id="<%= key %>" class="objBtn"><i class="<%= objLabels[type]["icon"] %>" ></i> <%= @fwObjects[key]["value"]  %></div></li>
                     <%       end #Objectref type matches current type %>
                     <%    end   #for each Objectref %>
                     <% end  #are there any objects for this type? %>
@@ -266,9 +272,12 @@
                                           bNoSources = false # even if one reference exists, then dont add ANY
                                       end
                                       type = obj["type"]
+                                      iconClass = ""; iconClass = objLabels[type]["icon"] if !objLabels[type].nil?
+                                      iconTitle = ""; iconTitle = objLabels[type]["label"] if !objLabels[type].nil?
                         %>
                             <li class="object">
                                 <div id="<%= objRef %>" class="objBtn">
+                                    <i class="<%= iconClass %>" title="<%= iconTitle %>"></i>
                                     <% if (src["neg"] == "true") then %><b> NOT </b><% end %>
                                     <%= obj["value"] %>
                                 </div>
@@ -317,9 +326,12 @@
                                           bNoDests = false # even if one reference exists, then dont add ANY
                                       end
                                       type = obj["type"]
+                                      iconClass = ""; iconClass = objLabels[type]["icon"] if !objLabels[type].nil?
+                                      iconTitle = ""; iconTitle = objLabels[type]["label"] if !objLabels[type].nil?                                    
                         %>
                             <li class="object">
                                 <div id="<%= objRef %>" class="objBtn">
+                                    <i class="<%= iconClass %>" title="<%= iconTitle %>"></i>
                                     <% if (dest["neg"] == "true") then %><b> NOT </b><% end %>
                                     <%= obj["value"] %>
                                 </div>
@@ -500,7 +512,7 @@
          oldObject.id = obj.attr('id') || 'obj_' + Date.now(); //If there is no id, then generate one
          oldObject.text = obj.text();
 
-         obj.replaceWith('<input id="valueEditor" value='+obj.text()+'  type="text">').width(obj.width());
+         obj.replaceWith('<input id="valueEditor" class="success" value="'+obj.text()+'"  type="text">').width(obj.width());
          $('#valueEditor').focus();
      }
 
@@ -521,6 +533,19 @@
         oldObject.text = $(this).val();
         $(this).parent().replaceWith(newItem);
         newItem.show();
+
+         //Modify the object references in source/destination of the policy rules
+         var objID = oldObject.id;
+         var re = /(<i.*>\s*)(.*)/; //retain the icon, while replacing the label
+         $('#ruleList .rule').each(function() {
+             $('.references .objBtn', this).each(function() {
+                 if ($(this).attr('id') == objID) {
+                    var replaceText = $(this).html().replace(re, "$1"+oldObject.text);
+                    $(this).html(replaceText);
+                 }
+             });
+         });
+
 
         bDirty = true;
 
@@ -563,7 +588,6 @@
          var objID = obj.attr('id');
          $('#ruleList .rule').each(function() {
              $('.references .objBtn', this).each(function() {
-                console.log("obj = " + objID + " ID = " + $(this).attr('id') );
                  if ($(this).attr('id') == objID) {
                      deleteObject($(this), true);
                  }
@@ -651,7 +675,6 @@
         // Save only if the user has changed something
         //
         if (bDirty == false) {
-           alert('Nothing to save');
            return;
         }
 
@@ -671,7 +694,6 @@
            $('.object > .objBtn', $div).each(function() {
                var valueText = $(this).text().trim() || "";
                if ((objCategory == "ipv4") && (valueText.indexOf(",") > 0)) {
-                   alert("ipv4 = " + valueText);
                    valueText = valueText.replace(/,/g, " or ");
                    objType = "ipv4list";
                } else if ((objCategory == "portrange") && (valueText.indexOf(",") > 0)) {

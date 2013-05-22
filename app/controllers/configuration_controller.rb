@@ -85,85 +85,6 @@ class ConfigurationController < ApplicationController
     end
   end
 
-  def edit_policy
-
-    @fwObjects = Hash.new
-    @fwRules = Array.new
-
-    if (!File.exist?(Rails.configuration.peregrine_policyfile)) then
-        #
-        # Missing policy file?
-        #
-        @fwRules << {
-                      "id" => "Rule1",
-                      "position" => "0",
-                      "sources" => [],
-                      "destinations" => [],
-                      "log" => "false",
-                      "action" => "allow"
-        }
-
-        return;
-
-    end
-
-    file = File.new(Rails.configuration.peregrine_policyfile)
-    xmldoc = Document.new(file)
-
-    xmldoc.elements.each("FWPolicy/FWObject") do |obj|
-        objType = obj.attributes["type"].downcase
-
-        if (objType == "portlist") then 
-           objType = "portrange"
-        elsif (objType == "ipv4list") then
-           objType = "ipv4"
-           obj.attributes["value"] = obj.attributes["value"].gsub(" or ", ", ")
-        end
-
-        @fwObjects[obj.attributes["id"]] = {"type" => objType, "value" => obj.attributes["value"]}
-    end
-
-    xmldoc.elements.each("FWPolicy/Policy/PolicyRule") do |rule|
-        sourceArray = Array.new
-        rule.elements.each("Src") do |src|
-            #
-            # Each source node could have one or more Object references
-            #
-            objArray = Array.new
-            src.elements.each("ObjectRef") do |objRef|
-                 objArray << objRef.attributes["ref"]
-            end
-
-            sourceArray << { "neg" => src.attributes["neg"].downcase,  "references" => objArray }
-        end
-
-        destArray = Array.new
-        rule.elements.each("Dst") do |dst|
-            #
-            # Each Destination node could have one or more Object references
-            #
-            objArray = Array.new
-            dst.elements.each("ObjectRef") do |objRef|
-                 objArray << objRef.attributes["ref"]
-            end
-
-            destArray << { "neg" => dst.attributes["neg"].downcase,  "references" => objArray }
-        end
-
-        @fwRules << {
-                      "id" => rule.attributes["id"],
-                      "position" => rule.attributes["position"],
-                      "sources" => sourceArray,
-                      "destinations" => destArray,
-                      "log" => rule.attributes["log"].downcase,
-                      "action" => rule.attributes["action"].downcase
-        }
-
-
-    end
-
-  end #policy
-
   def save_policy
     objTypeMappings = {
                          "any" => "Any",
@@ -250,23 +171,6 @@ class ConfigurationController < ApplicationController
     end
 
     #
-    # HACK - Just to get the new rule addition working for now.
-    #
-    if (params[:new_rule] == "y") then
-       @fwRules.unshift({
-                      "id" => "Rule" + (1000 + Random.rand(100)).to_s,
-                      "position" => "0",
-                      "sources" => [],
-                      "destinations" => [],
-                      "log" => "false",
-                      "action" => "allow"
-        })
-        render :edit_policy
-        return
-
-    end
-
-    #
     # Before saving, rotate the files. Keep at least N versions of the file backed up.
     # N - could be defined in a config file
     #
@@ -296,7 +200,7 @@ class ConfigurationController < ApplicationController
     #
     # redisplay the saved policy file
     #
-    render :edit_policy
+    render :new_policy
   end
 
 end
