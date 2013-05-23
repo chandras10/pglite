@@ -6,7 +6,7 @@ class ConfigurationController < ApplicationController
 
   include REXML
 
-  def new_policy
+  def edit_policy
     default_ANY_ANY_rule = {
                       "id" => "Rule1",
                       "position" => "0",
@@ -37,7 +37,7 @@ class ConfigurationController < ApplicationController
            objType = "portrange"
         elsif (objType == "ipv4list") then
            objType = "ipv4"
-           obj.attributes["value"] = obj.attributes["value"].gsub(" or ", ", ")
+           obj.attributes["value"] = obj.attributes["value"].gsub(/\s+or\s+/, ", ")
         end
 
         @fwObjects[obj.attributes["id"]] = {"type" => objType, "value" => obj.attributes["value"]}
@@ -83,7 +83,10 @@ class ConfigurationController < ApplicationController
     if (@fwRules.empty?) then
         @fwRules << default_ANY_ANY_rule
     end
-  end
+
+    render :policy
+
+  end # edit_policy routine
 
   def save_policy
     objTypeMappings = {
@@ -127,7 +130,7 @@ class ConfigurationController < ApplicationController
           policyXML.FWObject('id' => obj['id'], 'type' => objTypeMappings[obj['type']], 'value' => obj['value'])
 
           if (obj['type'] == "ipv4list") then
-             obj['value'] = obj['value'].gsub(" or ", ", ")
+             obj['value'] = obj['value'].gsub(/\s+or\s+/, ", ")
              obj['type'] = 'ipv4'
           elsif (obj['type'] == "portlist") then
              obj['type'] = 'portrange'
@@ -200,7 +203,7 @@ class ConfigurationController < ApplicationController
     #
     # redisplay the saved policy file
     #
-    render :new_policy
+    render :policy
   end
 
 end
