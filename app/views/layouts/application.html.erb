@@ -26,6 +26,9 @@
      .sidebar-nav {
             padding: 9px 0;
      }
+ .transparent {
+  background:transparent no-repeat scroll;
+}
   </style>
 
 
@@ -43,7 +46,7 @@
         <div class="top-nav nav-collapse">
           <ul class="nav">
             <li> <%= link_to "http://www.i7nw.com/products/peregrine-lite/", :target => "_blank" do
-                        image_tag("i7logo.png", :class=>"logo",:alt=> "Peregrine Guard Logo")
+                        image_tag("logo20.png", :class=>"logo transparent",:alt=> "Peregrine Guard Logo")
                      end
                  %>
             </li>
@@ -155,7 +158,7 @@
 <%= javascript_include_tag "charisma" %>
 <%= javascript_include_tag "jquery.layout" %>
 <%= javascript_include_tag "jquery.contextmenu.r2.packed" %>
-
+<%= javascript_include_tag "intro.js" %>
 
 <!-- %= debug(params) if Rails.env.development? % -->
 </body>

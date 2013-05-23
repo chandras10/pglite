@@ -153,7 +153,71 @@
         border-collapse: collapse;
      }
 
+     .introjs-tooltip {
+      font-family: Tahoma,"Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-size: 10pt;
+     }
+
   </style>
+
+<script type="text/javascript">
+     function startIntro(){
+        var intro = introJs();
+          intro.setOptions({
+            steps: [
+              {
+                element: '#splitterContainer',
+                intro: "Policy Editor features tour...",
+                position: 'left'
+              },
+              {
+                element: '#accordion',
+                intro: "Source/Destination object list. These could be dragged over to the policy rules on the right. ",
+                position: 'right'
+              },
+              {
+                element: '#'+$('.objBtn:visible').first().attr('id'),
+                intro: "<b>Edit/Delete</b> this object with a right click. Rules having this object will also be updated to reflect the change.",
+                position: 'bottom'
+              },              
+              {
+                element: '#rightPane',
+                intro: "List of all policy rules. Each rule can have more than one source/destination. Default source/destination is ANY.",
+                position: 'left'
+              },
+              {
+                element: '#' + $('.rule:visible').first().attr('id'),
+                intro: " - Drag the pin to move the rule up/down the list. <br>\n\
+                         - Objects from the left pane can be dragged and dropped onto the Source/Destination. \n\
+                           Right click on the dropped objects to delete them. <br>\n\
+                           You can also set <b> NOT </b> to mean any object that does not equal to this object's value.<br>\n\
+                         - Action is a toggle changing between <b> ALLOW </b> and <b> DENY </b>. <br>\n\
+                         - You can log the instance when this rule matches for auditing/troubleshooting. <br>\n\
+                         - Delete the rule, if not needed. <i> There has to be at least one rule in the policy </i>",
+                position: 'bottom'
+              },              
+              {
+                element: '#newRuleBtn',
+                intro: "Clicking this will add a new <i>default</i> rule to the top of the list. You can then change it to suit your needs.",
+                position: 'bottom'
+              },              
+              {
+                element: '#saveBtn',
+                intro: "Policy will saved and enforced when this button is clicked.",
+                position: 'left'
+              }, 
+              {
+                element: '#leftPane',
+                intro: "Click on this vertical column (aka splitter) to hide the objects list.",
+                position: 'right'
+              },
+             
+            ]
+          });
+
+          intro.start();
+      }
+</script>
 
 <div class="contextMenu" id="objectMenu" style="display:none">
     <ul>
@@ -177,6 +241,8 @@
                 <a class="btn btn-primary" id="newRuleBtn" 
                     title="Creates a new rule and adds it as the topmost one." data-rel="tooltip"><i class="icon-pencil icon-white"></i> New Rule</a>
                 <a class="btn" id="saveBtn" type="submit"><i class="icon-download-alt"></i> Save</a>
+                <div style="width:20px; height:auto;display:inline-block;"></div>
+                <a class="btn btn-primary"><i class="icon-info-sign icon-white" onclick="startIntro()"></i></a>
             </fieldset>
         </form>
     </div>
@@ -191,7 +257,7 @@
                 <h3 class="<%=type%>"><%= objLabels[type]["label"] %></h3>
                 <div class="objectList">
                     <!-- controls for creating new object values -->
-                    <button class="btn btn-mini btn-primary new-object-btn"><i class="icon-plus icon-white"></i></button>
+                    <button class="btn btn-mini btn-primary new-object-btn"><i class="icon-plus icon-white"></i> </button>
                     <input type="text" class="new-object-input-fld" style="display:none">
 
                     <ul class="objects">
@@ -199,7 +265,9 @@
                           @fwObjects.keys.each do | key |
                              if (@fwObjects[key]["type"] == type) then 
                     %>
-                        <li class="object"><div id="<%= key %>" class="objBtn"><i class="<%= objLabels[type]["icon"] %>" ></i> <%= @fwObjects[key]["value"]  %></div></li>
+                        <li class="object"><div id="<%= key %>" class="objBtn">
+                            <i class="<%= objLabels[type]["icon"] %>" ></i> <%= @fwObjects[key]["value"]  %>
+                        </div></li>
                     <%       end #Objectref type matches current type %>
                     <%    end   #for each Objectref %>
                     <% end  #are there any objects for this type? %>
@@ -783,13 +851,11 @@
         $('#policyForm').submit();
      }
 
-
      //Initialization routines
      initObjects();
      initReferences();
      $('#splitterContainer').layout();
      $('#accordion').accordion({ icons: null, autoHeight: false });
-
 
   }); /* document.ready() */
 
