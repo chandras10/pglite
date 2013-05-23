@@ -24,6 +24,7 @@ class ConfigurationController < ApplicationController
         # Missing policy file?
         #
         @fwRules << default_ANY_ANY_rule
+        render :policy
         return;
     end
 
