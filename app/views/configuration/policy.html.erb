@@ -227,10 +227,10 @@
             <div class="rule" id="ruleTemplate" style="display:none"><table style="width:100%"><tr>
                 <td class="handle"><i class="icon32 icon-pin"></i></td>
                 <td class="sources references">
-                    <li class="object"><div id="<%= objANY %>" class="objBtn">Any</div></li>
+                    <li class="object"><div id="<%= objANY %>" class="objBtn">any</div></li>
                 </td>
                 <td class="destinations references">
-                    <li class="object"><div id="<%= objANY %>" class="objBtn">Any</div></li>
+                    <li class="object"><div id="<%= objANY %>" class="objBtn">any</div></li>
                 </td>
                 <td class="option accessToggler">
                     <h3 style="display:none">ALLOW</h3>
@@ -271,7 +271,7 @@
                                 bNoSources = true # reset the flag and set it to TRUE when you find a true reference (object exists)
                         %>
                         <!-- Keep the default ANY, hidden if there are sources. This is made visible if all sources are deleted by the user -->
-                            <li class="object" style="display:none"><div  id="<%= objANY %>" class="objBtn">Any</div></li>                                    
+                            <li class="object" style="display:none"><div  id="<%= objANY %>" class="objBtn">any</div></li>                                    
                         <%      fwRule["sources"].each do | src |
                                    src["references"].each do | objRef |
                                       obj = @fwObjects[objRef] 
@@ -325,7 +325,7 @@
                                 bNoDests = true # reset the flag and set it to TRUE when you find a true reference (object exists)
                         %>
                         <!-- Keep the default ANY, hidden if there are sources. This is made visible if all sources are deleted by the user -->
-                            <li class="object" style="display:none"><div  id="<%= objANY %>" class="objBtn">Any</div></li>                                    
+                            <li class="object" style="display:none"><div  id="<%= objANY %>" class="objBtn">any</div></li>                                    
                         <%      fwRule["destinations"].each do | dest |
                                    dest["references"].each do | objRef |
                                       obj = @fwObjects[objRef] 

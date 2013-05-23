@@ -90,7 +90,7 @@ class ConfigurationController < ApplicationController
 
   def save_policy
     objTypeMappings = {
-                         "any" => "Any",
+                         "any" => "any",
                          "osname" => "OSName",
                          "portrange" => "PortRange",
                          "portlist" => "PortList",
