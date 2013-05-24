@@ -158,10 +158,12 @@
      .introjs-tooltip {
       font-family: Tahoma,"Helvetica Neue",Helvetica,Arial,sans-serif;
       font-size: 10pt;
+      max-width: 75%;
      }
 
   </style>
 
+<!-- context menus used for editing/deleting policy objects -->
 <div class="contextMenu" id="objectMenu" style="display:none">
     <ul>
         <li id="edit"><i class="icon icon-color icon-edit"></i> Edit</li>
@@ -175,6 +177,7 @@
     </ul>
 </div>
 
+<!-- policy editor page starts here -->
 <div class="box span10" style="height:90%;">
     <div class="box-header well">
         <h2><i class="icon-edit"></i> Policy Editor</h2>
@@ -185,7 +188,8 @@
                     title="Creates a new rule and adds it as the topmost one." data-rel="tooltip"><i class="icon-pencil icon-white"></i> New Rule</a>
                 <a class="btn" id="saveBtn" type="submit"><i class="icon-download-alt"></i> Save</a>
                 <div style="width:20px; height:auto;display:inline-block;"></div>
-                <a class="btn btn-primary" id='helpBtn'><i class="icon-info-sign icon-white"></i></a>
+                <a class="btn btn-primary" id='helpBtn' 
+                    title="Policy Editor Help" data-rel="tooltip"> <i class="icon-info-sign icon-white"></i></a>
             </fieldset>
         </form>
     </div>
@@ -238,10 +242,10 @@
             <div class="rule" id="ruleTemplate" style="display:none"><table style="width:100%"><tr>
                 <td class="handle"><i class="icon32 icon-pin"></i></td>
                 <td class="sources references">
-                    <li class="object"><div id="<%= objANY %>" class="objBtn">any</div></li>
+                    <li class="object"><div id="<%= objANY %>" class="objBtn">ANY</div></li>
                 </td>
                 <td class="destinations references">
-                    <li class="object"><div id="<%= objANY %>" class="objBtn">any</div></li>
+                    <li class="object"><div id="<%= objANY %>" class="objBtn">ANY</div></li>
                 </td>
                 <td class="option accessToggler">
                     <h3 style="display:none">ALLOW</h3>
@@ -260,112 +264,14 @@
                 <div class="rule" id="<%= fwRule["id"] %>"><table><tr>
                     <td class="handle"><i class="icon32 icon-pin"></i></td>
                     <td class="sources references">
-                        <% 
-                            #
-                            # Just add "ANY", if:
-                            #      - Source list is empty OR
-                            #      - One of the sources references "ANY". In this case all other object references are discarded OR
-                            #      - All the source references refer to non-existent objects (should happen only if someone manually edited the file in a wrong way)
-                            #
-
-                            bNoSources = fwRule["sources"].empty?
-                            if (!bNoSources) then
-                                fwRule["sources"].each do |src|
-                                    if (src["references"].include? objANY) then
-                                        bNoSources = true
-                                        break
-                                    end
-                                end
-                            end
-
-                            if (bNoSources == false) then 
-                                bNoSources = true # reset the flag and set it to TRUE when you find a true reference (object exists)
-                        %>
-                        <!-- Keep the default ANY, hidden if there are sources. This is made visible if all sources are deleted by the user -->
-                            <li class="object" style="display:none"><div  id="<%= objANY %>" class="objBtn">any</div></li>                                    
-                        <%      fwRule["sources"].each do | src |
-                                   src["references"].each do | objRef |
-                                      obj = @fwObjects[objRef] 
-                                      if (obj.nil?) then
-                                          #
-                                          # If the object reference does not have a corresponding object, then skip adding it the rule.
-                                          # This condition should happen only if someone has edited the policy outside the UI editor and made
-                                          # a mistake. This IF condition is present to avoid a page crash.
-                                          next
-                                      else
-                                          bNoSources = false # even if one reference exists, then dont add ANY
-                                      end
-                                      type = obj["type"]
-                                      iconClass = ""; iconClass = objLabels[type]["icon"] if !objLabels[type].nil?
-                                      iconTitle = ""; iconTitle = objLabels[type]["label"] if !objLabels[type].nil?
-                        %>
-                            <li class="object">
-                                <div id="<%= objRef %>" class="objBtn">
-                                    <i class="<%= iconClass %>" title="<%= iconTitle %>"></i>
-                                    <% if (src["neg"] == "true") then %><b> NOT </b><% end %>
-                                    <%= obj["value"] %>
-                                </div>
-                            </li>
-                        <%         end #for each Objectref in a given SOURCE %>
-                        <%      end #for each source %>
-                        <%  end #source list is not empty %>
-                        <% if (bNoSources == true) then  %>
-                            <li class="object"><div id="<%= objANY %>" class="objBtn">any</div></li>
-                        <% end %>                            
+                        <%= render :partial => 'policy_rule_obj_refs', :locals  => { :objLabels => objLabels, :objANY => objANY,
+                                                                                     :fwRule => fwRule, :targetList => "sources"
+                                                                                   } %>
                     </td>
                     <td class="destinations references">
-                        <% 
-                            #
-                            # Just add "ANY", if:
-                            #      - Destination list is empty OR
-                            #      - One of the destination references "ANY". In this case all other object references are discarded OR
-                            #      - All the destination references refer to non-existent objects (should happen only if someone manually edited the file in a wrong way)
-                            #
-
-                            bNoDests = fwRule["destinations"].empty?
-                            if (!bNoSources) then
-                                fwRule["destinations"].each do |dest|
-                                    if (dest["references"].include? objANY) then
-                                        bNoDests = true
-                                        break
-                                    end
-                                end
-                            end
-
-                            if (bNoDests == false) then 
-                                bNoDests = true # reset the flag and set it to TRUE when you find a true reference (object exists)
-                        %>
-                        <!-- Keep the default ANY, hidden if there are sources. This is made visible if all sources are deleted by the user -->
-                            <li class="object" style="display:none"><div  id="<%= objANY %>" class="objBtn">any</div></li>                                    
-                        <%      fwRule["destinations"].each do | dest |
-                                   dest["references"].each do | objRef |
-                                      obj = @fwObjects[objRef] 
-                                      if (obj.nil?) then
-                                          #
-                                          # If the object reference does not have a corresponding object, then skip adding it the rule.
-                                          # This condition should happen only if someone has edited the policy outside the UI editor and made
-                                          # a mistake. This IF condition is present to avoid a page crash.
-                                          next
-                                      else
-                                          bNoDests = false # even if one reference exists, then dont add ANY
-                                      end
-                                      type = obj["type"]
-                                      iconClass = ""; iconClass = objLabels[type]["icon"] if !objLabels[type].nil?
-                                      iconTitle = ""; iconTitle = objLabels[type]["label"] if !objLabels[type].nil?                                    
-                        %>
-                            <li class="object">
-                                <div id="<%= objRef %>" class="objBtn">
-                                    <i class="<%= iconClass %>" title="<%= iconTitle %>"></i>
-                                    <% if (dest["neg"] == "true") then %><b> NOT </b><% end %>
-                                    <%= obj["value"] %>
-                                </div>
-                            </li>
-                        <%         end #for each Objectref in a given DESTINATION %>
-                        <%      end #for each destination %>
-                        <%  end #destination list is not empty %>
-                        <% if (bNoDests == true) then  %>
-                            <li class="object"><div id="<%= objANY %>" class="objBtn">any</div></li>
-                        <% end %>                            
+                        <%= render :partial => 'policy_rule_obj_refs', :locals  => { :objLabels => objLabels, :objANY => objANY,
+                                                                                     :fwRule => fwRule, :targetList => "destinations"
+                                                                                   } %>
                     </td>
                     <td class="option accessToggler">
                         <% if (fwRule["action"] == "allow") then %>
@@ -464,16 +370,17 @@
          
          if (isObjRef == true) {
             $(this).contextMenu('objectRefMenu', {
+                /* context menus are to be displayed only for non-ANY objects */
                 bindings: {
                    'qualify': function(o) { if ($(o).attr('id') != '<%= objANY %>' ) return qualifyObject(o) } ,
                    'delete': function (o) { if ($(o).attr('id') != '<%= objANY %>' ) return deleteObject(o, isObjRef) }
                 },
 
                 itemStyle: {
-                   fontSize: '13px',
+                   fontSize: '12px',
                    fontFamily: 'Trebuchet MS, Arial',
                    padding: '2px 2px 2px 10px',
-                   cursor: 'pointer',
+                   cursor: 'context-menu',
                    shadow: true
                 }
             });
@@ -486,10 +393,10 @@
                 },
 
                 itemStyle: {
-                   fontSize: '13px',
+                   fontSize: '12px',
                    fontFamily: 'Trebuchet MS, Arial',
                    padding: '2px 2px 2px 10px',
-                   cursor: 'pointer',
+                   cursor: 'context-menu',
                    shadow: true
                 }
             });
@@ -498,6 +405,30 @@
      });
 
      //Adding new objects
+     function newObject(id, elem, parent) {
+        //If there is no text, then force the user to enter it since it is mandatory to have a value for the object
+        if (elem.val().length == 0) return null;
+
+        var newItem = $('#objectTemplate').clone(true),
+            newObj = $('.objBtn', newItem);
+
+        newItem.removeAttr('id'); //remove #objectTemplate from the clone.
+        newObj.append(" " + elem.val());
+
+        if (id == null) {
+           newObj.attr('id', 'obj_' + Date.now()); //Set a unique id for the new object; 
+           parent.append(newItem);
+        } else {
+           newObj.attr('id', id);
+           parent.replaceWith(newItem);
+        }
+        newItem.show(); 
+        initObjects();     
+        bDirty = true;
+
+        return newItem;
+     }
+
      /* 
       * Unhide the edit field to let the user enter the text for the new object being created.
       */
@@ -514,24 +445,10 @@
      $('#accordion .new-object-input-fld').live('keyup', function(event) {
          if (event.which != 13) return; //Handle only ENTER key
        
-         //If there is no text, then force the user to enter it since it is mandatory to have a value for the object
-         if ($(this).val().length == 0) return;
-
-         var newItem = $('#objectTemplate').clone(true),
-             newObj = $('.objBtn', newItem);
-         newItem.removeAttr('id'); //remove #objectTemplate from the clone.
-         newObj.attr('id', 'obj_' + Date.now()); //Set a unique id for the new object
-         newObj.append(" " + $(this).val());
+         if (newObject(null, $(this), $(this).parent().find('.objects')) == null) return;
 
          //Clear the edit field and hide it
          $(this).val('').hide();
-
-         $(this).parent().find('.objects').append(newItem);
-         newItem.show();
-         bDirty = true;
-
-         initObjects();
-
      });
 
      //EDITing existing objects
@@ -560,23 +477,16 @@
 
      }
 
+
      /* Save the edited value by adding a new object. This new object also deletes the Edit field, which was
       * transient to let the user modify the object's value.
       */
      $('#valueEditor').live('keyup', oldObject, function(event) {
         if (event.which != 13) return; //handle only ENTER key
 
-        //If there is no text, then force the user to enter it since it is mandatory to have a value for the object
-        if ($(this).val().length == 0) return;
+        if (newObject(oldObject.id, $(this), $(this).parent()) == null) return;
 
-        var newItem = $('#objectTemplate').clone(true),
-            newObj = $('.objBtn', newItem);
-        newItem.removeAttr('id'); //remove #objectTemplate from the clone.
-        newObj.attr('id', oldObject.id); 
-        newObj.append(" " + $(this).val());
         oldObject.text = $(this).val();
-        $(this).parent().replaceWith(newItem);
-        newItem.show();
 
          //Modify the object references in source/destination of the policy rules
          var objID = oldObject.id;
@@ -589,11 +499,6 @@
                  }
              });
          });
-
-
-        bDirty = true;
-
-        initObjects();
 
      });
 
@@ -730,15 +635,8 @@
               type: 'information',
               modal: true,
               buttons: [
-                   {text: 'Ok', click: function($noty) {
-                                                      $noty.close();
-                                                      savePolicy();
-                                       }
-                   },
-                   {text: 'Cancel', click: function($noty) {
-                                                      $noty.close();
-                                       }
-                   }
+                   {text: 'Ok', click: function($noty) { $noty.close(); savePolicy(); } },
+                   {text: 'Cancel', click: function($noty) { $noty.close(); } }
               ]
         });
      });

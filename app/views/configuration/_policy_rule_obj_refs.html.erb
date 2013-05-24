@@ -1,0 +1,56 @@
+<% 
+  #
+  # Just add "ANY", if:
+  #      - Object reference list is empty OR
+  #      - One of the references = "ANY". In this case all other object references are discarded OR
+  #      - All the references refer to non-existent objects (should happen only if someone manually edited the file in a wrong way)
+  #
+
+  bNoObjRefs = fwRule[targetList].empty?
+  if (!bNoObjRefs) then
+      fwRule[targetList].each do |refList|
+          if (refList["references"].include? objANY) then
+              bNoObjRefs = true
+              break
+          end
+      end
+  end
+
+  if (bNoObjRefs == false) then 
+      bNoObjRefs = true # reset the flag and set it to TRUE when you find a true reference (object exists)
+%>
+<!-- Keep the default ANY, hidden if there are valid object references. This is made visible if all references are deleted by the user -->
+<li class="object" style="display:none"><div  id="<%= objANY %>" class="objBtn">ANY</div></li>          
+<%    fwRule[targetList].each do | refList |
+         refList["references"].each do | objRef |
+            obj = @fwObjects[objRef] 
+            if (obj.nil?) then
+                #
+                # If the object reference does not have a corresponding object, then skip adding it the rule.
+                # This condition should happen only if someone has edited the policy outside the UI editor and made
+                # a mistake. This IF condition is present to avoid a page crash.
+                next
+            else
+                bNoObjRefs = false # even if one reference exists, then dont add ANY
+            end
+            type = obj["type"]
+            iconClass = ""; iconClass = objLabels[type]["icon"] if !objLabels[type].nil?
+            iconTitle = ""; iconTitle = objLabels[type]["label"] if !objLabels[type].nil?
+%>
+<li class="object">
+    <div id="<%= objRef %>" class="objBtn">
+        <i class="<%= iconClass %>" title="<%= iconTitle %>"></i>
+<%          if (refList["neg"] == "true") then %><b> NOT </b><% end %>
+<%          if (obj["value"] == "any") then %> 
+               ANY 
+<%          else %>
+<%=            obj["value"] %>
+<%          end %>
+    </div>
+</li>
+<%       end #for each Objectref %>
+<%    end #for each Object reference list %>
+<% end #reference list is not empty %>
+<% if (bNoObjRefs == true) then  %>
+<li class="object"><div id="<%= objANY %>" class="objBtn">ANY</div></li>
+<% end %>  
