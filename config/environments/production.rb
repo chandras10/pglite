@@ -15,7 +15,7 @@ Pglite::Application.configure do
   config.assets.compress = true
 
   # Don't fallback to assets pipeline if a precompiled asset is missed
-  config.assets.compile = false
+  config.assets.compile = true
 
   # Generate digests for assets URLs
   config.assets.digest = true
@@ -46,7 +46,9 @@ Pglite::Application.configure do
   # config.action_controller.asset_host = "http://assets.example.com"
 
   # Precompile additional assets (application.js, application.css, and all non-JS/CSS are already added)
-  # config.assets.precompile += %w( search.js )
+  #config.assets.precompile += %w( search.js )
+  #config.assets.precompile = [/^[a-zA-Z]*\..*/]
+  config.assets.precompile += %w[ *.js *.png *.jpg *.jpeg *.gif]
 
   # Disable delivery errors, bad email addresses will be ignored
   # config.action_mailer.raise_delivery_errors = false
@@ -64,4 +66,11 @@ Pglite::Application.configure do
   # Log the query plan for queries taking more than this (works
   # with SQLite, MySQL, and PostgreSQL)
   # config.active_record.auto_explain_threshold_in_seconds = 0.5
+
+  # Peregrine Guard Policy file residence
+  config.peregrine_policyfile = "/tmp/pg_policy.xml"
+  config.peregrine_policyfile_dtd = "/usr/local/etc/pgguard/pg_policy.dtd"
+  config.peregrine_pgguard_pidfile = "/usr/local/var/pgguard/pgguard.pid"
+  config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"
+
 end
