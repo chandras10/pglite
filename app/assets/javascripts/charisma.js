@@ -136,7 +136,6 @@ function docReady(){
 	//popover
 	$('[rel="popover"],[data-rel="popover"]').popover();
 
-
     //datatable
     $('.datatable').dataTable({
       "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span12'i><'span12 center'p>>",
@@ -159,10 +158,11 @@ function docReady(){
 		else 					   $('i',$(this)).removeClass('icon-chevron-down').addClass('icon-chevron-up');
 		$target.slideToggle();
 	});
+	/*
 	$('.btn-setting').click(function(e){
 		e.preventDefault();
 		$('#myModal').modal('show');
-	});		
+	});*/		
 }
 
 
