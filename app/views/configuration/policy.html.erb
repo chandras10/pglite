@@ -647,7 +647,7 @@
         bDirty = false;
 
         var objectsArray = new Array();
-        objectsArray.push({id: '<%= objANY %>', type: 'Any', value: 'any'}); //Default object - ANY
+        objectsArray.push({id: '<%= objANY %>', type: 'any', value: 'any'}); //Default object - ANY
 
         $('#accordion h3').each(function() {
            var objCategory = $(this).attr('class').split(" ").shift();
