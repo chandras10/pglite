@@ -18,6 +18,7 @@
     hashOperatingSystem[devinfo.operatingsystem] += 1
   end
   
+  #authDevices = @deviceinfos.select { |d| (!d["auth_source"].nil? && d["auth_source"] != 0)}
 %>
 
 <div id="content" class="span10">
@@ -104,17 +105,30 @@
 	          <div class="sortable row-fluid" style="#position: absolute; overflow: hidden; vertical-align: center">
 	             <div class="well span4 top-block" >
 		              <div>Laptop</div>
-                  <%= link_to content_tag(:span, ''), {:action => "tbl_inventory", :deviceclass => "Desktop/Laptop"}, :class=>"icon-laptop icon-4x" %>
+                  <%= link_to content_tag(:span, ''), {:action => "tbl_inventory", :column => "deviceclass", :value => "Desktop/Laptop"}, :class=>"icon-laptop icon-4x" %>
 		              <div><%= hashDeviceClass["Desktop/Laptop"] %> </div>
                </div>
 	             <div class="well span4 top-block" >
 		              <div>Phone</div>
-                  <%= link_to content_tag(:span, ''), {:action => "tbl_inventory", :deviceclass => "MobileDevice"}, :class=>"icon-mobile-phone icon-4x" %>
+                  <%= link_to content_tag(:span, ''), {:action => "tbl_inventory", :column => "deviceclass", :value => "MobileDevice"}, :class=>"icon-mobile-phone icon-4x" %>
 		              <div><%= hashDeviceClass["MobileDevice"] %> </div>
                </div>
             </div> <!-- sortable -->
          </div> <!-- box-content -->
       </div> <!-- box span4 -->
+      <div class="box span4">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Unauthorized Devices",
+                                 :header_link  => "/tbl_inventory" }
+         %>
+         <div class="box-content">
+               <%= link_to "/tbl_inventory?column=auth_source&value=0" do %>
+               <canvas id="unauthGauge" class="well span4" style="height:50%;width: 100%; position:relative;">[No canvas support]</canvas>
+               <div id="gauge-textfield" style="font-size: 30px;position: absolute;margin-top:10px;margin-left:125px;"></div>
+               <% end %>
+         </div> <!-- box-content -->
+      </div> <!-- box span4 -->
+
    </div><!-- row-fluid sortable -->
 </div><!-- content ends -->
 
@@ -129,12 +143,28 @@
    window.onload = function (){
      var labels = <%=raw hashOperatingSystem.keys %>;
      var data = <%=raw hashOperatingSystem.values %>;
+     var deviceTypeLabels = <%=raw hashDeviceType.keys %>;
 
      //
      var total = 0;
      for (var i=0; i < data.length; i++) {
        total += data[i];
      }
+
+     function pieClicked(e, pie) {
+        var idx = pie['index'];
+        var label = labels[idx].split(' ', 1);
+        if (label == 'Unknown') label = '';
+        window.location.replace("/tbl_inventory?column=operatingsystem&value="+label);
+     }
+
+     function hbarClicked(e, hbar) {
+        var idx = hbar['index'];
+        var label = deviceTypeLabels[idx];
+        if (label == 'Unknown') label = '';
+        window.location.replace("/tbl_inventory?column=devicetype&value="+label);
+     }
+
 
      //resize the canvas appropriately
      document.body.onresize = function () {
@@ -164,6 +194,7 @@
      hbar.Set('noxtickmarks', true);
      hbar.Set('noytickmarks', true); 
      hbar.Set('gutter.left', (document.getElementById('devinfo_os_hbar').width * 0.3));
+     hbar.Set('events.click', hbarClicked);
 
      if (!RGraph.isOld()) {
         hbar.Set('tooltips', <%=raw hashDeviceType.keys %>);
@@ -173,6 +204,7 @@
      } else {
         hbar.Draw();
      } 
+
 
      var pie = new RGraph.Pie('devinfo_os_hbar', data);
      //pie.Set('colors', ['#8B0000', '#FF8C00', '#00008B', '#7FFF00', '#9400D3', '#A52A2A', '#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
@@ -191,6 +223,7 @@
      pie.Set('labels.position', 'gutter');
      pie.Set('tooltips', labels);
      pie.Set('tooltips.event', 'onmousemove');
+     pie.Set('events.click', pieClicked);
 
      for (var i=0; i< labels.length; i++) {
        labels[i] = labels[i] + ' ' + roundNumber(data[i]/total*100, 0) + '%';
@@ -200,6 +233,27 @@
 
      RGraph.Effects.Pie.RoundRobin(pie);
 
+
+     var opts = {
+       lines: 20, // The number of lines to draw
+       angle: 0.15, // The length of each line
+       lineWidth: 0.44, // The line thickness
+       pointer: {
+          length: 0.61, // The radius of the inner circle
+          strokeWidth: 0.053, // The rotation offset
+          color: '#000000' // Fill color
+       },
+       colorStart: '#369BD7',   // Colors
+       colorStop: '#FF0000',    // just experiment with them
+       strokeColor: '#369BD7',   // to see which ones work best for you
+       generateGradient: true
+     };
+     var target = document.getElementById('unauthGauge'); // your canvas element
+     var gauge = new Gauge(target).setOptions(opts); // create sexy gauge!
+     gauge.setTextField(document.getElementById('gauge-textfield'));
+     gauge.maxValue = <%= @deviceinfos.count %>; // set max gauge value
+     gauge.animationSpeed = 32; // set animation speed (32 is default value)
+     gauge.set(<%=@deviceinfos.select { |d| (d["auth_source"].nil? || d["auth_source"] == 0)}.count %>); // set actual value
 
    };
 </script>
