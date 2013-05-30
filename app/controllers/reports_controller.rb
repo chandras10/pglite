@@ -16,9 +16,21 @@ class ReportsController < ApplicationController
   def tbl_inventory
     @deviceinfos = Deviceinfo.scoped
 
-    deviceclass = params[:deviceclass]
-    @deviceinfos = @deviceinfos.where("deviceclass = ?", deviceclass) if deviceclass.present?
-  end
+    columnName = params[:column]
+    value = params[:value] 
+    if (columnName.present?)
+       case columnName
+       when "auth_source"
+          @deviceinfos = @deviceinfos.where("((auth_source is NULL) OR (auth_source = 0))")
+       when "operatingsystem" && (!value.present? || value.empty?) 
+          @deviceinfos = @deviceinfos.where("((operatingsystem is NULL) OR (operatingsystem = ''))")
+       when "devicetype" && (!value.present? || value.empty?) 
+          @deviceinfos = @deviceinfos.where("((devicetype is NULL) OR (devicetype = ''))")
+       else
+          @deviceinfos = @deviceinfos.where("#{columnName} = ?", value)
+       end
+    end
+end
  
   # Total bandwidth dashboard showing b/w usage across all internal servers...
   def dash_bw
