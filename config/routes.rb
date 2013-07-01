@@ -1,11 +1,8 @@
 Pglite::Application.routes.draw do
 
-  resources :users
   resources :deviceinfos
 
   root to: 'reports#dash_inventory'
-
-  match '/login', to: 'users#login'
 
   match '/dash_inventory', to: 'reports#dash_inventory'
   match '/tbl_inventory', to: 'reports#tbl_inventory'
