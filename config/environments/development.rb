@@ -41,4 +41,6 @@ Pglite::Application.configure do
   config.peregrine_pgguard_pidfile = "/usr/local/var/pgguard/pgguard.pid"
   config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"
 
+  config.logger = Logger.new(STDOUT)
+
 end

@@ -1,9 +1,14 @@
 Pglite::Application.routes.draw do
 
+  resources :users
+  resources :sessions, only: [:new, :create, :destroy]
   resources :deviceinfos
 
-  root to: 'reports#dash_inventory'
+  root to: 'sessions#new'
 
+  match '/signin', to: 'sessions#new'
+  match '/signout', to: 'sessions#destroy', via: :delete
+  
   match '/dash_inventory', to: 'reports#dash_inventory'
   match '/tbl_inventory', to: 'reports#tbl_inventory'
 

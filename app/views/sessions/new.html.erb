@@ -1,0 +1,35 @@
+		<% provide(:title, "Sign in") %>
+		<div class="container-fluid">
+		<div class="row-fluid">			
+			<div class="row-fluid">
+				<div class="well span5 center login-box">
+					<%= form_for(:session, url: sessions_path) do |f| %>
+						<fieldset>
+                            <% flash.each do |key, value| %>
+                                <div class="alert alert-<%= key %>"><%= value %></div>
+                            <% end %>
+							<div class="input-prepend" title="Username" data-rel="tooltip">
+								<span class="add-on"><i class="icon-user"></i></span><input autofocus class="input-large span10" name="session[name]" id="username" type="text" value="admin" />
+							</div>
+							<div class="clearfix"></div>
+
+							<div class="input-prepend" title="Password" data-rel="tooltip">
+								<span class="add-on"><i class="icon-lock"></i></span><input class="input-large span10" name="session[password]" id="password" type="password" />
+							</div>
+							<div class="clearfix"></div>
+
+							<div class="input-prepend">
+							<label class="remember" for="remember"><input type="checkbox" id="remember" name="session[remember_me]"/> Remember me</label>
+							</div>
+							<div class="clearfix"></div>
+
+							<p class="center span5">
+							<button type="submit" class="btn btn-large btn-primary">Login</button>
+							</p>
+						</fieldset>
+                    <% end %>
+			</div><!--/row-->
+				</div><!--/fluid-row-->
+				</div><!--/span-->
+		
+	</div><!--/.fluid-container-->

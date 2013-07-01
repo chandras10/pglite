@@ -1,8 +1,9 @@
 class ReportsController < ApplicationController
- 
-  def login
-     #TODO
-  end
+  include SessionsHelper 
+  before_filter :signed_in_user, only: [:dash_inventory, :tbl_inventory, 
+                                        :dash_bw, :dash_bw_server,
+                                        :dash_snort, :tbl_snort,
+                                        :device_details, :tbl_vulnerability]
 
   def dash_inventory
     @deviceinfos = Deviceinfo.scoped
@@ -303,5 +304,4 @@ end
                                order(:score)
     end
   end
-
 end

@@ -15,6 +15,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Peregrine Guard - Agentless BYOD discovery and control.">
 
+  <title><%= full_title(yield(:title)) %></title>
   <%= stylesheet_link_tag    "application", :media => "all" %>
   <%= javascript_include_tag "application" %>
   <%= csrf_meta_tags %>
@@ -62,6 +63,28 @@
             </li>
           </ul>
         </div><!--/.nav-collapse -->
+                <!-- user dropdown starts -->
+        <div class="btn-group pull-right" >
+        <% if signed_in? %> 
+          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            <i class="icon-user"></i><span class="hidden-phone">&nbsp;<%= current_user.name %></span>
+            <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+            <li><%= link_to "Profile", current_user %></li>
+            <li><%= link_to "Change Password", edit_user_path(current_user) %></li>
+            <li class="divider"></li>
+            <li><%= link_to "Logout", signout_path, method: "delete" %></li>
+          </ul>
+        <% else %>
+          <a class="btn dropdown-toggle" data-toggle="dropdown" href="/signin">
+            <i class="icon-user"></i><span class="hidden-phone"> Login</span>
+            <span class="caret"></span>
+          </a>
+        <% end %>
+        </div>
+        <!-- user dropdown ends -->
+
       </div>
     </div>
 </div>
@@ -93,7 +116,13 @@
 				</div>
 			</noscript>
 			
-<%= yield %>
+
+    <div class="container">
+      <% flash.each do |key, value| %>
+        <div class="alert alert-<%= key %>"><%= value %></div>
+      <% end %>
+      <%= yield %>
+    </div>
               </div> <!-- row-fluid -->
               <div class="modal hide fade" id="myModal">
                         <div class="modal-header">

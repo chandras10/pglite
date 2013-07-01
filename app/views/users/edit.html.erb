@@ -1,0 +1,29 @@
+<style>
+   .box-content { overflow: hidden; width: 90%;}
+</style>
+
+<% provide(:title, "Edit user") %>
+<div id="content" class="span10">
+	<div class="box span10">
+        <div class="box-header well">
+            <h2><i class="icon-edit"></i> Update your profile</h2>	
+        </div>
+	    <div class="box-content">
+		    <%= form_for(@user) do |f| %>
+		        <%= render 'shared/error_messages' %>
+
+		        <%= f.label :name %>
+		        <%= f.text_field :name %>
+
+		        <%= f.label :password %>
+		        <%= f.password_field :password %>
+
+		        <%= f.label :password_confirmation, "Confirm Password" %>
+		        <%= f.password_field :password_confirmation %>
+
+                <br/>
+		        <%= f.submit "Save changes", class: "btn btn-large btn-primary" %>
+		    <% end %>
+        </div>
+    </div>
+</div>
