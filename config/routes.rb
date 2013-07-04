@@ -4,7 +4,7 @@ Pglite::Application.routes.draw do
   resources :sessions, only: [:new, :create, :destroy]
   resources :deviceinfos
 
-  root to: 'sessions#new'
+  root to: 'reports#dash_inventory'
 
   match '/signin', to: 'sessions#new'
   match '/signout', to: 'sessions#destroy', via: :delete
