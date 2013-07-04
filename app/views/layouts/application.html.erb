@@ -83,8 +83,7 @@
           </a>
         <% end %>
         </div>
-        <!-- user dropdown ends -->
-
+        <!-- user dropdown ends -->        
       </div>
     </div>
 </div>
@@ -107,7 +106,7 @@
                 <span class="hidden-tablet"> <%= (current_user.admin?  ? "Policy Editor" : "Policy") %></span></a></li>
             <% if current_user.admin? %>
             <li><a class="ajax-link" href="/users"><i class="icon-user"></i><span class="hidden-tablet"> Users</span></a></li>
-            <% end %>
+            <% end %>                
 					</ul>
 				</div><!--/.well -->
 			</div><!--/span-->
@@ -120,16 +119,12 @@
 				</div>
 			</noscript>
 			
-
-    <div id="content" class="span10">
-      <div>
+      <div class="span10">
       <% flash.each do |key, value| %>
         <div class="alert alert-<%= key %>"><%= value %></div>
       <% end %>
     </div>
-    <div class="container">
       <%= yield %>
-    </div>
   </div>
               </div> <!-- row-fluid -->
               <div class="modal hide fade" id="myModal">
