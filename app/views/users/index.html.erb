@@ -1,29 +1,20 @@
-<h1>Listing users</h1>
+<style>
+   .box-content { overflow: hidden; width: 90%;}
+</style>
 
-<table>
-  <tr>
-    <th>Name</th>
-    <th>Password digest</th>
-    <th>Remember token</th>
-    <th>Admin</th>
-    <th></th>
-    <th></th>
-    <th></th>
-  </tr>
+<% provide(:title, "All users") %>
+<div id="content" class="span10">
+   <div class="box span10">
+      <div class="box-header well">
+         <h2><i class="icon-edit"></i> All users</h2>  
+      </div>
+      <div class="box-content">
+          <%= will_paginate %>
+          <ul class="users">
+             <%= render @users %>
+          </ul>
 
-<% @users.each do |user| %>
-  <tr>
-    <td><%= user.name %></td>
-    <td><%= user.password_digest %></td>
-    <td><%= user.remember_token %></td>
-    <td><%= user.admin %></td>
-    <td><%= link_to 'Show', user %></td>
-    <td><%= link_to 'Edit', edit_user_path(user) %></td>
-    <td><%= link_to 'Destroy', user, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-  </tr>
-<% end %>
-</table>
-
-<br />
-
-<%= link_to 'New User', new_user_path %>
+          <%= will_paginate %>
+      </div>
+   </div>
+</div>

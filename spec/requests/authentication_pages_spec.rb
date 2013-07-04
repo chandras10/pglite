@@ -52,6 +52,11 @@ describe "Authentication" do
            before { put user_path(user) }
            specify { response.should redirect_to(signin_path) }
         end
+
+        describe "visiting the user index" do
+           before { visit users_path }
+           it { should have_selector('title', text: 'Sign in') }
+        end
      end
 
      describe "as wrong user" do
@@ -86,6 +91,18 @@ describe "Authentication" do
                  page.should have_selector('title', text: 'Edit user')
               end
            end
+        end
+     end
+
+     describe "as non-admin user" do
+        let(:user) { FactoryGirl.create(:user) }
+        let(:non_admin) { FactoryGirl.create(:user) }
+
+        before { sign_in non_admin }
+
+        describe "submitting a DELETE request to the User#destroy action" do
+           before { delete user_path(user) }
+           specify { response.should redirect_to(root_path) }
         end
      end
   end

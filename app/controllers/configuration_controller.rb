@@ -4,7 +4,8 @@ require 'rexml/document'
 
 class ConfigurationController < ApplicationController
   include SessionsHelper 
-  before_filter :signed_in_user, only: [:edit_policy, :save_policy]
+  before_filter :signed_in_user, only: :edit_policy
+  before_filter :admin_user, only: :save_policy
 
   include REXML
 

@@ -103,7 +103,11 @@
             <li><a class="ajax-link" href="/tbl_vulnerability"><i class="icon-warning-sign"></i><span class="hidden-tablet"> Vulnerability Database</span></a></li>
 
 						<li class="nav-header hidden-tablet">Configuration</li>
-            <li><a class="ajax-link" href="/policy"><i class="icon-tasks"></i><span class="hidden-tablet"> Policy Editor</span></a></li>
+            <li><a class="ajax-link" href="/policy"><i class="icon-tasks"></i>
+                <span class="hidden-tablet"> <%= (current_user.admin?  ? "Policy Editor" : "Policy") %></span></a></li>
+            <% if current_user.admin? %>
+            <li><a class="ajax-link" href="/users"><i class="icon-user"></i><span class="hidden-tablet"> Users</span></a></li>
+            <% end %>
 					</ul>
 				</div><!--/.well -->
 			</div><!--/span-->
@@ -117,12 +121,16 @@
 			</noscript>
 			
 
-    <div class="container">
+    <div id="content" class="span10">
+      <div>
       <% flash.each do |key, value| %>
         <div class="alert alert-<%= key %>"><%= value %></div>
       <% end %>
+    </div>
+    <div class="container">
       <%= yield %>
     </div>
+  </div>
               </div> <!-- row-fluid -->
               <div class="modal hide fade" id="myModal">
                         <div class="modal-header">

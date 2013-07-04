@@ -179,10 +179,13 @@
 <!-- policy editor page starts here -->
 <div class="box span10" style="height:90%;">
     <div class="box-header well">
-        <h2><i class="icon-edit"></i> Policy Editor</h2>
+        <% if current_user.admin? %>
+        <h2><i class="icon-edit"></i> Policy Editor
+        </h2>
         <form id="policyForm" class="pull-right" action="/policy" method="POST">
             <fieldset>
                 <input type="hidden" id="policy_json" name="policy_json" value="" />
+
                 <a class="btn btn-primary" id="newRuleBtn" 
                     title="Creates a new rule and adds it as the topmost one." data-rel="tooltip"><i class="icon-pencil icon-white"></i> New Rule</a>
                 <a class="btn" id="saveBtn" type="submit"><i class="icon-download-alt"></i> Save</a>
@@ -191,6 +194,10 @@
                     title="Policy Editor Help" data-rel="tooltip"> <i class="icon-info-sign icon-white"></i></a>
             </fieldset>
         </form>
+        <% else %>
+        <h2><i class="icon-edit"></i> Policy
+        </h2>        
+        <% end %>
     </div>
 
     <div id="splitterContainer" class="box-content">
