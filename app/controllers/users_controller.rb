@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-	before_filter :signed_in_user, only: [:index, :edit, :update]
+	before_filter :signed_in_user, only: [:index, :edit, :update, :show]
 	before_filter :correct_user, only: [:edit, :update]
 	before_filter :admin_user, only: :destroy
 
@@ -7,10 +7,9 @@ class UsersController < ApplicationController
 		@user = User.find(params[:id])
 	end
 
-	def create
-		# We dont have user sign ups yet in PG...
-	end
-
+    def create
+    end
+    
 	def edit
 	end
 

@@ -3,10 +3,10 @@ module SessionsHelper
    def sign_in(user)
          # Save cookie, only if user says "Remember me" on the login screen. 
          # else, save it only for this session.
-   	   if (session[:remember_token].nil?)
-   	      cookies.permanent[:remember_token] = user.remember_token
+   	   if (params[:session][:remember_me].nil?) #dont save the credentials...
+            session[:remember_token] = user.remember_token            
    	   else
-   	   	session[:remember_token] = user.remember_token
+            cookies.permanent[:remember_token] = user.remember_token
    	   end
    	   self.current_user = user
    end
@@ -34,12 +34,7 @@ module SessionsHelper
 
    def current_user
    	   # Get the user based on remember_token, if and only if current_user is undefined
-   	   if (session[:remember_token])
-   	   	  token = session[:remember_token]
-   	   else
-   	   	  token = cookies[:remember_token]
-   	   end
-   	   
+         token = cookies[:remember_token] || session[:remember_token]
    	   @current_user ||= User.find_by_remember_token(token)
    end
 
