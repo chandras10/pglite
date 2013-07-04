@@ -3,6 +3,12 @@ require 'builder'
 require 'rexml/document'
 
 class ConfigurationController < ApplicationController
+
+  # This skip filter(below) is needed. Else, a warning - 'Cant verify CSRF token authenticity'
+  # gets generated while saving the PG policy. This will lead to deleting the user cookie
+  # in applicationcontroller and then a crash while trying to save the policy.
+  skip_before_filter  :verify_authenticity_token
+
   include SessionsHelper 
   before_filter :signed_in_user, only: :edit_policy
   before_filter :admin_user, only: :save_policy
@@ -145,7 +151,6 @@ class ConfigurationController < ApplicationController
        
        policyXML.Policy do
           policyJSON["rules"].each do |rule|
-             logger.debug("ACTION = #{rule['action']}")
              sourceArray = Array.new
              destArray = Array.new
 

@@ -34,7 +34,7 @@ module SessionsHelper
 
    def current_user
    	   # Get the user based on remember_token, if and only if current_user is undefined
-         token = cookies[:remember_token] || session[:remember_token]
+           token = cookies[:remember_token] || session[:remember_token]
    	   @current_user ||= User.find_by_remember_token(token)
    end
 
@@ -51,4 +51,8 @@ module SessionsHelper
    	   session[:return_to] = request.url
    end
 
+   def admin_user
+       signed_in_user
+       redirect_to(signin_path) unless current_user.admin?
+   end
 end
