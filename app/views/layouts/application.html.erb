@@ -71,8 +71,11 @@
             <span class="caret"></span>
           </a>
           <ul class="dropdown-menu">
+            <% # Restricting display of certain menu options, only when using the local database for user authentication
+               if current_user && Rails.application.config.authentication == "Local" %>
             <li><%= link_to "Profile", current_user %></li>
             <li><%= link_to "Change Password", edit_user_path(current_user) %></li>
+            <% end %>
             <li class="divider"></li>
             <li><%= link_to "Logout", signout_path, method: "delete" %></li>
           </ul>
@@ -104,7 +107,7 @@
 						<li class="nav-header hidden-tablet">Configuration</li>
             <li><a class="ajax-link" href="/policy"><i class="icon-tasks"></i>
                 <span class="hidden-tablet"> <%= ((current_user && current_user.admin?)  ? "Policy Editor" : "Policy") %></span></a></li>
-            <% if current_user && current_user.admin? %>
+            <% if current_user && Rails.application.config.authentication == "Local" && current_user.admin? %>
             <li><a class="ajax-link" href="/users"><i class="icon-user"></i><span class="hidden-tablet"> Users</span></a></li>
             <% end %>                
 					</ul>

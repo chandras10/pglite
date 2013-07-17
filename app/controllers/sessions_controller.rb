@@ -5,14 +5,23 @@ class SessionsController < ApplicationController
    end
 
    def create
-   	  user = User.find_by_name(params[:session][:name].downcase)
-   	  if user && user.authenticate(params[:session][:password])
-   	  	 sign_in user
-   	  	 redirect_back_or '/dash_inventory'
-   	  else
-   	  	 flash.now[:error] = 'Invalid name/password combination'
-   	  	 render 'new'
-   	  end
+
+      if Rails.application.config.authentication == "ActiveDirectory"
+         user = ActiveDirectoryUser.authenticate(params[:session][:name].downcase, params[:session][:password])
+      else 
+         user = User.find_by_name(params[:session][:name].downcase)
+         if !(user && user.authenticate(params[:session][:password]))
+            user = nil # didnt find the user or authentication failed!
+         end
+      end
+      
+   	if user 
+   	  	sign_in user
+   	  	redirect_back_or root_path
+   	else
+   	  	flash.now[:error] = 'Invalid name/password combination'
+   	  	render 'new'
+   	end
    end
 
    def destroy

@@ -1,13 +1,20 @@
+require 'net/ldap'
 module SessionsHelper
 
    def sign_in(user)
          # Save cookie, only if user says "Remember me" on the login screen. 
          # else, save it only for this session.
-   	   if (params[:session][:remember_me].nil?) #dont save the credentials...
-            session[:remember_token] = user.remember_token            
-   	   else
-            cookies.permanent[:remember_token] = user.remember_token
-   	   end
+         if Rails.application.config.authentication == "ActiveDirectory"
+               # Dont save cookies for AD authentication
+               session[:remember_user] = user
+         else
+            if (params[:session] && params[:session][:remember_me])
+               cookies.permanent[:remember_user] = user.remember_token
+            else
+               session[:remember_user] = user.remember_token
+            end
+         end
+
    	   self.current_user = user
    end
 
@@ -24,8 +31,8 @@ module SessionsHelper
 
    def sign_out
    	   self.current_user = nil
-   	   cookies.delete(:remember_token)
-   	   session.delete(:remember_token)
+   	   cookies.delete(:remember_user)
+   	   session.delete(:remember_user)
    end
 
    def current_user=(user)
@@ -33,9 +40,13 @@ module SessionsHelper
    end
 
    def current_user
-   	   # Get the user based on remember_token, if and only if current_user is undefined
-           token = cookies[:remember_token] || session[:remember_token]
-   	   @current_user ||= User.find_by_remember_token(token)
+         if Rails.application.config.authentication == "ActiveDirectory"
+            @current_user = session[:remember_user]
+         else
+   	      # Get the user based on remember_token, if and only if current_user is undefined
+            token = session[:remember_user] || cookies[:remember_user] 
+   	      @current_user ||= User.find_by_remember_token(token)
+         end
    end
 
    def current_user?(user)

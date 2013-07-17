@@ -1,0 +1,4 @@
+server: 192.168.1.160
+port: 389
+base: dc=eagle,dc=i7networks,dc=in
+domain: eagle.i7networks.in
