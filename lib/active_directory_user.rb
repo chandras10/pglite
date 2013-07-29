@@ -36,13 +36,17 @@
 require 'net/ldap' # gem install ruby-net-ldap
 
 class ActiveDirectoryUser
+
+  KEY_TO_LOGIN = Digest::SHA256.hexdigest("peregrineGuard User")
+  KEY_TO_PASSWD = Digest::SHA256.hexdigest("peregrineGuard Password")
+
   ### BEGIN CONFIGURATION ###
   # ATTR_SV is for single valued attributes only. Generated readers will
   # convert the value to a string before returning or calling your Proc.
   ATTR_SV = {
-              :login => :samaccountname,
-              :first_name => :givenname,
-              :last_name => :sn,
+              :username => :samaccountname,
+              #:first_name => :givenname,
+              #:last_name => :sn,
               :email => :mail
             }
             
@@ -58,7 +62,7 @@ class ActiveDirectoryUser
 
   # Exposing the raw Net::LDAP::Entry is probably overkill, but could be set
   # up by uncommenting the line below if you disagree.
-   attr_reader :entry
+  #attr_reader :entry
 
   ### END CONFIGURATION ###
 
@@ -66,9 +70,9 @@ class ActiveDirectoryUser
   # to initialize a Net::LDAP object and call its bind method. If successful,
   # we find the LDAP entry for the user and initialize with it. Returns nil
   # on failure.
-  def self.authenticate(login, pass)
 
-     @config = YAML.load_file("#{Rails.root}/config/ldap.yml")
+  def self.ldapConnect(login, pass) 
+    @config = YAML.load_file("#{Rails.root}/config/ldap.yml")
 
     return nil if login.empty? or pass.empty? or (@config.nil? or @config["server"].nil?)
 
@@ -79,8 +83,35 @@ class ActiveDirectoryUser
                          :auth => { :username => "#{login}@#{@config['domain']}",
                                     :password => pass,
                                     :method => :simple }
-    if conn.bind and user = conn.search(:filter => "sAMAccountName=#{login}").first
-      return self.new(user)
+    return conn
+  end
+
+  def self.authenticate(login, pass)
+    
+    conn = ldapConnect(login, pass)
+
+    if conn.nil?
+       return nil
+    end
+
+    #
+    # Get only the LDAP attributes that we want and not the entire LDAP record
+    #
+    attrs = Array.new
+    ATTR_SV.each { |k,v| attrs << v.to_s }
+    ATTR_MV.each do |k,v| 
+      if v.kind_of?(Array) 
+        attrs << v.first.to_s 
+      else
+        attrs << v.to_s
+      end
+    end
+
+    if conn.bind and entry = conn.search(:filter => "sAMAccountName=#{login}", :attributes => attrs).first
+       user = self.new(entry)
+       user.loginName = Encryptor.encrypt(login.downcase, :key => KEY_TO_LOGIN)
+       user.passwd = Encryptor.encrypt(pass.downcase, :key => KEY_TO_PASSWD)
+       return user
     else
       return nil
     end
@@ -90,31 +121,69 @@ class ActiveDirectoryUser
     return nil
   end
 
-  def full_name
-    self.first_name + ' ' + self.last_name
-  end
-
-  def member_of?(group)
-    self.groups.include?(group)
+ def member_of?(group)
+    return self.groups.include?(group)
   end
 
   def name
-    self.login
+    return self.username
   end
 
   def admin?
     self.member_of?("Administrators")
   end
+  
+  def loginName=(login)
+      @loginName = login
+  end
 
+  def passwd=(password)
+      @passwd = password
+  end
+  #
+  # Get all the users (and the groups they belong to) within the given domain.
+  # This call reuses the LDAP connection made during authentication() call.
+  #
+  def listUsers
+
+      listOfUsers = Array.new
+
+      conn = ActiveDirectoryUser.ldapConnect(Encryptor.decrypt(@loginName, :key => KEY_TO_LOGIN),
+                         Encryptor.decrypt(@passwd, :key => KEY_TO_PASSWD))
+      if conn and conn.bind 
+
+         config = YAML.load_file("#{Rails.root}/config/ldap.yml")
+
+         filter = Net::LDAP::Filter.eq("objectCategory", "organizationalPerson")
+         conn.search(:base => config['base'], :filter => filter) do |entry|
+             if !entry['samaccountname'].first.nil?
+                if entry.attribute_names.include?(:memberof)
+                   groups = []
+                   entry.memberof.each do |g|
+                      groups << g.gsub(/.*?CN=(.*?),.*/,'\1')
+                   end
+                   listOfUsers << {:name => entry.samaccountname.first, :groups => groups}
+                else
+                   listOfUsers << {:name => entry.samaccountname.first, :groups => []} # corner case with a user having no groups.
+                end
+             end
+         end
+      end 
+
+      return listOfUsers
+  end
 
   private
 
   def initialize(entry)
     @entry = entry
+
     self.class.class_eval do
       generate_single_value_readers
       generate_multi_value_readers
     end
+
+    #@entry = nil
   end
 
   def self.generate_single_value_readers

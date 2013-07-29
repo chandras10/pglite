@@ -4,6 +4,11 @@ Pglite::Application.routes.draw do
   resources :sessions, only: [:new, :create, :destroy]
   resources :deviceinfos
 
+  resources :autocomplete_tags, only: [] do
+     get :usernames, :on => :collection
+     get :groupnames, :on => :collection
+  end
+
   root to: 'reports#dash_inventory'
 
   match '/signin', to: 'sessions#new'
@@ -26,6 +31,7 @@ Pglite::Application.routes.draw do
   
   match '/500', to: 'errors#internal_error'
   match '/404', to: 'errors#internal_error'
+
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

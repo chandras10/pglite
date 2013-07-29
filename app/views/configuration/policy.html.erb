@@ -9,20 +9,24 @@
                "deviceclass" => {"label" => "Device Class", "icon" => "icon-tags" },
                "devicetype"  => {"label" => "Device Type",  "icon" => "icon-hdd" },
                "osname"      => {"label" => "Operating System", "icon" => "icon-flag" },
-               "userrole"    => {"label" => "User Role", "icon" => "icon-star" },
-               "username"    => {"label" => "User", "icon" => "icon-user" },
+               "userrole"    => {"label" => "User Role", "icon" => "icon-star",
+                                 "autocompleteurl" => "autocomplete_tags/groupnames" },
+               "username"    => {"label" => "User", "icon" => "icon-user", 
+                                 "autocompleteurl" => "autocomplete_tags/usernames" },
                "location"    => {"label" => "Location", "icon" => "icon-globe" },
                "ipv4"        => {"label" => "IP Address", "icon" => "icon-tasks"  }, 
                "ipv4subnet"  => {"label" => "IP Subnet", "icon" => "icon-calendar" },
                "port"        => {"label" => "Service", "icon" => "icon-screenshot" },
-               "portrange"   => {"label" => "Service Group", "icon" => "icon-certificate" }
+               "portrange"   => {"label" => "Service Group", "icon" => "icon-certificate" },
+               "osversion"   => {"label" => "OS Version", "icon" => "icon-star" },
+               "dvi"   => {"label" => "DVI", "icon" => "icon-star" }
     }
 
     #
     # identifier of the wildcard = "ANY". This was copied from the policy DTD for object type="Any"
     #
     objANY = "any_obj"
-
+    
 %>
 
   <style type="text/css">
@@ -155,9 +159,16 @@
      }
 
      .introjs-tooltip {
-      font-family: Tahoma,"Helvetica Neue",Helvetica,Arial,sans-serif;
-      font-size: 10pt;
-      max-width: 75%;
+        font-family: Tahoma,"Helvetica Neue",Helvetica,Arial,sans-serif;
+        font-size: 10pt;
+        max-width: 75%;
+     }
+
+     .ui-autocomplete {
+        max-height: 100px;
+        overflow-y: auto;
+        /* prevent horizontal scrollbar */
+        overflow-x: hidden;
      }
 
   </style>
@@ -165,16 +176,29 @@
 <!-- context menus used for editing/deleting policy objects -->
 <div class="contextMenu" id="objectMenu" style="display:none">
     <ul>
+        <!--<li id="addname"><i class="icon icon-color icon-add"></i> Add Name</li> -->
         <li id="edit"><i class="icon icon-color icon-edit"></i> Edit</li>
         <li id="delete"><i class="icon icon-color icon-close"></i> Delete</li>
     </ul>
 </div>
 <div class="contextMenu" id="objectRefMenu" style="display:none">
     <ul>
-        <li id="qualify"><i class="icon icon-color icon-cancel"></i> Negate</li>
-        <li id="delete"><i class="icon icon-color icon-close"></i> Delete</li>
+        <li id="ne"><i class="icon icon-black icon-cancel"></i> Not Equal</li>
+        <li id="clear"><i class="icon icon-black icon-cross"></i> Clear</li>
+        <li id="delete"><i class="icon icon-black icon-trash"></i> Delete</li>
     </ul>
-</div>
+</div> 
+<div class="contextMenu" id="objectRefMenuWithOperators" style="display:none" >
+    <ul>
+        <li id="ne"><i class="icon icon-black icon-cancel"></i> Not equal</li>
+        <li id="lt"><i class="icon icon-black icon-carat-1-w"></i> Less than</li>
+        <li id="gt"><i class="icon icon-black icon-carat-1-e"></i> Greater than</li>
+        <li id="le"><i class="icon icon-black icon-arrowreturn-se"></i> Less than / Equal</li>
+        <li id="ge"><i class="icon icon-black icon-arrowreturn-sw"></i> Greater than / Equal</li>
+        <li id="clear"><i class="icon icon-black icon-cross"></i> Clear</li>
+        <li id="delete"><i class="icon icon-black icon-trash"></i> Delete</li>
+    </ul>
+</div> 
 
 <!-- policy editor page starts here -->
 <div class="box span10" style="height:90%;">
@@ -203,7 +227,7 @@
     <div id="splitterContainer" class="box-content">
         <div id="leftPane" class="pane ui-layout-west">
             <!-- template for a new accordion list item -->
-            <li id="objectTemplate" class="object" style="display:none"><div class="objBtn"><i class="icon-star-empty"></i></div></li>          
+            <li id="objectTemplate" class="object" name="objectName" style="display:none"><div class="objBtn"><i class="icon-star-empty"></i></div></li>          
 
             <div id="accordion">
                 <% objLabels.keys.sort.each do | type | %>
@@ -211,14 +235,19 @@
                 <div class="objectList">
                     <!-- controls for creating new object values -->
                     <button class="btn btn-mini btn-primary new-object-btn"><i class="icon-plus icon-white"></i> </button>
-                    <input type="text" class="new-object-input-fld" style="display:none">
+                    <% if !objLabels[type]["autocompleteurl"].nil? %>
+                          <input type="text" class="new-object-input-fld <%=type.downcase%>" 
+                                 data-autocompleteurl="<%= objLabels[type]['autocompleteurl'] %>" style="display:none">
+                    <% else %>
+                          <input type="text" class="new-object-input-fld <%=type.downcase%>" style="display:none">
+                    <% end %>
 
-                    <ul class="objects">
+                    <ul class="objects" name="<%=type%>">
                     <% if !(@fwObjects.nil? || @fwObjects.empty?) then
                           @fwObjects.keys.each do | key |
                              if (@fwObjects[key]["type"] == type) then 
                     %>
-                        <li class="object"><div id="<%= key %>" class="objBtn">
+                        <li class="object"><div id="<%= key %>" class="objBtn" name="<%=type%>">
                             <i class="<%= objLabels[type]["icon"] %>" ></i> <%= @fwObjects[key]["value"]  %>
                         </div></li>
                     <%       end #Objectref type matches current type %>
@@ -254,8 +283,8 @@
                     <li class="object"><div id="<%= objANY %>" class="objBtn">ANY</div></li>
                 </td>
                 <td class="option accessToggler">
-                    <h3 style="display:none">ALLOW</h3>
-                    <h3>DENY</h3>
+                    <h3 style="display:none">DENY</h3>
+                    <h3>ALLOW</h3>
                 </td>
                 <td class="option loggingToggler">
                     <img class="icon32 icon-blue icon-check" style="display:none"></img>
@@ -375,10 +404,21 @@
          var isObjRef = ($(this).closest('.rule').length == 0) ? false : true;
          
          if (isObjRef == true) {
-            $(this).contextMenu('objectRefMenu', {
+
+         var name = $(this).attr('name');
+         var contextMenuToselect = "objectRefMenu";
+         if (name == 'osversion' || name == 'dvi') {
+            contextMenuToselect = 'objectRefMenuWithOperators';
+         }
+            $(this).contextMenu(contextMenuToselect, {
                 /* context menus are to be displayed only for non-ANY objects */
                 bindings: {
-                   'qualify': function(o) { if ($(o).attr('id') != '<%= objANY %>' ) return qualifyObject(o) } ,
+                   'ne': function(o) { operatorObject(o,"NOT") } ,
+                   'lt': function(o) { operatorObject(o,"<") } ,
+                   'gt': function(o) { operatorObject(o,">") } ,
+                   'le': function(o) { operatorObject(o,"<=") } ,
+                   'ge': function(o) { operatorObject(o,">=") } ,
+                   'clear': function(o) { if ($(o).attr('id') != '<%= objANY %>' ) return clearObject(o) } ,
                    'delete': function (o) { if ($(o).attr('id') != '<%= objANY %>' ) return deleteObject(o, isObjRef) }
                 },
 
@@ -388,12 +428,15 @@
                    padding: '2px 2px 2px 10px',
                    cursor: 'context-menu',
                    shadow: true
-                }
+                },
+
+                 menuStyle:{ listStyle:'none',padding:'1px',margin:'0px',backgroundColor:'#fff',border:'1px solid #999',width:'150px'}
             });
 
          } else { //It is a policy object
             $(this).contextMenu('objectMenu', {
                 bindings: {
+                   //'addname': function(o) { return addNameObject(o, oldObject) } ,
                    'edit': function(o) { return editObject(o, oldObject) } ,
                    'delete': function (o) { return deleteObject(o, isObjRef) }
                 },
@@ -417,12 +460,13 @@
 
         var newItem = $('#objectTemplate').clone(true),
             newObj = $('.objBtn', newItem);
-
         newItem.removeAttr('id'); //remove #objectTemplate from the clone.
+        newItem.removeAttr('name');
         newObj.append(" " + elem.val());
-
+        
         if (id == null) {
            newObj.attr('id', 'obj_' + Date.now()); //Set a unique id for the new object; 
+           newObj.attr('name', parent.attr('name'));
            parent.append(newItem);
         } else {
            newObj.attr('id', id);
@@ -470,6 +514,9 @@
          }
      }
 
+     function addNameObject(t, oldObject) {
+	var person=prompt("Name of the object: ","");
+     }
      //When EDIT menu option is clicked, replace the object with an Edit field, filled in with existing value.
      function editObject(t, oldObject) {
          var obj = $(t);
@@ -492,19 +539,21 @@
 
         if (newObject(oldObject.id, $(this), $(this).parent()) == null) return;
 
-        oldObject.text = $(this).val();
+        var newText = $(this).val();
 
          //Modify the object references in source/destination of the policy rules
          var objID = oldObject.id;
-         var re = /(<i.*>\s*)(.*)/; //retain the icon, while replacing the label
          $('#ruleList .rule').each(function() {
              $('.references .objBtn', this).each(function() {
                  if ($(this).attr('id') == objID) {
-                    var replaceText = $(this).html().replace(re, "$1"+oldObject.text);
-                    $(this).html(replaceText);
+                    var oldText = oldObject.text.replace(/^\s+|\s+$/g,'');
+                    $(this).html($(this).html().replace(oldText, newText));
                  }
              });
          });
+
+        //After replacing the reference values, change the object value
+        oldObject.text = newText;
 
      });
 
@@ -553,20 +602,23 @@
          obj.closest('li').remove();
      }
 
-     // This function will add boolean operators - NOT, greater/lesser than etc on the selected object
-     function qualifyObject(o) {
-         var obj = $(o);
-
-         if (obj.find('b').text().indexOf('NOT') > 0) {
-            obj.find('b').remove();
-         } else {
-            obj.find('i').after('<b style="font-size:1.25em"> NOT </b>');
-            //obj.prepend('<b style="font-size:1.25em"> NOT </b>');
+     function operatorObject(o,op) {
+         if ($(o).attr('id') == '<%= objANY %>' ) {
+              return;
          }
-         
+         var obj = $(o);
+	 obj.find('b').remove();
+         obj.find('i').after('<b style="font-size:1.25em">'+ op +'</b>');
          bDirty = true;
      }
 
+     function clearObject(o) {
+         var obj = $(o);
+         obj.find('b').remove();
+         bDirty = true;
+     }
+
+     
      //Functions for manipulating policy rules and its objects.
 
      //ALLOW/DENY the policy rule...
@@ -620,8 +672,20 @@
          return $('li.object > .objBtn:visible', list).map(function(k, v) {
             var objRef = $(this).attr("id");
             var value = $(this).text().trim() || "";
-           
-            return { ref: objRef, negation: ((value.indexOf("NOT ") !== -1) ? "true" : "false") }
+	    var op = "eq";
+            //return { ref: objRef, negation: ((value.indexOf("== ") !== -1) ? "eq" : "ne") }
+	   if(value.indexOf("NOT") == 0) {
+		op = "ne";
+	    } else if(value.indexOf("<=") == 0) {
+		op = "le";
+	    } else if(value.indexOf(">=") == 0) {
+		op = "ge";
+	    } else if(value.indexOf("<") == 0) {
+		op = "lt";
+	    } else if(value.indexOf(">") == 0) {
+		op = "gt";
+	    } 
+	    return { ref: objRef, opr: op }
 
          }).get();
      }

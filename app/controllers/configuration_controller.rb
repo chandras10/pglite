@@ -64,7 +64,7 @@ class ConfigurationController < ApplicationController
                  objArray << objRef.attributes["ref"]
             end
 
-            sourceArray << { "neg" => src.attributes["neg"].downcase,  "references" => objArray }
+            sourceArray << { "operator" => src.attributes["operator"],  "references" => objArray }
         end
 
         destArray = Array.new
@@ -77,7 +77,7 @@ class ConfigurationController < ApplicationController
                  objArray << objRef.attributes["ref"]
             end
 
-            destArray << { "neg" => dst.attributes["neg"].downcase,  "references" => objArray }
+            destArray << { "operator" => dst.attributes["operator"],  "references" => objArray }
         end
 
         @fwRules << {
@@ -111,6 +111,7 @@ class ConfigurationController < ApplicationController
                          "deviceclass" => "DeviceClass",
                          "devicetype" => "DeviceType",
                          "osversion" => "OSVersion",
+                         "dvi" => "DVI",
                          "username" => "UserName",
                          "userrole" => "UserRole",
                          "location" => "Location"
@@ -156,15 +157,15 @@ class ConfigurationController < ApplicationController
 
              policyXML.PolicyRule("position"=>rule["position"], "id"=>rule["id"], "log"=>rule["log"].capitalize, "action"=>rule["action"].downcase) {
                 rule["sources"].each do |src|
-                   policyXML.Src("neg"=>src["negation"].capitalize) {
+                   policyXML.Src("operator"=>src["opr"]) {
                       policyXML.ObjectRef("ref"=>src["ref"])
-                      sourceArray << { "neg" => src["neg"],  "references" => [src["ref"]] }
+                      sourceArray << { "operator" => src["opr"],  "references" => [src["ref"]] }
                    }
                 end
                 rule["destinations"].each do |dst|
-                   policyXML.Dst("neg"=>dst["negation"].capitalize) {
+                   policyXML.Dst("operator"=>dst["opr"]) {
                       policyXML.ObjectRef("ref"=>dst["ref"])
-                      destArray << { "neg" => dst["neg"],  "references" => [dst["ref"]] }
+                      destArray << { "operator" => dst["opr"],  "references" => [dst["ref"]] }
                    }
                 end
              }
@@ -177,6 +178,7 @@ class ConfigurationController < ApplicationController
                       "log" => rule["log"].downcase,
                       "action" => rule["action"].downcase
              }
+
 
           end
        end

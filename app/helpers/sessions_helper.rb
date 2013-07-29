@@ -5,14 +5,12 @@ module SessionsHelper
          # Save cookie, only if user says "Remember me" on the login screen. 
          # else, save it only for this session.
          if Rails.application.config.authentication == "ActiveDirectory"
-               # Dont save cookies for AD authentication
                session[:remember_user] = user
-         else
+         else # local database
             if (params[:session] && params[:session][:remember_me])
                cookies.permanent[:remember_user] = user.remember_token
-            else
-               session[:remember_user] = user.remember_token
             end
+            session[:remember_user] = user.remember_token
          end
 
    	   self.current_user = user
@@ -31,8 +29,8 @@ module SessionsHelper
 
    def sign_out
    	   self.current_user = nil
-   	   cookies.delete(:remember_user)
-   	   session.delete(:remember_user)
+         session.delete(:remember_user)
+         cookies.delete(:remember_user)
    end
 
    def current_user=(user)
@@ -41,7 +39,18 @@ module SessionsHelper
 
    def current_user
          if Rails.application.config.authentication == "ActiveDirectory"
-            @current_user = session[:remember_user]
+            #
+            # Check if the user is already logged in.
+            # We save only a few parameters for a logged in user rather than the entire LDAP record.
+            # Hence it is better to check "username" attribute to ensure that we have a valid object, if not
+            # our user object in the session is corrupt and in that case return NIL.
+            #
+            if session[:remember_user] and defined? (session[:remember_user].username)
+               @current_user = session[:remember_user]
+               return @current_user
+            else
+               return nil
+            end
          else
    	      # Get the user based on remember_token, if and only if current_user is undefined
             token = session[:remember_user] || cookies[:remember_user] 

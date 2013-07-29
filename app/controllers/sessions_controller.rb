@@ -1,5 +1,4 @@
 class SessionsController < ApplicationController
-
    def new
    	   flash.now[:info] = "Please login with your Username and Password."
    end
