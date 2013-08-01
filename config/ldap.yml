@@ -1,9 +1,0 @@
-#
-# ActiveDirectory Server IP Address and port 
-server: 192.168.1.160
-port: 389
-
-#
-# Base distinguished name
-base: dc=eagle,dc=i7networks,dc=in
-domain: eagle.i7networks.in
