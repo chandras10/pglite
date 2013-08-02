@@ -38,7 +38,7 @@
 	       <tbody>
                   <% @snortAlertRecs.each do |rec| %>
                      <tr>
-                        <td><%= link_to rec.sigid, "http://www.snortid.com/snortid.asp?QueryId=#{rec.sigid}", :target => "_blank" %></td>
+                        <td><%= link_to rec.sigid, "http://www.snort.org/search/sid/1-#{rec.sigid}", :target => "_blank" %></td>
                         <td><%= rec.time %></td>
                         <td><%= rec.message %></td>
 
