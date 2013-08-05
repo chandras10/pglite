@@ -1,6 +1,7 @@
 require 'json'
 require 'builder'
 require 'rexml/document'
+require 'nokogiri'
 
 class ConfigurationController < ApplicationController
 

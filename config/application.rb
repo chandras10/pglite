@@ -69,7 +69,7 @@ module Pglite
 
     config.exceptions_app = self.routes
 
-    config.authentication = (File.exists?("#{Rails.root}/config/ldap.yml") ? "ActiveDirectory" : "Local")
+    config.authentication = (File.exists?("/usr/local/etc/pgguard/ldap.yml") ? "ActiveDirectory" : "Local")
   end
 
 end

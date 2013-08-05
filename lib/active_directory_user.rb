@@ -72,7 +72,7 @@ class ActiveDirectoryUser
   # on failure.
 
   def self.ldapConnect(login, pass) 
-    @config = YAML.load_file("#{Rails.root}/config/ldap.yml")
+    @config = YAML.load_file("/usr/local/etc/pgguard/ldap.yml")
 
     return nil if login.empty? or pass.empty? or (@config.nil? or @config["server"].nil?)
 
@@ -152,7 +152,7 @@ class ActiveDirectoryUser
                          Encryptor.decrypt(@passwd, :key => KEY_TO_PASSWD))
       if conn and conn.bind 
 
-         config = YAML.load_file("#{Rails.root}/config/ldap.yml")
+         config = YAML.load_file("/usr/local/etc/pgguard/ldap.yml")
 
          filter = Net::LDAP::Filter.eq("objectCategory", "organizationalPerson")
          conn.search(:base => config['base'], :filter => filter) do |entry|

@@ -9,11 +9,12 @@ Pglite::Application.routes.draw do
      get :groupnames, :on => :collection
   end
 
-  root to: 'reports#dash_inventory'
+  root to: 'reports#dashboard'
 
   match '/signin', to: 'sessions#new'
   match '/signout', to: 'sessions#destroy', via: :delete
   
+  match '/dashboard', to: 'reports#dashboard'
   match '/dash_inventory', to: 'reports#dash_inventory'
   match '/tbl_inventory', to: 'reports#tbl_inventory'
 
@@ -28,6 +29,12 @@ Pglite::Application.routes.draw do
 
   match '/policy', to: 'configuration#edit_policy', :via => :get
   match '/policy', to: 'configuration#save_policy', :via => :post
+
+  match '/settings', to: 'settings#settings_menu', :via => :get
+  match '/settings', to: 'settings#save_settings', :via => :post
+
+
+
   
   match '/500', to: 'errors#internal_error'
   match '/404', to: 'errors#internal_error'
