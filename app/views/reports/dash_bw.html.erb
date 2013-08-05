@@ -12,7 +12,7 @@ hashGraphTimeBasedTotals.each do |i, arrayTotals|
 end
 
 # Servers (sorted in descending order of Total bytes) for the dataTable
-hashServers = Hash[@hashServerTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
+hashResources = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
 # Devices (sorted in descending order of Total bytes) for the dataTable
 hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
 
@@ -50,7 +50,7 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
 	          </tr>
 	       </thead>   
 	       <tbody>
-               <% hashServers.each do | server_ip, arrayTotals | %>
+               <% hashResources.each do | server_ip, arrayTotals | %>
                      <tr>
                         <td><%= link_to server_ip, :action => "dash_bw_server", :server_ip => server_ip %></td>
                         <td><%= sprintf("%.2f", arrayTotals[0]/$BW_MEASURE) %></td>

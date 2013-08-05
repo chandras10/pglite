@@ -12,6 +12,9 @@ gem 'will_paginate', '3.0.3'
 gem 'bootstrap-will_paginate', '0.0.6'
 gem 'net-ldap'
 gem 'encryptor'
+gem 'thinreports'
+gem 'rmagick'
+gem 'gruff'
 
 gem 'pg'
 
