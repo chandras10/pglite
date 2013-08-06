@@ -36,7 +36,9 @@ Pglite::Application.configure do
   config.assets.debug = true
 
   # Peregrine Guard Policy file residence
-  config.peregrine_policyfile = "/tmp/pg_policy.xml"
+  config.peregrine_policyfile = "/usr/local/etc/pgguard/policy.xml"
+  config.peregrine_ldapfile = "/usr/local/etc/pgguard/ldap.yml"
+  config.peregrine_configfile = "/usr/local/etc/pgguard/pgguardconfig.xml"
   config.peregrine_policyfile_dtd = "/usr/local/etc/pgguard/pg_policy.dtd"
   config.peregrine_pgguard_pidfile = "/usr/local/var/pgguard/pgguard.pid"
   config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"

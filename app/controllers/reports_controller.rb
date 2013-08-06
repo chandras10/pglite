@@ -1,5 +1,5 @@
 class ReportsController < ApplicationController
-  before_filter :signed_in_user, only: [:dash_inventory, :tbl_inventory, 
+  before_filter :signed_in_user, only: [:dashboard, :dash_inventory, :tbl_inventory, 
                                         :dash_bw, :dash_bw_server,
                                         :dash_snort, :tbl_snort,
                                         :device_details, :tbl_vulnerability]
@@ -10,7 +10,7 @@ class ReportsController < ApplicationController
     tbl_vulnerability
 
     tbl_snort
-    
+
     @license_info = Licenseinfo.first
   end
 
@@ -20,13 +20,10 @@ class ReportsController < ApplicationController
     tbl_vulnerability
 
     tbl_snort
-
     
   end
 
   def tbl_inventory
-
-
     @deviceinfos = Deviceinfo.scoped
 
     columnName = params[:column]
@@ -44,79 +41,136 @@ class ReportsController < ApplicationController
        end
     end
 
-
     @auth_src = Authsources.order('id')
 
-end
+  end 
  
-  # Total bandwidth dashboard showing b/w usage across all internal servers...
+  # Total bandwidth dashboard showing b/w usage
   def dash_bw
 
-    # Total (IN + OUTbytes) consumption per Server, per hour/day/month etc.
-    # Key: Internal_Server_IP_address, Value: 'integer' array holding Mbytes consumed/hr/day/month etc.
+    # Total (IN + OUTbytes) consumption per Server/App, per hour/day/month etc.
+    # Key: Server_IP_address/Application Name, Value: 'integer' array holding Mbytes consumed/hr/day/month etc.
     @hashTimeIntervalData = Hash.new
 
     #
-    #  Per Server, Total INbytes and OUTBytes.
+    #  Per Server/App, Total INbytes and OUTBytes.
     # Key: Internal_Server_IP_address, Value: Array[INbytes, OUTbytes]
-    @hashServerTotals = Hash.new
+    @hashResourceTotals = Hash.new
 
     #
     # Per Device, Total INbytes and OUTbytes
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
-    #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
+    #today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
+    today = Time.mktime(2013, 1, 1) #TODO: DELETEME after testing
 
-    if (params[:device].nil?) then
-       @IpstatRecs = Ipstat.joins(:deviceinfo).
-                            select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
-                                    destip as ip, deviceid as device, 
-                                    sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                            #where("timestamp >= ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S")).
-                            where("timestamp >= ?", today).
-                            group(:time, :destip, :deviceid).order(:destip)
-    else 
-       # all bandwidth records for a specific device
-       @IpstatRecs = Ipstat.select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
-                                    destip as ip, deviceid as device, 
-                                    sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                            #where("timestamp >= ? AND deviceid = ?", 1.day.ago.strftime("%Y-%m-%d %H:%M:%S"), params[:device]).
-                            where("timestamp >= ? AND deviceid = ?", today, params[:device]). 
-                            group(:time, :destip, :deviceid).order(:destip)
+    #if there is no query string, then show the total bandwidth consumption.
+    #else show specific data as pointed to by "type"
+    #
+    reportType = params[:type]
+    case reportType
+    when "internalIP"
+         statTable = Internalipstat
+         appIDTable = nil
+         groupByColName = "destip"
+         orderByColName = groupByColName
+    when "externalIP"
+         statTable = Externalipstat
+         appIDTable = nil
+         groupByColName = "destip"
+         orderByColName = groupByColName
+    when "internalAPP"
+         statTable = Internalresourcestat
+         appIDTable = :appidinternal
+         groupByColName = "#{appIDTable}.appname"
+         orderByColName = "#{appIDTable}.appid"
+    when "externalAPP"
+         statTable = Externalresourcestat
+         appIDTable = :appidexternal
+         groupByColName = "#{appIDTable}.appname"
+         orderByColName = "#{appIDTable}.appid"
     end
 
-    @IpstatRecs.each do |rec |
-
-      # Update the Hashmap holding per hour/day/month stats for each server
-       arrayData = @hashTimeIntervalData[rec['ip']]
-       if arrayData.nil? then
-          arrayData = @hashTimeIntervalData[rec['ip']] = Array.new(24, 0)
+    if !reportType.nil? 
+       if appIDTable.nil? then # IP addresses only
+          @IpstatRecs = statTable.joins(:deviceinfo).
+                                  select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
+                                         #{groupByColName} as resource, deviceid as device, 
+                                         sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                                  where("timestamp >= ?", today).
+                                  group(:time, orderByColName, :deviceid).order(orderByColName).scoped
+       else # APPlication data only
+          @IpstatRecs = statTable.joins(:deviceinfo).joins(appIDTable).
+                                  select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
+                                          #{groupByColName} as resource, deviceid as device, 
+                                          sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                                  where("timestamp >= ?", today).
+                                  group(:time, orderByColName, :deviceid).order(orderByColName).scoped
        end
 
-       recTime = rec['time'].split[1].to_i
-       arrayData[recTime] += (rec['inbytes'] + rec['outbytes'])
+       #add specific device to the query, if it exists
+       @IpstatRecs = @IpstatRecs.where("deviceid = ?", params[:device]) if !params[:device].nil?
 
-       # Update the Hashmap holding total in/out bytes counters for each server
-       arrayData = @hashServerTotals[rec['ip']]
-       if arrayData.nil? then
-          arrayData = @hashServerTotals[rec['ip']] = Array.new(2, 0)
-       end
-       arrayData[0] += rec['inbytes']
-       arrayData[1] += rec['outbytes']
+       # In case of specific type, we will only show internal/external data
+       # otherwise we will aggregate data from INTERNAL and EXTERNAL
+       statRecordSets = [@IpstatRecs]
 
-       if (params[:device].nil?) then
-          # Update the Hashmap holding total in/out bytes counters for each device (or client)
-          arrayData = @hashDeviceTotals[rec['device']]
+    else # No query string means total bandwidth (internal IP + external IP)
+
+       internalStatRecs = Internalipstat.joins(:deviceinfo).
+                               select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
+                                       destip as resource, deviceid as device, 
+                                       sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                               where("timestamp >= ?", today).
+                               group(:time, :destip, :deviceid).order(:destip)
+
+       internalStatRecs = internalStatRecs.where("deviceid = ?", params[:device]) if !params[:device].nil?
+
+       externalStatRecs = Externalipstat.joins(:deviceinfo).
+                               select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
+                                       destip as resource, deviceid as device, 
+                                       sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                               where("timestamp >= ?", today).
+                               group(:time, :destip, :deviceid).order(:destip)
+
+       externalStatRecs = externalStatRecs.where("deviceid = ?", params[:device]) if !params[:device].nil?
+
+       statRecordSets = [internalStatRecs, externalStatRecs]
+    end
+
+    statRecordSets.each do |recArray|
+       recArray.each do |rec|
+
+          # Update the Hashmap holding per hour/day/month stats for each server
+          arrayData = @hashTimeIntervalData[rec['resource']]
           if arrayData.nil? then
-             arrayData = @hashDeviceTotals[rec['device']] = Array.new(2, 0)
+             arrayData = @hashTimeIntervalData[rec['resource']] = Array.new(24, 0)
           end
-          arrayData[0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
-          arrayData[1] += rec['inbytes']
-       end
 
-    end # For each Ipstat record...
+          recTime = rec['time'].split[1].to_i
+          arrayData[recTime] += (rec['inbytes'] + rec['outbytes'])
+
+          # Update the Hashmap holding total in/out bytes counters for each server
+          arrayData = @hashResourceTotals[rec['resource']]
+          if arrayData.nil? then
+             arrayData = @hashResourceTotals[rec['resource']] = Array.new(2, 0)
+          end
+          arrayData[0] += rec['inbytes']
+          arrayData[1] += rec['outbytes']
+
+          if (params[:device].nil?) then
+             # Update the Hashmap holding total in/out bytes counters for each device (or client)
+             arrayData = @hashDeviceTotals[rec['device']]
+             if arrayData.nil? then
+                arrayData = @hashDeviceTotals[rec['device']] = Array.new(2, 0)
+             end
+             arrayData[0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
+             arrayData[1] += rec['inbytes']
+          end
+
+       end # For each stat record...
+    end #statRecordSets
 
   end
 

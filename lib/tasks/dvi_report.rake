@@ -26,6 +26,11 @@ namespace :reports do
           r.use_layout "#{Rails.root}/app/reports/device_vulnerability_report.tlf", :id => :summary
           r.use_layout "#{Rails.root}/app/reports/dvi_table.tlf", :id => :dvi_table
 
+          r.events.on :page_create do |e|
+            e.page.item(:page_number).value(e.page.no)
+            e.page.item(:report_create_date).value(Time.now)
+          end
+
           # First page - Summary
 
           # Set up the headers and labels
@@ -42,9 +47,6 @@ namespace :reports do
           list.add_row({:dvi_range => "0.40  -   0.69", :severity_label => "Medium"})
           list.add_row({:dvi_range => "< 0.40",     :severity_label => "Low"})
   
-          r.page.values(:page_number => "1", :report_create_date => Time.now)
-
-
           # Draw the first graph
           devices = Deviceinfo.
                                select("macid, username, devicename, to_char(updated_at, 'YYYY-MM-DD HH') as updated_at, dvi").
@@ -78,17 +80,19 @@ namespace :reports do
 
           g = Gruff::Bar.new('600x600')
           g.title = " "
+          g.sort = false
           #g.hide_legend = true
-    g.theme = {
-        :background_colors => %w(#c0c0c0 #c5c5c5),
-        :background_direction => :top_bottom,
-    }          
 
-          g.data(:High, dvi_counter[0], '#990000')
-          g.data(:Medium, dvi_counter[1], '#009900')
-          g.data(:Low, dvi_counter[2], '#000099')
+          g.theme_37signals
+
+          g.data(:High, dvi_counter[0])
+          g.data(:Medium, dvi_counter[1])
+          g.data(:Low, dvi_counter[2])
+
+          #g.labels = { 0 => 'High', 1 => 'Medium', 2 => 'Low' }
 
           g.minimum_value = 0
+
           g.write "#{Rails.root}/tmp/graph1.png"
 
 
@@ -106,6 +110,7 @@ namespace :reports do
 
           g = Gruff::Pie.new
           g.title = " "
+          g.theme_37signals
           slice_vuln_by_os.each do |os_rec|
              g.data os_rec.os_name, os_rec.cnt.to_i
           end
@@ -114,7 +119,6 @@ namespace :reports do
           r.page.item(:graph2).src("#{Rails.root}/tmp/graph2.png") if File.exists? "#{Rails.root}/tmp/graph2.png"          
 
           r.start_new_page :layout => :dvi_table
-          r.page.values(:page_number => "2", :report_create_date => Time.now)
           devices.each do |d|
             record = { :macid => d.macid.upcase, 
                        :username => d.username,
@@ -123,10 +127,7 @@ namespace :reports do
                       :dvi => d.dvi
                     }
             r.page.list.add_row(record)
-
           end
-
-
        end
 
        report.generate_file('device_vulnerability_report.pdf')
