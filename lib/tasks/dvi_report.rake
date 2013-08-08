@@ -27,6 +27,7 @@ namespace :reports do
           
           r.use_layout "#{Rails.root}/app/reports/dvi_report_header.tlf", :id => :summary
           r.use_layout "#{Rails.root}/app/reports/dvi_table.tlf", :id => :dvi_table
+          r.use_layout "#{Rails.root}/app/reports/dvi_report_device_cve_notices.tlf", :id => :device_cve_notices
 
           r.events.on :page_create do |e|
             e.page.item(:page_number).value(e.page.no)
@@ -142,7 +143,7 @@ namespace :reports do
             vulns = DviVuln.joins(:vulnerability).
                          select("count(*) as cnt").
                          where("mac = ?", d.macid)
-
+            
             snortAlerts = Alertdb.select("count(*) as cnt").
                               where("srcmac = ? OR dstmac = ?", d.macid, d.macid)
 
@@ -161,6 +162,35 @@ namespace :reports do
 
             lineCounter += 1
           end
+
+          #for each device, print out the list of CVE notices
+          devices.each do |d|
+
+            lineCounter = 1
+
+            vulns = DviVuln.joins(:vulnerability).
+                         select("vuln_id, vulnerability.summary as desc, vulnerability.cvss_score as score").
+                         where("mac = ?", d.macid)
+            
+            next if vulns.count == 0
+
+            r.start_new_page :layout => :device_cve_notices
+
+            r.page.list(:device_details).add_row({
+                                           :mac => d.macid.upcase,                                           
+                                           :username => d.username,
+                                           :devicename => d.devicename,
+                                           :updated_at => d.updated_at,
+                                           :cve_count => vulns.count})
+
+            vulns.each do |v|
+               r.page.list(:cve_list).add_row({:vuln_no => "#{lineCounter}.",
+                                               :cve_id => v.vuln_id,
+                                               :cve_summary => v.desc,
+                                               :cve_score => v.score})
+               lineCounter += 1
+            end
+          end #for each device
        end
 
        report.generate_file(reportFileName + ".pdf")
@@ -175,7 +205,7 @@ namespace :reports do
       file.write(e.backtrace.inspect)
    rescue IOError => e
       #Ignore for now...
-   end       
+   end #begin (for exception handling)       
    end
 
 end #namespace
