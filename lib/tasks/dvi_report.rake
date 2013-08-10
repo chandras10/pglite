@@ -8,8 +8,13 @@ namespace :reports do
    desc 'Device Vulnerabilty Index (DVI) Report'
 
    task dvi_report: :environment do begin    
+
        reportGenTimeStamp = Time.now.strftime('%Y%m%d_%H%M%S')
        reportFileName = "dvi_report_" + reportGenTimeStamp
+
+       graphNames = [ "#{Rails.root}/tmp/graph1_#{reportGenTimeStamp}.png", 
+                      "#{Rails.root}/tmp/graph2_#{reportGenTimeStamp}.png" ]
+
 
        page1_header = {
                    :company_name => "i7 Networks Pvt Ltd.",
@@ -38,7 +43,7 @@ namespace :reports do
 
           # Set up the headers and labels
           r.start_new_page :layout => :summary    
-          r.page.values(:company_name  => page1_header[:company_name],
+          r.page.values(:company_name       => page1_header[:company_name],
                         :company_addr_line1 => page1_header[:company_addr_line1],
                         :company_addr_line2 => page1_header[:company_addr_line2],
                         :company_addr_line3 => page1_header[:company_addr_line3],
@@ -51,41 +56,35 @@ namespace :reports do
           list.add_row({:dvi_range => "< 0.40",     :severity_label => "Low"})
   
           # Draw the first graph
-          devices = Deviceinfo.
-                               select("macid, username, devicename, to_char(updated_at, 'YYYY-MM-DD HH') as updated_at, dvi, weight").
+          deviceList = Deviceinfo.
+                               select("macid, username, devicename, operatingsystem, osversion, weight, to_char(updated_at, 'YYYY-MM-DD HH') as updated_at, dvi, weight").
                                where("ipaddr <> '' ").
                                order("dvi DESC")
           
           dvi_counter = Array.new(3, 0)
           dvi_severityHash = Hash.new
-          # Array Index 0: High, 1: Med, 2: Low
-          devices.each do |d|
-             if !d.dvi.nil?
-                case d.dvi
-                when d.dvi >= 0.7 && d.dvi <= 1.0
-                   dvi_counter[0] += 1
-                   dvi_severityHash[d.macid] = "High"
-                when d.dvi > 0.4 && d.dvi < 0.7
-                   dvi_counter[1] += 1
-                   dvi_severityHash[d.macid] = "Medium"
-                else
-                   dvi_counter[2] += 1
-                   dvi_severityHash[d.macid] = "Low"
-                end
+          deviceList.each do |d|
+             next if d.dvi.nil?
+             
+             if (d.dvi >= 0.7 && d.dvi <= 1.0)
+                dvi_counter[0] += 1
+                dvi_severityHash[d.macid] = "High"
+             elsif (d.dvi >= 0.4 && d.dvi < 0.7)
+                dvi_counter[1] += 1
+                dvi_severityHash[d.macid] = "Med"
+             else
+                dvi_counter[2] += 1
+                dvi_severityHash[d.macid] = "Low"
              end
-          end
 
-          #g = Gruff::Pie.new
-          #g.title = " "
-          #g.data 'High', dvi_counter[0]
-          #g.data 'Medium', dvi_counter[1]
-          #g.data 'Low', dvi_counter[2]
-   
-          #g.write "#{Rails.root}/tmp/graph1.png"
+          end # foreach device
 
-          g = Gruff::SideBar.new('600x600')
+          #
+          # DVI graph showing device list sliced by DVI severity (HIGH/MED/LOW)
+          #
+          g = Gruff::SideBar.new
           g.hide_title
-          g.x_axis_label = "Number of devices"
+          g.x_axis_label = "Number of deviceList"
           g.y_axis_label = "DVI Severity"
           g.top_margin = 0
           g.bottom_margin = 0
@@ -108,37 +107,81 @@ namespace :reports do
 
           g.labels = { 0 => 'High', 1 => 'Medium', 2 => 'Low' }
 
-          g.write "#{Rails.root}/tmp/graph1_#{reportGenTimeStamp}.png"
+          g.write graphNames[0]
+
+          r.page.item(:graph1).src(graphNames[0]) if File.exists? graphNames[0]
 
 
-          r.page.item(:graph1).src("#{Rails.root}/tmp/graph1_#{reportGenTimeStamp}.png") if File.exists? "#{Rails.root}/tmp/graph1_#{reportGenTimeStamp}.png"
+          # Get a list of operating system and distinct vulnerabilities discovered for each OS. The list of OSes is only for devices detected by us.
+          #
 
-          # select prod.os_name, count(*) from dvi_vuln d, vulnerability v, product prod, vuln_product vp  
-          # where d.vuln_id = v.id and vp.vuln_id = v.id and vp.product_id = prod.id 
-          # group by prod.os_name;
+          deviceVulns =  DviVuln.joins(:deviceinfo).joins(:vulnerability).
+                         select("deviceinfo.macid as mac, deviceinfo.operatingsystem as os, deviceinfo.osversion as osver, vuln_id")
 
-          slice_vuln_by_os = DviVuln.joins(:vulnerability).
-                             joins("INNER JOIN vuln_product ON vuln_product.vuln_id = vulnerability.id").
-                             joins("INNER JOIN product ON vuln_product.product_id = product.id").
-                             select("product.os_name, count(*) as cnt").
-                             group("product.os_name").order("cnt DESC")
+          # Aggregate the database records as follows:
+          # for each OS = { osver = { CVE = { [array of devices] } } }
+          # 
+
+          osVulnMap = Hash.new
+          deviceVulns.each do |dv|
+             if osVulnMap[dv.os].nil? then osVulnMap[dv.os] = Hash.new end
+             if osVulnMap[dv.os][dv.osver].nil? then 
+                osVulnMap[dv.os][dv.osver] = Hash.new
+             end
+             if osVulnMap[dv.os][dv.osver][dv.vuln_id].nil? then 
+                osVulnMap[dv.os][dv.osver][dv.vuln_id] = Array.new 
+             end
+
+             osVulnMap[dv.os][dv.osver][dv.vuln_id] << dv.mac
+          end
 
           list = r.page.list(:os_vuln_list)
           
           g = Gruff::Pie.new
           g.hide_title
           g.theme_37signals
-          slice_vuln_by_os.each do |os_rec|
-             g.data os_rec.os_name, os_rec.cnt.to_i
-             list.add_row({:os_name => os_rec.os_name, :count => os_rec.cnt})
+
+          osVulnMap.each do |os, osver_cve_device_map|
+
+             # Plot the graph at OS level and ignore OS_Version. For each OS, 
+             # we want the distinct/unique list of vulnerabilities
+             #
+             # We also want the list of devices running the given OS and OS_Version.
+             #
+             cveArray = Array.new
+             deviceArray = Array.new
+             osver_cve_device_map.each do |osver, cve_device_map|
+                cveArray << cve_device_map.keys
+             end
+
+             g.data os, cveArray.uniq.length
+
+             # Print per OS, per OS_version vulnerability counts
+             osName = os
+             osver_cve_device_map.keys.sort.each do |osver|
+                osVersion = osver
+                osVersion = "Unknown" if osVersion.strip.length == 0 # OS version is nil, empty or just whitespaces?
+
+                list.add_row({:os_name => osName, 
+                              :os_ver => osVersion, 
+                              :device_count => osver_cve_device_map[osver].values.flatten.compact.uniq.length,
+                              :vuln_count => osver_cve_device_map[osver].keys.count})
+                osName = " " #print OS name only once and not for every version row
+
+             end
           end
 
-          g.write "#{Rails.root}/tmp/graph2_#{reportGenTimeStamp}.png"
-          r.page.item(:graph2).src("#{Rails.root}/tmp/graph2_#{reportGenTimeStamp}.png") if File.exists? "#{Rails.root}/tmp/graph2_#{reportGenTimeStamp}.png"          
+          g.write graphNames[1]
+          r.page.item(:graph2).src(graphNames[1]) if File.exists? graphNames[1]
 
+
+          #
+          # List out all the devices, their DVI and other attributes 
+          #
           lineCounter = 1
           r.start_new_page :layout => :dvi_table
-          devices.each do |d|
+
+          deviceList.each do |d|
 
             vulns = DviVuln.joins(:vulnerability).
                          select("count(*) as cnt").
@@ -151,7 +194,8 @@ namespace :reports do
                        :macid => d.macid.upcase, 
                        :username => d.username,
                        :devicename => d.devicename,
-                       :updated_at => d.updated_at,
+                       :os => "#{d.operatingsystem} #{d.osversion}",
+                       :compromised => ((d.weight & 0x00FF0000) > 0) ? "Yes" : "No", 
                        :ids_count => snortAlerts.first.cnt,
                        :vuln_count => vulns.first.cnt,
                        :dvi => "#{d.dvi.round(2)}   (#{dvi_severityHash[d.macid]})"
@@ -164,9 +208,7 @@ namespace :reports do
           end
 
           #for each device, print out the list of CVE notices
-          devices.each do |d|
-
-            lineCounter = 1
+          deviceList.each do |d|
 
             vulns = DviVuln.joins(:vulnerability).
                          select("vuln_id, vulnerability.summary as desc, vulnerability.cvss_score as score").
@@ -175,19 +217,20 @@ namespace :reports do
             next if vulns.count == 0
 
             r.start_new_page :layout => :device_cve_notices
-
-            r.page.list(:device_details).add_row({
-                                           :mac => d.macid.upcase,                                           
-                                           :username => d.username,
+            r.page.list(:cve_list).header({:mac => d.macid.upcase,
                                            :devicename => d.devicename,
-                                           :updated_at => d.updated_at,
-                                           :cve_count => vulns.count})
+                                           :username => d.username})
 
+            lineCounter = 1
             vulns.each do |v|
-               r.page.list(:cve_list).add_row({:vuln_no => "#{lineCounter}.",
-                                               :cve_id => v.vuln_id,
-                                               :cve_summary => v.desc,
-                                               :cve_score => v.score})
+
+               record = {:vuln_no => "#{lineCounter}.",
+                         :cve_id => v.vuln_id,
+                         :cve_summary => v.desc,
+                         :cve_score => v.score
+                        }
+
+               r.page.list(:cve_list).add_row(record)
                lineCounter += 1
             end
           end #for each device
@@ -195,13 +238,13 @@ namespace :reports do
 
        report.generate_file(reportFileName + ".pdf")
 
-       File.delete "#{Rails.root}/tmp/graph1_#{reportGenTimeStamp}.png" if File.exists? "#{Rails.root}/tmp/graph1_#{reportGenTimeStamp}.png"
-       File.delete "#{Rails.root}/tmp/graph2_#{reportGenTimeStamp}.png" if File.exists? "#{Rails.root}/tmp/graph2_#{reportGenTimeStamp}.png"
+       File.delete graphNames[0] if File.exists? graphNames[0]
+       File.delete graphNames[1] if File.exists? graphNames[1]
 
    rescue Exception => e
       file = File.open(reportFileName + ".txt", 'w')
-      file.write("Unable to generate the report.")
-      file.write("Error: #{e.message}")
+      file.write("Unable to generate the report.\n")
+      file.write("Error: #{e.message}\n\n")
       file.write(e.backtrace.inspect)
    rescue IOError => e
       #Ignore for now...
