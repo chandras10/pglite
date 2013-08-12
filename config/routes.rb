@@ -33,6 +33,8 @@ Pglite::Application.routes.draw do
   match '/settings', to: 'settings#settings_menu', :via => :get
   match '/settings', to: 'settings#save_settings', :via => :post
 
+  # Batch Reports
+  match '/dvi_report', to:  'batch_reports#dvi_report'
 
 
   
