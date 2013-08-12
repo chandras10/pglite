@@ -33,6 +33,7 @@ namespace :reports do
           r.use_layout "#{Rails.root}/app/reports/dvi_report_header.tlf", :id => :summary
           r.use_layout "#{Rails.root}/app/reports/dvi_table.tlf", :id => :dvi_table
           r.use_layout "#{Rails.root}/app/reports/dvi_report_device_cve_notices.tlf", :id => :device_cve_notices
+          r.use_layout "#{Rails.root}/app/reports/dv_report_device_intrusion_notices.tlf", :id => :device_intrusion_notices
 
           r.events.on :page_create do |e|
             e.page.item(:page_number).value(e.page.no)
@@ -180,6 +181,8 @@ namespace :reports do
           #
           lineCounter = 1
           r.start_new_page :layout => :dvi_table
+          snortAlerts_srcmac = Hash.new
+          snortAlerts_dstmac = Hash.new
 
           deviceList.each do |d|
 
@@ -187,8 +190,16 @@ namespace :reports do
                          select("count(*) as cnt").
                          where("mac = ?", d.macid)
             
-            snortAlerts = Alertdb.select("count(*) as cnt").
-                              where("srcmac = ? OR dstmac = ?", d.macid, d.macid)
+            #snortAlerts = Alertdb.select("count(*) as cnt").
+            #                  where("srcmac = ? OR dstmac = ?", d.macid, d.macid)
+            snortAlerts_srcmac[d.macid] = Alertdb.find_by_sql("select srcmac as macid, sigid, priority, message, count(*) as cnt from alertdb 
+                                               where (srcmac = '#{d.macid}') 
+                                               group by srcmac, sigid, priority, message
+                                               order by srcmac, priority, sigid")
+            snortAlerts_dstmac[d.macid] = Alertdb.find_by_sql("select dstmac as macid, sigid, priority, message, count(*) as cnt from alertdb 
+                                                where (dstmac = '#{d.macid}') 
+                                                group by dstmac, sigid, priority, message
+                                                order by dstmac, priority, sigid")
 
             record = { :line_no => "#{lineCounter}.",
                        :macid => d.macid.upcase, 
@@ -196,7 +207,7 @@ namespace :reports do
                        :devicename => d.devicename,
                        :os => "#{d.operatingsystem} #{d.osversion}",
                        :compromised => ((d.weight & 0x00FF0000) > 0) ? "Yes" : "No", 
-                       :ids_count => snortAlerts.first.cnt,
+                       :ids_count => snortAlerts_srcmac[d.macid].count + snortAlerts_dstmac[d.macid].count,
                        :vuln_count => vulns.first.cnt,
                        :dvi => "#{d.dvi.round(2)}   (#{dvi_severityHash[d.macid]})"
                     }
@@ -219,7 +230,9 @@ namespace :reports do
             r.start_new_page :layout => :device_cve_notices
             r.page.list(:cve_list).header({:mac => d.macid.upcase,
                                            :devicename => d.devicename,
-                                           :username => d.username})
+                                           :username => d.username,
+                                           :os_name => d.operatingsystem,
+                                           :os_version => d.osversion})
 
             lineCounter = 1
             vulns.each do |v|
@@ -234,6 +247,70 @@ namespace :reports do
                lineCounter += 1
             end
           end #for each device
+
+          
+          deviceList.each do |d|
+            next if (snortAlerts_srcmac[d.macid].count == 0) && (snortAlerts_dstmac[d.macid].count == 0)
+
+            r.start_new_page :layout => :device_intrusion_notices
+            r.page.list(:ids_list).header({:mac => d.macid.upcase,
+                                           :devicename => d.devicename,
+                                           :username => d.username,
+                                           :os_name => d.operatingsystem,
+                                           :os_version => d.osversion})
+
+
+            lineCounter = 1
+            snortAlerts_srcmac[d.macid].each do |rec|
+               case rec.priority
+               when 1 
+                  priority = "High"
+               when 2 
+                  priority = "Medium"
+               when 3 
+                  priority = "Low"
+               when 4 
+                  priority = "Very Low"
+               else   
+                  priority = "Unknown"
+               end
+
+               record = {:ids_no => "#{lineCounter}.",
+                         :ids_sig_id => rec.sigid,
+                         :ids_priority => priority,
+                         :ids_message => rec.message,
+                         :ids_sigid_occurences => rec.cnt
+                        }
+
+               r.page.list(:ids_list).add_row(record)
+               lineCounter += 1
+            end
+            snortAlerts_dstmac[d.macid].each do |rec|
+               case rec.priority
+               when 1 
+                  priority = "High"
+               when 2 
+                  priority = "Medium"
+               when 3 
+                  priority = "Low"
+               when 4 
+                  priority = "Very Low"
+               else   
+                  priority = "Unknown"
+               end
+
+               record = {:ids_no => "#{lineCounter}.",
+                         :ids_sig_id => rec.sigid,
+                         :ids_priority => priority,
+                         :ids_message => rec.message,
+                         :ids_sigid_occurences => rec.cnt
+                        }
+
+               r.page.list(:ids_list).add_row(record)
+               lineCounter += 1
+            end
+
+          end
        end
 
        report.generate_file(reportFileName + ".pdf")
