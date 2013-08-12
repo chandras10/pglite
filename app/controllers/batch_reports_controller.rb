@@ -27,6 +27,7 @@ class BatchReportsController < ApplicationController
        report = ThinReports::Report.create do |r|
           
           r.use_layout "#{Rails.root}/app/reports/dvi_report_header.tlf", :id => :summary
+          r.use_layout "#{Rails.root}/app/reports/dvi_vuln_summary_table.tlf", :id => :vuln_summary          
           r.use_layout "#{Rails.root}/app/reports/dvi_table.tlf", :id => :dvi_table
           r.use_layout "#{Rails.root}/app/reports/dvi_report_device_cve_notices.tlf", :id => :device_cve_notices
           r.use_layout "#{Rails.root}/app/reports/dv_report_device_intrusion_notices.tlf", :id => :device_intrusion_notices
@@ -108,29 +109,14 @@ class BatchReportsController < ApplicationController
 
           r.page.item(:graph1).src(graphNames[0]) if File.exists? graphNames[0]
 
-
-          # Get a list of operating system and distinct vulnerabilities discovered for each OS. The list of OSes is only for devices detected by us.
+          # Graph 2: Get a list of operating system and distinct vulnerabilities discovered for each OS. The list of OSes is only for devices detected by us.
           #
-
           deviceVulns =  DviVuln.joins(:deviceinfo).joins(:vulnerability).
-                         select("deviceinfo.macid as mac, deviceinfo.operatingsystem as os, deviceinfo.osversion as osver, vuln_id")
+                         select("deviceinfo.macid as mac, deviceinfo.operatingsystem as os, deviceinfo.osversion as osver, vuln_id, 
+                         	     vulnerability.summary as desc, vulnerability.cvss_score as score, vulnerability.cvss_access_complexity as vuln_severity")
 
-          # Aggregate the database records as follows:
-          # for each OS = { osver = { CVE = { [array of devices] } } }
-          # 
+          snortAlerts = Alertdb.select("srcmac, dstmac, sigid, priority, message, count(*) as cnt").group("srcmac, dstmac, sigid, priority, message")
 
-          osVulnMap = Hash.new
-          deviceVulns.each do |dv|
-             if osVulnMap[dv.os].nil? then osVulnMap[dv.os] = Hash.new end
-             if osVulnMap[dv.os][dv.osver].nil? then 
-                osVulnMap[dv.os][dv.osver] = Hash.new
-             end
-             if osVulnMap[dv.os][dv.osver][dv.vuln_id].nil? then 
-                osVulnMap[dv.os][dv.osver][dv.vuln_id] = Array.new 
-             end
-
-             osVulnMap[dv.os][dv.osver][dv.vuln_id] << dv.mac
-          end
 
           list = r.page.list(:os_vuln_list)
           
@@ -138,92 +124,116 @@ class BatchReportsController < ApplicationController
           g.hide_title
           g.theme_37signals
 
-          osVulnMap.each do |os, osver_cve_device_map|
+          osList = deviceVulns.map {|dv| dv.os}.uniq.sort
+          osList.each do |os|
 
-             # Plot the graph at OS level and ignore OS_Version. For each OS, 
-             # we want the distinct/unique list of vulnerabilities
-             #
-             # We also want the list of devices running the given OS and OS_Version.
-             #
-             cveArray = Array.new
-             deviceArray = Array.new
-             osver_cve_device_map.each do |osver, cve_device_map|
-                cveArray << cve_device_map.keys
-             end
-
-             g.data os, cveArray.uniq.length
-
-             # Print per OS, per OS_version vulnerability counts
+             # Breakup the vulnerability count and device count per OS and its version
              osName = os
-             osver_cve_device_map.keys.sort.each do |osver|
-                osVersion = osver
-                osVersion = "Unknown" if osVersion.strip.length == 0 # OS version is nil, empty or just whitespaces?
+             osRecs = deviceVulns.select {|dv| dv.os == os}
+             osVersionList = osRecs.map {|dv| dv.osver}.uniq.sort
+             osVulnCount = 0
+             osVersionList.each do |osver|
+             	deviceCount = osRecs.select{|dv| dv.osver == osver}.map{|dv| dv.mac}.uniq.count
+             	vulnCount   = osRecs.select{|dv| dv.osver == osver}.map{|dv| dv.vuln_id}.uniq.count
+                osVulnCount += vulnCount
 
                 list.add_row({:os_name => osName, 
-                              :os_ver => osVersion, 
-                              :device_count => osver_cve_device_map[osver].values.flatten.compact.uniq.length,
-                              :vuln_count => osver_cve_device_map[osver].keys.count})
+                              :os_ver => (osver != "" ? osver : "Unknown"), 
+                              :device_count => deviceCount,
+                              :vuln_count => vulnCount})
                 osName = " " #print OS name only once and not for every version row
-
              end
+
+             g.data os, osVulnCount
+
           end
 
           g.write graphNames[1]
           r.page.item(:graph2).src(graphNames[1]) if File.exists? graphNames[1]
 
+          r.start_new_page :layout => :vuln_summary
+          r.page.values( :page_title => "Vulnerability Events",
+          	             :event_type => "vulnerabilities: ")
 
-          #
-          # List out all the devices, their DVI and other attributes 
+          vulnSeverityValues = ["CRITICAL", "HIGH", "MEDIUM", "LOW", ""] # copied these from vulnerability table in the database
+          vulnSeverityValues.each do |severity|
+          	 if severity.empty?
+          	    vulns = deviceVulns.inject(Hash.new(0)) {|hash, dv| hash[dv.vuln_id] += 1 if dv.vuln_severity.nil?; hash}
+          	    severity = "Unknown"
+          	 else
+          	    vulns = deviceVulns.inject(Hash.new(0)) {|hash, dv| hash[dv.vuln_id] += 1 if dv.vuln_severity == severity ; hash}
+          	 end
+             vulns.keys.sort.each do |cve|
+             	rec = deviceVulns.detect { |dv| dv.vuln_id == cve } 
+                r.page.list.add_row ( {
+                                       :severity => severity,
+                                       :description => rec.desc,
+                                       :id => rec.vuln_id,
+                                       :count => vulns[cve]
+          	 	                    })
+                severity = " "
+             end
+          end
+
+          r.start_new_page :layout => :vuln_summary
+          r.page.values( :page_title => "Intrusion Events",
+          	             :event_type => "possible intrusions: ")
+
+          snortPriority = ["High", "Medium", "Low", "Very Low"]
+          for priorityIndex in 0..4
+          	 if priorityIndex == 0
+          	    snorts = snortAlerts.inject(Hash.new(0)) {|hash, sa| hash[sa.sigid] += sa.cnt.to_i if sa.priority.nil?; hash}
+          	    priorityLabel = "Unknown"
+          	 else
+          	    snorts = snortAlerts.inject(Hash.new(0)) {|hash, sa| hash[sa.sigid] += sa.cnt.to_i if sa.priority == priorityIndex ; hash}
+          	    priorityLabel = snortPriority[priorityIndex]
+          	 end
+             snorts.keys.sort.each do |snortID|
+             	rec = snortAlerts.detect { |sa| sa.sigid == snortID } 
+                r.page.list.add_row ( {
+                                       :severity => priorityLabel,
+                                       :description => rec.message,
+                                       :id => snortID,
+                                       :count => snorts[snortID]
+          	 	                    })
+                priorityLabel = " "
+             end
+          end
+          # Page 3:
+          # List out all the devices, their DVI, Snort alert counts and other attributes 
           #
           lineCounter = 1
           r.start_new_page :layout => :dvi_table
-          snortAlerts_srcmac = Hash.new
-          snortAlerts_dstmac = Hash.new
 
           deviceList.each do |d|
 
-            vulns = DviVuln.joins(:vulnerability).
-                         select("count(*) as cnt").
-                         where("mac = ?", d.macid)
+            vulns = deviceVulns.select {|dv| dv.mac == d.macid }
+            snorts = snortAlerts.select {|sa| (sa.srcmac == d.macid || sa.dstmac == d.macid) }
             
-            #snortAlerts = Alertdb.select("count(*) as cnt").
-            #                  where("srcmac = ? OR dstmac = ?", d.macid, d.macid)
-            snortAlerts_srcmac[d.macid] = Alertdb.find_by_sql("select srcmac as macid, sigid, priority, message, count(*) as cnt from alertdb 
-                                               where (srcmac = '#{d.macid}') 
-                                               group by srcmac, sigid, priority, message
-                                               order by srcmac, priority, sigid")
-            snortAlerts_dstmac[d.macid] = Alertdb.find_by_sql("select dstmac as macid, sigid, priority, message, count(*) as cnt from alertdb 
-                                                where (dstmac = '#{d.macid}') 
-                                                group by dstmac, sigid, priority, message
-                                                order by dstmac, priority, sigid")
-
-            record = { :line_no => "#{lineCounter}.",
-                       :macid => d.macid.upcase, 
-                       :username => d.username,
-                       :devicename => d.devicename,
-                       :os => "#{d.operatingsystem} #{d.osversion}",
-                       :compromised => ((d.weight & 0x00FF0000) > 0) ? "Yes" : "No", 
-                       :ids_count => snortAlerts_srcmac[d.macid].count + snortAlerts_dstmac[d.macid].count,
-                       :vuln_count => vulns.first.cnt,
-                       :dvi => "#{d.dvi.round(2)}   (#{dvi_severityHash[d.macid]})"
-                    }
-            r.page.list.add_row(record)
+            r.page.list.add_row( { :line_no => "#{lineCounter}.",
+                                   :macid => d.macid.upcase, 
+                                   :username => d.username,
+                                   :devicename => d.devicename,
+                                   :os => "#{d.operatingsystem} #{d.osversion}",
+                                   :compromised => ((d.weight & 0x00FF0000) > 0) ? "Yes" : "No", 
+                                   :ids_count => snorts.uniq {|sa| sa.sigid}.count, 
+                                   :vuln_count => vulns.uniq {|v| v.vuln_id}.count,
+                                   :dvi => "#{d.dvi.round(2)}   (#{dvi_severityHash[d.macid]})"
+                                 })
 
             # TODO: Color rows different if there is a jailbroken device - d.weight & 0x00FF0000 > 0
-
             lineCounter += 1
           end
 
-          #for each device, print out the list of CVE notices
+          #for each device, print out the list of CVE notices and its Snort Alerts
           deviceList.each do |d|
 
-            vulns = DviVuln.joins(:vulnerability).
-                         select("vuln_id, vulnerability.summary as desc, vulnerability.cvss_score as score").
-                         where("mac = ?", d.macid)
-            
+            vulns = deviceVulns.select {|dv| dv.mac == d.macid }
+
             next if vulns.count == 0
 
             r.start_new_page :layout => :device_cve_notices
+
             r.page.list(:cve_list).header({:mac => d.macid.upcase,
                                            :devicename => d.devicename,
                                            :username => d.username,
@@ -233,20 +243,18 @@ class BatchReportsController < ApplicationController
             lineCounter = 1
             vulns.each do |v|
 
-               record = {:vuln_no => "#{lineCounter}.",
-                         :cve_id => v.vuln_id,
-                         :cve_summary => v.desc,
-                         :cve_score => v.score
-                        }
-
-               r.page.list(:cve_list).add_row(record)
+               r.page.list(:cve_list).add_row( {:vuln_no => "#{lineCounter}.",
+                                                :cve_id => v.vuln_id,
+                                                :cve_summary => v.desc,
+                                                :cve_score => v.score
+                                               })
                lineCounter += 1
             end
-          end #for each device
 
-          
-          deviceList.each do |d|
-            next if (snortAlerts_srcmac[d.macid].count == 0) && (snortAlerts_dstmac[d.macid].count == 0)
+            snortPriority = ["Unknown", "High", "Medium", "Low", "Very Low"]
+            snorts = snortAlerts.select {|sa| (sa.srcmac == d.macid || sa.dstmac == d.macid) }
+            next if snorts.count == 0
+            snortCountHash = snorts.inject(Hash.new(0)) {|h, s| h[s.sigid] += 1; h }
 
             r.start_new_page :layout => :device_intrusion_notices
             r.page.list(:ids_list).header({:mac => d.macid.upcase,
@@ -257,68 +265,27 @@ class BatchReportsController < ApplicationController
 
 
             lineCounter = 1            
-            snortAlerts_srcmac[d.macid].each do |rec|
-               case rec.priority
-               when 1 
-                  priority = "High"
-               when 2 
-                  priority = "Medium"
-               when 3 
-                  priority = "Low"
-               when 4 
-                  priority = "Very Low"
-               else   
-                  priority = "Unknown"
-               end
+            snortCountHash.keys.sort.each do |id|
 
-               
-               record = {:ids_no => "#{lineCounter}.",
-                         :ids_sig_id => rec.sigid,
-                         :ids_priority => priority,
-                         :ids_message => rec.message,
-                         :ids_sigid_occurences => rec.cnt
-                        }
-
-               r.page.list(:ids_list).add_row(record)
+               # Get the first Snort Alert that matches the given Snort ID. We need it to grab the priority and message for that ID.
+               rec = snorts.detect { |s| s.sigid == id } 
+               r.page.list(:ids_list).add_row( {:ids_no => "#{lineCounter}.",
+                                                :ids_sig_id => rec.sigid,
+                                                :ids_priority => snortPriority[rec.priority],
+                                                :ids_message => rec.message,
+                                                :ids_sigid_occurences => snortCountHash[id]
+                                               } )
                lineCounter += 1
-            end
-            snortAlerts_dstmac[d.macid].each do |rec|
-               case rec.priority
-               when 1 
-                  priority = "High"
-               when 2 
-                  priority = "Medium"
-               when 3 
-                  priority = "Low"
-               when 4 
-                  priority = "Very Low"
-               else   
-                  priority = "Unknown"
-               end
+            end #for each snort alert
 
-               record = {:ids_no => "#{lineCounter}.",
-                         :ids_sig_id => rec.sigid,
-                         :ids_priority => priority,
-                         :ids_message => rec.message,
-                         :ids_sigid_occurences => rec.cnt
-                        }
-
-               #r.page.list(:ids_list).add_row(record)
-               #lineCounter += 1
-            end
-
-          end
-       end
+          end # each Device
+       end # Report
 
        send_data report.generate, filename: "#{reportFileName}.pdf", 
                                type: 'application/pdf', 
                                disposition: 'attachment'
 
        #report.generate_file(reportFileName + ".pdf")
-
-       File.delete graphNames[0] if File.exists? graphNames[0]
-       File.delete graphNames[1] if File.exists? graphNames[1]
-
    rescue Exception => e
       file = File.open(reportFileName + ".txt", 'w')
       file.write("Unable to generate the report.\n")
@@ -326,6 +293,9 @@ class BatchReportsController < ApplicationController
       file.write(e.backtrace.inspect)
    rescue IOError => e
       #Ignore for now...
+   ensure
+       File.delete graphNames[0] if File.exists? graphNames[0]
+       File.delete graphNames[1] if File.exists? graphNames[1]   	
    end #begin (for exception handling)       
 
   end
