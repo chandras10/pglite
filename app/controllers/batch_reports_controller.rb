@@ -2,7 +2,8 @@ require 'thinreports'
 require 'gruff'
 
 class BatchReportsController < ApplicationController
-#  before_filter :signed_in_user, only: [:dvi_report]
+
+  TRUNCATE_MESG_LENGTH = 400
 
   def dvi_report
    begin    
@@ -29,7 +30,7 @@ class BatchReportsController < ApplicationController
        report = ThinReports::Report.create do |r|
           
           r.use_layout "#{Rails.root}/app/reports/dvi_report_header.tlf", :id => :summary
-#          r.use_layout "#{Rails.root}/app/reports/dvi_vuln_summary_table.tlf", :id => :vuln_summary
+          r.use_layout "#{Rails.root}/app/reports/dvi_vuln_summary_table.tlf", :id => :vuln_summary          
           r.use_layout "#{Rails.root}/app/reports/dvi_table.tlf", :id => :dvi_table
           r.use_layout "#{Rails.root}/app/reports/dvi_report_device_cve_notices.tlf", :id => :device_cve_notices
           r.use_layout "#{Rails.root}/app/reports/dv_report_device_intrusion_notices.tlf", :id => :device_intrusion_notices
@@ -39,16 +40,8 @@ class BatchReportsController < ApplicationController
             e.page.item(:report_create_date).value(Time.now)
           end
 
-          deviceList = Deviceinfo.
-                               select("macid, username, devicename, operatingsystem, osversion, weight, to_char(updated_at, 'YYYY-MM-DD HH') as updated_at, dvi, weight").
-                               where("ipaddr <> '' ").
-                               order("dvi DESC")
-          deviceVulns =  DviVuln.joins(:deviceinfo).joins(:vulnerability).
-                                 select("deviceinfo.macid as mac, deviceinfo.operatingsystem as os, deviceinfo.osversion as osver, vuln_id, 
-                                         vulnerability.summary as desc, vulnerability.cvss_score as score, vulnerability.cvss_access_complexity as vuln_severity")
-          snortAlerts = Alertdb.select("srcmac, dstmac, sigid, priority, message, count(*) as cnt").group("srcmac, dstmac, sigid, priority, message")
-
           # First page - Summary
+
           # Set up the headers and labels
           r.start_new_page :layout => :summary    
           r.page.values(:company_name       => page1_header[:company_name],
@@ -63,7 +56,18 @@ class BatchReportsController < ApplicationController
           list.add_row({:dvi_range => "0.40  -   0.69", :severity_label => "Medium"})
           list.add_row({:dvi_range => "< 0.40",     :severity_label => "Low"})
   
+          # Draw the first graph
+          deviceList = Deviceinfo.
+                               select("macid, username, devicename, operatingsystem, osversion, weight, to_char(updated_at, 'YYYY-MM-DD HH') as updated_at, dvi, weight").
+                               where("ipaddr <> '' ").
+                               order("dvi DESC")
+          deviceVulns =  DviVuln.joins(:deviceinfo).joins(:vulnerability).
+                                 select("deviceinfo.macid as mac, deviceinfo.operatingsystem as os, deviceinfo.osversion as osver, vuln_id, 
+                                         vulnerability.summary as desc, vulnerability.cvss_score as score, vulnerability.cvss_access_complexity as vuln_severity")
 
+          snortAlerts = Alertdb.select("srcmac, dstmac, sigid, priority, message, count(*) as cnt").group("srcmac, dstmac, sigid, priority, message")
+
+          
           dvi_counter = Array.new(3, 0)
           dvi_severityHash = Hash.new
           deviceList.each do |d|
@@ -116,6 +120,7 @@ class BatchReportsController < ApplicationController
 
           # Graph 2: Get a list of operating system and distinct vulnerabilities discovered for each OS. The list of OSes is only for devices detected by us.
           #
+
           list = r.page.list(:os_vuln_list)
           
           g = Gruff::Pie.new
@@ -129,11 +134,11 @@ class BatchReportsController < ApplicationController
              osName = os
              osRecs = deviceVulns.select {|dv| dv.os == os}
              osVersionList = osRecs.map {|dv| dv.osver}.uniq.sort
-             perOsVulnCount = 0
+             osVulnCount = 0
              osVersionList.each do |osver|
-             	  deviceCount = osRecs.select{|dv| dv.osver == osver}.map{|dv| dv.mac}.uniq.count
-             	  vulnCount   = osRecs.select{|dv| dv.osver == osver}.map{|dv| dv.vuln_id}.uniq.count
-                perOsVulnCount += vulnCount
+             	deviceCount = osRecs.select{|dv| dv.osver == osver}.map{|dv| dv.mac}.uniq.count
+             	vulnCount   = osRecs.select{|dv| dv.osver == osver}.map{|dv| dv.vuln_id}.uniq.count
+                osVulnCount += vulnCount
 
                 list.add_row({:os_name => osName, 
                               :os_ver => (osver != "" ? osver : "Unknown"), 
@@ -142,13 +147,61 @@ class BatchReportsController < ApplicationController
                 osName = " " #print OS name only once and not for every version row
              end
 
-             g.data os, perOsVulnCount
+             g.data os, osVulnCount
 
           end
 
           g.write graphNames[1]
           r.page.item(:graph2).src(graphNames[1]) if File.exists? graphNames[1]
 
+          r.start_new_page :layout => :vuln_summary
+          r.page.values( :page_title => "Vulnerability Events",
+          	             :event_type => "vulnerabilities: ")
+
+          vulnSeverityValues = ["CRITICAL", "HIGH", "MEDIUM", "LOW", ""] # copied these from vulnerability table in the database
+          vulnSeverityValues.each do |severity|
+          	 if severity.empty?
+          	    vulns = deviceVulns.inject(Hash.new(0)) {|hash, dv| hash[dv.vuln_id] += 1 if dv.vuln_severity.nil?; hash}
+          	    severity = "Unknown"
+          	 else
+          	    vulns = deviceVulns.inject(Hash.new(0)) {|hash, dv| hash[dv.vuln_id] += 1 if dv.vuln_severity == severity ; hash}
+          	 end
+             vulns.keys.sort.each do |cve|
+             	rec = deviceVulns.detect { |dv| dv.vuln_id == cve } 
+                r.page.list.add_row ( {
+                                       :severity => severity,
+                                       :description => rec.desc.truncate(TRUNCATE_MESG_LENGTH, :separator => ' '),
+                                       :id => rec.vuln_id,
+                                       :count => vulns[cve]
+          	 	                    })
+                severity = " "
+             end
+          end
+
+          r.start_new_page :layout => :vuln_summary
+          r.page.values( :page_title => "Intrusion Events",
+          	             :event_type => "possible intrusions: ")
+
+          snortPriority = ["High", "Medium", "Low", "Very Low"]
+          for priorityIndex in 0..4
+          	 if priorityIndex == 0
+          	    snorts = snortAlerts.inject(Hash.new(0)) {|hash, sa| hash[sa.sigid] += sa.cnt.to_i if sa.priority.nil?; hash}
+          	    priorityLabel = "Unknown"
+          	 else
+          	    snorts = snortAlerts.inject(Hash.new(0)) {|hash, sa| hash[sa.sigid] += sa.cnt.to_i if sa.priority == priorityIndex ; hash}
+          	    priorityLabel = snortPriority[priorityIndex]
+          	 end
+             snorts.keys.sort.each do |snortID|
+             	rec = snortAlerts.detect { |sa| sa.sigid == snortID } 
+                r.page.list.add_row ( {
+                                       :severity => priorityLabel,
+                                       :description => rec.message.truncate(TRUNCATE_MESG_LENGTH, :separator => ' '),
+                                       :id => snortID,
+                                       :count => snorts[snortID]
+          	 	                    })
+                priorityLabel = " "
+             end
+          end
           # Page 3:
           # List out all the devices, their DVI, Snort alert counts and other attributes 
           #
@@ -195,7 +248,7 @@ class BatchReportsController < ApplicationController
 
                r.page.list(:cve_list).add_row( {:vuln_no => "#{lineCounter}.",
                                                 :cve_id => v.vuln_id,
-                                                :cve_summary => v.desc,
+                                                :cve_summary => v.desc.truncate(TRUNCATE_MESG_LENGTH, :separator => ' '),
                                                 :cve_score => v.score
                                                })
                lineCounter += 1
@@ -222,7 +275,7 @@ class BatchReportsController < ApplicationController
                r.page.list(:ids_list).add_row( {:ids_no => "#{lineCounter}.",
                                                 :ids_sig_id => rec.sigid,
                                                 :ids_priority => snortPriority[rec.priority],
-                                                :ids_message => rec.message,
+                                                :ids_message => rec.message.truncate(TRUNCATE_MESG_LENGTH, :separator => ' '),
                                                 :ids_sigid_occurences => snortCountHash[id]
                                                } )
                lineCounter += 1
@@ -232,9 +285,8 @@ class BatchReportsController < ApplicationController
        end # Report
 
        send_data report.generate, filename: "#{reportFileName}.pdf", 
-                                  type: 'application/pdf', 
-                                  disposition: 'attachment'
-       render :nothing => true
+                               type: 'application/pdf', 
+                               disposition: 'attachment'
 
        #report.generate_file(reportFileName + ".pdf")
    rescue Exception => e
@@ -246,7 +298,7 @@ class BatchReportsController < ApplicationController
       #Ignore for now...
    ensure
        File.delete graphNames[0] if File.exists? graphNames[0]
-       File.delete graphNames[1] if File.exists? graphNames[1]
+       File.delete graphNames[1] if File.exists? graphNames[1]   	
    end #begin (for exception handling)       
 
   end
