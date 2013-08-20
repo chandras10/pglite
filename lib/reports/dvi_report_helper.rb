@@ -2,7 +2,7 @@ module DviReportHelper
 
 require 'thinreports'
   
-    TRUNCATE_MESG_LENGTH = 400
+    TRUNCATE_MESG_LENGTH = 85
     VULN_SEVERITY_LABELS = ["CRITICAL", "HIGH", "MEDIUM", "LOW", ""]
     DVI_SEVERITY_LABELS = ["Low", "Medium", "High"]
     DVI_SEVERITY_RANGES = [0.0..0.39, 0.4..0.69, 0.7..1.0]
@@ -17,13 +17,9 @@ require 'thinreports'
              r.use_layout "#{Rails.root}/app/reports/dvi_table.tlf", :id => :dvi_table
              r.use_layout "#{Rails.root}/app/reports/dvi_vuln_by_os.tlf", :id => :vuln_by_os_summary
              r.use_layout "#{Rails.root}/app/reports/dvi_vuln_by_os_osver_table.tlf", :id => :vuln_by_os_osver_table
+             r.use_layout "#{Rails.root}/app/reports/dvi_intrusion_summary_table.tlf", :id => :intrusion_summary
 
-
-             r.events.on :page_create do |e|
-                e.page.item(:page_number).value(e.page.no)
-                e.page.item(:report_create_date).value(Time.now)
-             end
-
+             setPageBreakEvents()
 
              #DATABASE QUERIES
              @deviceList = Deviceinfo.
@@ -44,30 +40,39 @@ require 'thinreports'
                                                group by p.os_name, p.os_version, v.cvss_access_complexity 
                                                order by os, osver, v.cvss_access_complexity")
 
-             r.start_new_page :layout => :dvi_chart
-           
+             r.start_new_page :layout => :dvi_chart           
              setCompanyDetails()             
              printDVILegend()
-
-
              dviSeverityGraph()
 
              r.start_new_page :layout => :dvi_table
              dviTableListingAllDevices()
 
-             # 
-             #----------------------------------------
-             #
              r.start_new_page :layout => :vuln_by_os_summary
              vulnByOsGraph()
 
              r.start_new_page :layout => :vuln_by_os_osver_table
              vulnByOs_OsversionTable()
+
+             r.events.on :page_create do |e|
+                e.page.item(:page_number).value(e.page.no)
+                e.page.item(:report_create_date).value(Time.now)
+             end
+
+             r.start_new_page :layout => :intrusion_summary
+             snortAlertsSummary()
              
           end # report.create
 
        return dvi_report
 
+    end
+
+    def setPageBreakEvents
+       @report.events.on :page_create do |e|
+           e.page.item(:page_number).value(e.page.no)
+           e.page.item(:report_create_date).value(Time.now)
+       end
     end
 
     def dviIndex(dviScore)
@@ -187,7 +192,8 @@ require 'thinreports'
             vulns = @deviceVulns.select {|dv| dv.mac == d.macid }
             snorts = @snortAlerts.select {|sa| (sa.srcmac == d.macid || sa.dstmac == d.macid) }
             
-            @report.page.list.add_row( { :line_no => "#{i+1}.",
+            @report.page.list.add_row do |row|
+                row.values( { :line_no => "#{i+1}.",
                                    :macid => d.macid.upcase, 
                                    :username => d.username,
                                    :devicename => d.devicename,
@@ -197,6 +203,9 @@ require 'thinreports'
                                    :vuln_count => vulns.uniq {|v| v.vuln_id}.count,
                                    :dvi => "#{d.dvi.round(2)}"
                                  })
+                row.item(:detail_row_box).style(:fill_color, (i%2 == 0) ? 'ffffff' : 'c6d9f0')
+                1.upto(8) { |n| row.item("col_border#{n}".to_sym).show }                
+            end
 
             # TODO: Color rows different if there is a jailbroken device - d.weight & 0x00FF0000 > 0
           end
@@ -208,18 +217,18 @@ require 'thinreports'
 
        @report.page.values(:graph_title => "Vulnerabilities By Operating System")
 
-       g = Gruff::Pie.new
+       g = Gruff::Pie.new(400)
        g.hide_title
        g.theme_37signals
 
        osVulnHash = Hash.new
-       osList = @deviceVulns.map {|dv| dv.os}.uniq.sort
+       osList = @deviceVulns.map {|dv| dv.os}.compact.uniq.sort
        osList.each do |os|
           deviceVulnRecs = @deviceVulns.select{|dv| dv.os == os}
-          osVersionList = deviceVulnRecs.map {|dv| dv.osver.to_s}.uniq.sort
+          osVersionList = deviceVulnRecs.map {|dv| dv.osver.to_s}.compact.uniq.sort
          
           osVulnHash[os] = Array.new(VULN_SEVERITY_LABELS.length, 0) if osVulnHash[os].nil?
-          deviceCount = deviceVulnRecs.map{|dv| dv.mac}.uniq.count
+          deviceCount = deviceVulnRecs.map{|dv| dv.mac}.compact.uniq.count
 
           osVersionList.each do |osver|
              prodVulnRecs = @prodVulns.select {|pv| pv.os.downcase == os.downcase && pv.osver.downcase == osver.downcase}
@@ -248,18 +257,34 @@ require 'thinreports'
     end
 
     def vulnByOs_OsversionTable
+       @report.page.values(:graph_title => "Vulnerabilities By Operating System Version(s)")
+
        severityLabelHash = Hash[VULN_SEVERITY_LABELS.map.with_index.to_a]
 
        osVulnHash = Hash.new
-       osList = @deviceVulns.map {|dv| dv.os}.uniq.sort
+       osList = @deviceVulns.map {|dv| dv.os}.compact.uniq.sort
        osList.each do |os|
-          @report.page.list.add_row({:os_name => os})
+
+          # While printing out the versions of a specific OS, if there is a page break then
+          # reprint the OS heading again on the new page.
+          @report.events.on :page_create do |e|
+              e.page.item(:page_number).value(e.page.no)
+              e.page.list.add_row do |row|
+                 row.item(:os_name).value(os)
+                 row.item(:detail_row_border).style(:fill_color, 'c6d9f0')
+              end
+          end
+
+          @report.page.list.add_row do |row|
+              row.item(:os_name).value(os)
+              row.item(:detail_row_border).style(:fill_color, 'c6d9f0')
+          end
 
           deviceVulnRecs = @deviceVulns.select{|dv| dv.os == os}
-          osVersionList = deviceVulnRecs.map {|dv| dv.osver.to_s if dv.os == os}.uniq.sort
+          osVersionList = deviceVulnRecs.map {|dv| dv.osver.to_s if dv.os == os}.compact.uniq.sort
           osVersionList.each do |osver|         
              osVulnHash[osver] = Array.new(VULN_SEVERITY_LABELS.length, 0) if osVulnHash[osver].nil?
-             deviceCount = deviceVulnRecs.map{|dv| dv.mac if dv.osver == osver}.uniq.count
+             deviceCount = deviceVulnRecs.map{|dv| dv.mac if dv.osver == osver}.compact.uniq.count
 
              prodVulnRecs = @prodVulns.select {|pv| pv.os.downcase == os.downcase && pv.osver.downcase == osver.downcase}
              prodVulnRecs.each do |rec|
@@ -276,5 +301,56 @@ require 'thinreports'
              end
           end #for each OS version
        end #for each OS
+
+       #cleanup... Restore page break settings to original. This was modified earlier in this routine.
+       setPageBreakEvents()
     end
+
+    def snortAlertsSummary
+
+       @report.page.values(:graph_title => "Intrusion Alerts Summary")
+       snortPriorityLabels = ["Unknown", "High", "Medium", "Low", "Very Low"]
+
+       devices = @deviceList.map {|d| d.macid }
+       alertStatsHash = Hash.new
+       @snortAlerts.each do |alert|
+
+          if alertStatsHash[alert.sigid].nil?
+             alertStatsHash[alert.sigid] = Array.new(2)
+             alertStatsHash[alert.sigid][0] = 0  # Count the number of times an alert with this ID was raised.
+             alertStatsHash[alert.sigid][1] = Array.new # Sub-Array to hold the devices for which this alert was raised.
+          end
+          
+          alertStatsHash[alert.sigid][0] += alert.cnt.to_i
+
+          if devices.include?(alert.srcmac) && !alertStatsHash[alert.sigid][1].include?(alert.srcmac)
+             alertStatsHash[alert.sigid][1] << alert.srcmac
+          elsif devices.include?(alert.dstmac)  && !alertStatsHash[alert.sigid][1].include?(alert.dstmac)
+             alertStatsHash[alert.sigid][1] << alert.dstmac
+          end
+          
+       end # for each Snort Alert
+
+       snortPriorityLabels.each_with_index do |priority, i|
+          next if i==0 #ignore alerts with nil/unknown priority
+
+          snorts = @snortAlerts.select {|s| s.priority == i }
+          next if snorts.length == 0
+
+          @report.page.list.add_row do |row|
+             row.item(:alert_priority).value(priority.upcase)
+             row.item(:detail_row_box).style(:fill_color, 'c6d9f0')
+          end
+
+          ids = snorts.map {|s| s.sigid }.compact.uniq.sort
+          ids.each do |alertID|
+             snortAlert = @snortAlerts.detect { |s| s.sigid == alertID }
+             @report.page.list.add_row({ :alertID => alertID,
+                                                :alert_description => snortAlert.message.truncate(TRUNCATE_MESG_LENGTH, :separator => ' '),
+                                                :device_count => alertStatsHash[alertID][1].length,
+                                                :occurence_count => alertStatsHash[alertID][0]})
+
+          end
+       end #for each snort Priority...
+    end #end of routine
 end
