@@ -6,6 +6,8 @@
   #      - All the references refer to non-existent objects (should happen only if someone manually edited the file in a wrong way)
   #
 
+ operators = Hash["ge" => ">=", "le" => "<=", "gt" => ">", "lt" => "<", "ne"=> "NOT"]
+
   bNoObjRefs = fwRule[targetList].empty?
   if (!bNoObjRefs) then
       fwRule[targetList].each do |refList|
@@ -38,11 +40,11 @@
             iconTitle = ""; iconTitle = objLabels[type]["label"] if !objLabels[type].nil?
 %>
 <li class="object">
-    <div id="<%= objRef %>" class="objBtn">
+    <div id="<%= objRef %>" class="objBtn" name="<%= type %>">
         <i class="<%= iconClass %>" title="<%= iconTitle %>"></i>
-<%          if (refList["neg"] == "true") then %><b> NOT </b><% end %>
+	<b style="font-size:1.25em"><%=operators[refList["operator"]] %></b>
 <%          if (obj["value"] == "any") then %> 
-               ANY 
+		ANY
 <%          else %>
 <%=            obj["value"] %>
 <%          end %>

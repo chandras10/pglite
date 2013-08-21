@@ -20,84 +20,85 @@
   no_of_days = ((@license_info.valid_until - Time.zone.now) / 1.day).to_i
   
 %>
-<div class="box-header well span10" data-original-title="">
-	<h2><i class="icon-th"></i> Overview</h2>
-	<div class="box-icon">
-		<a href="#" class="btn btn-minimize btn-round"><i class="icon-chevron-up"></i></a>
-		<a href="#" class="btn btn-close btn-round"><i class="icon-remove"></i></a>
-	</div>
-</div>
-<div class="box-content span10">
-<!-- content starts -->
-		<div class="sortable row-fluid">
-      <!-- Summary counters - START -->
-		      <a data-rel="tooltip" title="Total number of unique devices detected so far." 
-		         class="well span3 top-block" href="/tbl_inventory">
-		         <span class="icon-flag icon-3x green"></span>
-			       <div>Devices</div>
-			       <div><%= @deviceinfos.count %></div>
-		      </a>
+<div id="content" class="span10">
+	<div class="box span12">
+		<%= render :partial => 'layouts/title_bar_icons',
+       	             :locals => { :header_title => "Overview",
+       	                          :header_link  => "#" }
+		%>
 
-		      <a data-rel="tooltip" title="Total number of laptops detected." 
-		         class="well span3 top-block" href="/tbl_inventory?column=deviceclass&value=Desktop/Laptop">
-		         <span class="icon-laptop icon-3x"></span>
-			       <div>Laptops</div>
-			       <div><%=  hashDeviceClass["Desktop/Laptop"] %></div>
-		      </a>
-		
-		      <a data-rel="tooltip" title="Total number of mobile devices detected."
-		         class="well span3 top-block" href="/tbl_inventory?column=deviceclass&value=MobileDevice">
-		         <span class="icon-mobile-phone icon-3x"></span>
-			       <div>Mobile Devices</div>
-			       <div><%= hashDeviceClass["MobileDevice"] %></div>
-		      </a>
-						
-		      <a data-rel="tooltip" title="Total Unauthorized devices."
-		         class="well span3 top-block" href="/tbl_inventory?column=auth_source&value=0">
-			       <span class="icon-thumbs-down icon-3x red"></span>
-			       <div>Unauthorized devices</div>
-			       <div><%=@deviceinfos.select { |d| (d["auth_source"].nil? || d["auth_source"] == 0)}.count  %></div>
-			      </a>
-		      <!-- Summary counters - END -->
-
-		   </div>
-
-
-		   <div class="sortable row-fluid">
+		<div class="box-content span11">
+		<!-- content starts -->
+			<div class="sortable row-fluid">
 		      <!-- Summary counters - START -->
-		      <a data-rel="tooltip" title="Total number of unique users detected." 
-		         class="well span3 top-block" href="/tbl_inventory">
-		         <span class="icon-user icon-3x"></span>
-			       <div>Users</div>
-			       <div><%= Deviceinfo.count(:username, :conditions => "username <> ''", :distinct => true) %></div>
-		      </a>
+			      <a data-rel="tooltip" title="Total number of unique devices detected so far." 
+			         class="well span3 top-block" href="/tbl_inventory">
+			         <span class="icon-flag icon-3x green"></span>
+				       <div>Devices</div>
+				       <div><%= @deviceinfos.count %></div>
+			      </a>
 
-		      <a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." 
-		         class="well span3 top-block" href="/dash_bw">
-		         <span class="icon-briefcase icon-3x"></span>
-			       <div>Assets</div>
-			       <div><%= Ipstat.select(:destip).uniq.length %></div>
-		      </a>
+			      <a data-rel="tooltip" title="Total number of laptops detected." 
+			         class="well span3 top-block" href="/tbl_inventory?column=deviceclass&value=Desktop/Laptop">
+			         <span class="icon-laptop icon-3x"></span>
+				       <div>Laptops</div>
+				       <div><%=  hashDeviceClass["Desktop/Laptop"] %></div>
+			      </a>
 			
-		      <a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." 
-		         class="well span3 top-block" href="/tbl_snort">
-			       <span class="icon-warning-sign icon-3x red"></span>
-			       <div>Security Alerts</div>
-			       <div><%= (if !@snortAlertRecs.nil? then @snortAlertRecs.count else 0 end) + (if !@cveAlertRecs.nil? then @cveAlertRecs.count else 0 end) %></div>
-		      </a>
-		      <a data-rel="tooltip" title="License expires at <%= @license_info.valid_until %>" 
-		         class="well span3 top-block" >
-		         <span class="icon-calendar icon-3x"></span>
-			       <div>License</div>
-				<% if (no_of_days < 0) then %>
-					<div class="red"> Expired </div>
-				<% else %>
-			       		<div class="green"><%= no_of_days %> more days</div>
-				<% end %>
-		      </a>
+			      <a data-rel="tooltip" title="Total number of mobile devices detected."
+			         class="well span3 top-block" href="/tbl_inventory?column=deviceclass&value=MobileDevice">
+			         <span class="icon-mobile-phone icon-3x"></span>
+				       <div>Mobile Devices</div>
+				       <div><%= hashDeviceClass["MobileDevice"] %></div>
+			      </a>
+							
+			      <a data-rel="tooltip" title="Total Unauthorized devices."
+			         class="well span3 top-block" href="/tbl_inventory?column=auth_source&value=0">
+				       <span class="icon-thumbs-down icon-3x red"></span>
+				       <div>Unauthorized devices</div>
+				       <div><%=@deviceinfos.select { |d| (d["auth_source"].nil? || d["auth_source"] == 0)}.count  %></div>
+				      </a>
+			      <!-- Summary counters - END -->
+	
+			   </div>
 
+
+			   <div class="sortable row-fluid">
+			      <!-- Summary counters - START -->
+			      <a data-rel="tooltip" title="Total number of unique users detected." 
+			         class="well span3 top-block" href="/tbl_inventory">
+			         <span class="icon-user icon-3x"></span>
+				       <div>Users</div>
+				       <div><%= Deviceinfo.count(:username, :conditions => "username <> ''", :distinct => true) %></div>
+			      </a>
+		
+			      <a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." 
+			         class="well span3 top-block" href="/dash_bw">
+			         <span class="icon-briefcase icon-3x"></span>
+				       <div>Assets</div>
+				       <div><%= Ipstat.select(:destip).uniq.length %></div>
+			      </a>
+				
+			      <a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." 
+			         class="well span3 top-block" href="/tbl_snort">
+				       <span class="icon-warning-sign icon-3x red"></span>
+				       <div>Security Alerts</div>
+				       <div><%= (if !@snortAlertRecs.nil? then @snortAlertRecs.count else 0 end) + (if !@cveAlertRecs.nil? then @cveAlertRecs.count else 0 end) %></div>
+			      </a>
+			      <a data-rel="tooltip" title="License expires at <%= @license_info.valid_until %>" 
+			         class="well span3 top-block" >
+			         <span class="icon-calendar icon-3x"></span>
+				       <div>License</div>
+					<% if (no_of_days < 0) then %>
+						<div class="red"> Expired </div>
+					<% else %>
+				       		<div class="green"><%= no_of_days %> more days</div>
+					<% end %>
+			      </a>
+	
+			</div>
+	
 		</div>
-
+	
 	</div>
-
 </div>
