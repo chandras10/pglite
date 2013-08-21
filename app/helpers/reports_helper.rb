@@ -4,7 +4,7 @@ module ReportsHelper
   # working backwards upto to 24 hours ago.
   def graphLabels24Hrs
 #  	currentHour = Time.now.strftime("%H").to_i 
-  	labelArray = (0..23).to_a #.rotate(currentHour+1)
+        labelArray = (0..23).to_a #.rotate(currentHour+1)
   	labelArray.map! do |i|
   		if (i%2 == 0) then
   		   if (i < 12) then
@@ -17,6 +17,25 @@ module ReportsHelper
   		end
   	end
   end  
+
+  def graphLabelsWeek
+        epochTime = Time.now.to_i - (86400 * 6)
+        labelArray = (0..6).to_a
+        labelArray.map! do |i|
+                        date = Time.at(epochTime)
+                        epochTime = epochTime + 86400
+                        labelArray[i] = Date.parse(date.to_s).strftime("%A")
+                end
+  end
+  def graphLabelsMonth
+        epochTime = Time.now.to_i - (86400 * 30)
+        labelArray = (0..29).to_a
+        labelArray.map! do |i|
+                        date = Time.at(epochTime)
+                        epochTime = epochTime + 86400
+                        labelArray[i] = date.day
+                end
+  end
 
   #
   # Bandwidth data will be shown in M/K/bytes depending on the variable value below.

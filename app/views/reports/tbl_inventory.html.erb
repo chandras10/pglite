@@ -28,6 +28,10 @@
           columnNames[c] = "Authorized"
        when "devicename"
           columnNames[c] = "Device Name"
+       when "vendorname"
+          columnNames[c] = "Vendor"
+       when "parentmacid"
+          columnNames[c] = "Host MacID"
        else
           columnNames[c] = c.capitalize
        end
@@ -70,8 +74,12 @@
                           <% case col %>
                           <% when "macid" %>
                                    <%= link_to deviceinfo[col], :action=> "device_details", :device => deviceinfo[col] %>
+                          <% when "auth_source" %>
+                                   <%= @auth_src[deviceinfo[col]].description if !deviceinfo[col].nil?%>
                           <% when "weight" %>
-                          <%      if ((deviceinfo[col] & 0x00FF0000) > 0) then %> Yes <% else %> No <% end %>
+				  <% if (!deviceinfo[col].nil?) then %>
+                          		<%      if ((deviceinfo[col] & 0x00FF0000) > 0) then %> Yes <% else %> No <% end %>
+				  <% end %>
                           <% else %>
                           <%= deviceinfo[col] %>
                           <% end %>

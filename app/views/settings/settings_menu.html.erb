@@ -2,7 +2,7 @@
     ldapobjproperty = {
                "server" => {"name" => "Server","editable" => "true" },
                "port" => {"name" => "Port","editable" => "true" },
-               "base" => {"name" => "FQDN","editable" => "true" },
+               "base" => {"name" => "Base DN","editable" => "true" },
                "domain" => {"name" => "Domain","editable" => "true" }
 	}
     pgobjproperty = {
@@ -17,158 +17,243 @@
                "policy" => {"name" => "Policy file","editable" => "false" },
                "easAuthorizationEnabled" => {"name" => "Integrate EAS","editable" => "true" }
 	}
-%>
-<div id="content" class="span10">
-    <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-        <li class="active"><a href="#red" data-toggle="tab">PGGuard</a></li>
-        <li><a href="#orange" data-toggle="tab">Active directory</a></li>
-        <li><a href="#homenet" data-toggle="tab">Homenet</a></li>
-    </ul>
-    <div id="my-tab-content" class="tab-content">
-        <div class="tab-pane active" id="red">
-		<div class="box-content">
-		<form id="pgconfig_form" class="form-horizontal" action="" method="POST">
-			<fieldset>
-				<input type="hidden" name="configtype" value="PGGUARD" />	
-				<% @pgconfig.each do |key, value| %>	
-					<div class="<%=key%>">
-						<% if (key == "easAuthorizationEnabled" ) then
-							value = (value == 0) ? "false" : "true"
-						end %>
-					
-						<label class="control-label"><%= pgobjproperty[key]["name"] %></label>
-							<div class="controls">
-							<% if(pgobjproperty[key]["editable"] == "true") then %>
-								<input class="input-xlarge focused focused" id="poconfig_json" name="<%=key%>" value="<%=value%>" type="text">
-							<% else %>
-								<span class="input-xlarge uneditable-input"><%=value%></span>
-							<%end%>
-							</div>
-					</div>
-				<% end %>
-				<div class="form-actions">
-					<button type="submit" class="btn btn-primary" onclick="sendADConfigData()">Save changes</button>
-					<button type="reset" class="btn">Cancel</button>
-				</div>
-            		</fieldset>
-         	</form>
-		</div>
-        </div>
-        <div class="tab-pane" id="orange">
-	<div class="box-content">
-		<% if (@ldapconfig.nil? || @ldapconfig.empty?) then %>
-                     <h1> ldap.yml not found </h1>
-		<% end %>
-		<% if !(@ldapconfig.nil? || @ldapconfig.empty?) then %>
-                <form id="ldap_form" class="form-horizontal" action="" method="POST">
-                        <fieldset>
-				<input type="hidden" name="configtype" value="AD" />	
-                                <% @ldapconfig.each do |key, value| %>
-                                        <div class="<%=key%>">
-                                                <% if (key == "easAuthorizationEnabled" ) then
-                                                        value = (value == 0) ? "false" : "true"
-                                                end %>
-                                        
-                                                <label class="control-label"><%= ldapobjproperty[key]["name"] %></label>
-                                                        <div class="controls">
-                                                        <% if(ldapobjproperty[key]["editable"] == "true") then %>
-                                                                <input class="input-xlarge focused focused" id="poconfig_json" name="<%=key%>" value="<%=value%>" type="text">
-                                                        <% else %>
-                                                                <span class="input-xlarge uneditable-input"><%=value%></span>
-                                                        <%end%>
-                                                        </div>
-                                        </div>
-                                <% end %>
-                                <div class="form-actions">
-                                        <button type="submit" class="btn btn-primary" onclick="sendPGConfigData()">Save changes</button>
-                                        <button type="reset" class="btn">Cancel</button>
-                                </div>
-                        </fieldset>
-                </form>
-		<% end %>
-                </div><!--/span-->
-        </div>
 
-        <div class="tab-pane" id="homenet">
-	<div class="box-content">
-<form name="homenet_form"  method="POST">
+     pluginad = {
+	       "ip" => {"name" => "Server","editable" => "true" },
+               "username" => {"name" => "User Name","editable" => "true" },
+               "password" => {"name" => "Password","editable" => "true" },
+               "polltime" => {"name" => "Time intervals","editable" => "true" },
+               "ssid" => {"name" => "SSID","editable" => "true" }
+	}
+
+%>
+<style>
+
+#main label {
+    color: #2D2D2D;
+   text-align: left;
+}
+
+</style>
+
+
+<div id="content" class="span10">
+	<ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+		<li class="active"><a href="#pgconfig" data-toggle="tab">PGGuard</a></li>
+		<li><a href="#ad" data-toggle="tab">Active directory</a></li>
+		<li><a href="#homenet" data-toggle="tab">Homenet</a></li>
+		<li><a href="#pluginad" data-toggle="tab">Plugin settings</a></li>
+	</ul>
+	<div id="my-tab-content" class="tab-content">
+		<div class="tab-pane active" id="pgconfig">
+			<div class="box-content">
+				<form id="pgconfig_form" class="form-horizontal" action="" method="POST">
+					<fieldset>
+						<input type="hidden" name="configtype" value="PGGUARD" />	
+						<% @pgconfig.each do |key, value| %>	
+						<% if (pgobjproperty[key] != nil) then %>
+							<div class="<%=key%>">
+							<% if (key == "easAuthorizationEnabled" ) then
+								value = (value == "0") ? "false" : "true"
+							end %>
+
+							<div id="main"><label class="control-label"><%= pgobjproperty[key]["name"] %></label></div>
+							<div class="controls">
+								<% if(pgobjproperty[key]["editable"] == "true") then %>
+									<input class="input-xlarge focused focused" id="poconfig_json" name="<%=key%>" value="<%=value%>" type="text">
+								<% else %>
+									<span class="input-xlarge uneditable-input"><%=value%></span>
+								<%end%>
+							</div>
+							</div>
+						<% end %>
+						<% end %>
+						<div class="form-actions">
+							<button class="btn btn-primary" onclick="sendPGConfigData()">Save changes</button>
+							<button type="reset" class="btn">Cancel</button>
+						</div>
+					</fieldset>
+				</form>
+			</div>
+		</div>
+
+
+		<div class="tab-pane" id="pluginad">
+			<div class="box-content">
+				<form id="pluginad_form" class="form-horizontal" action="" method="POST">
+					<fieldset>
+						<input type="hidden" name="configtype" value="PLUGINAD" />	
+						<% @pgeventconfig.each do |key, value| %>	
+							<div class="<%=key%>">
+							<div id="main"><label class="control-label"><%= pluginad[key]["name"] %></label></div>
+							<div class="controls">
+							<% if (key != "password" ) then %>
+							<input class="input-xlarge focused focused" name="<%=key%>" value="<%=value%>" type="text">
+							<% else %>
+							<input class="input-xlarge focused focused"  name="<%=key%>" value="<%=value%>" type="password">
+							<% end %>
+							</div>
+						</div>
+						<% end %>
+						<div class="form-actions">
+							<button class="btn btn-primary" onclick="sendPluginADConfigData()">Save changes</button>
+							<button type="reset" class="btn">Cancel</button>
+						</div>
+					</fieldset>
+				</form>
+			</div>
+		</div>
+
+	<div class="tab-pane" id="ad">
+		<div class="box-content">
+			<% if (@ldapconfig.nil? || @ldapconfig.empty?) then %>
+				<h1> ldap.yml not found </h1>
+			<% end %>
+			<% if !(@ldapconfig.nil? || @ldapconfig.empty?) then %>
+				<form id="ldap_form" class="form-horizontal" action="" method="POST">
+					<fieldset>
+						<input type="hidden" name="configtype" value="AD" />	
+						<% @ldapconfig.each do |key, value| %>
+							<div class="<%=key%>">
+								<% if (key == "easAuthorizationEnabled" ) then
+									value = (value == 0) ? "false" : "true"
+								end %>
+		                                        
+								<div id="main"><label class="control-label"><%= ldapobjproperty[key]["name"] %></label></div>
+								<div class="controls">
+								<% if(ldapobjproperty[key]["editable"] == "true") then %>
+									<input class="input-xlarge focused focused" id="poconfig_json" name="<%=key%>" value="<%=value%>" type="text">
+								<% else %>
+									<span class="input-xlarge uneditable-input"><%=value%></span>
+								<%end%>
+								</div>
+							</div>
+						<% end %>
+						<div class="form-actions">
+							<button type="submit" class="btn btn-primary" onclick="sendADConfigData()">Save changes</button>
+							<button type="reset" class="btn">Cancel</button>
+						</div>
+					</fieldset>
+				</form>
+			<% end %>
+		</div><!--/span-->
+	</div>
+	<div class="tab-pane" id="homenet">
+		<div class="box-content">
+			<form id="homenet_form"  method="POST">
 				<input type="hidden" name="configtype" value="HOMENET" />	
-<div>
-<label class="control-label"> HomeNets </label>
-<textarea class="cleditor" cols="200" rows="10" name="homenetip">
+				<div>
+					<label class="control-label"> HomeNets </label>
+<textarea id="homenettext" class="cleditor" cols="200" rows="10" name="homenetip">
 <% @homenetips.each do |ip| %>
 <%= ip.net %>
 <%end%>
 </textarea>
+				</div>
+				<div class="form-actions">
+					<button class="btn btn-primary" onclick="sendHomenetIps()">Save changes</button>
+					<button type="reset" class="btn">Cancel</button>
+				</div>
+	
+			</form>
+		</div>
+	</div>
 </div>
-<div class="form-actions">
-                                        <button type="submit" class="btn btn-primary" onclick="sendHomenetIps()">Save changes</button>
-                                        <button type="reset" class="btn">Cancel</button>
-                                </div>
 
-</form>
+	<% if (@restartrequired == true) then %>
+<div class="modal hide fade" id="restartbox">
+   <div class="modal-body">
+	<h3> Restart required to reflect the changes </h3>
+   </div>
+   <div class="modal-footer">
+       <a type="submit" id="restartsubmit" class="btn btn-primary" href="/settings?restart=true">Restart</a>
+       <a id="restartclose" class="btn" data-dismiss="modal">Cancel</a>
+   </div>
 </div>
-
-
-
-
-
-    </div>
-</div>
+	<% end %>
 
 <script type="text/javascript">
 
+
+  $(function(){
+    $('#restartbox').modal('show');
+  });
+
+
+
+
+$("#pgconfig_form :input").change(function() {
+   $("#pgconfig_form").data("changed",true);
+});
+
+
+$("#pgconfig_form").submit(function(e) {
+       e.preventDefault();
+});
+
 function sendPGConfigData() {
 
-	var objectsArray = new Array();
-
-	$("#pgconfig_form input").each(function() {
- 	var name = $(this).attr('name');
- 	var text = $(this).text
-	var obj = {
-                           name: name,
-                           value: value
-               };
-
-               objectsArray.push(obj);
-});
-        $('#pgconfig_form').submit();
+	if ($("#pgconfig_form").data("changed")) {
+       		 $('#pgconfig_form').submit();
+	}
 
 }
+
+$("#ldap_form :input").change(function() {
+   $("#ldap_form").data("changed",true);
+});
+
+
+$("#ldap_form").submit(function(e) {
+       e.preventDefault();
+});
 
 function sendADConfigData() {
-
-	var objectsArray = new Array();
-
-	$("#pgconfig_form input").each(function() {
- 	var name = $(this).attr('name');
- 	var value = $(this).attr('value');
-	var obj = {
-                           name: name,
-                           value: value
-               };
-
-               objectsArray.push(obj);
-});
-        $('#ldap_form').submit();
-
+	if ($("#ldap_form").data("changed")) {
+       		 $('#ldap_form').submit();
+	}
 }
+
+$("#homenettext").bind("keyup", function(event, ui) {                          
+   $("#homenet_form").data("changed",true);
+ });
+
+$("#homenet_form").submit(function(e) {
+       e.preventDefault();
+});
 
 function sendHomenetIps() {
 
-/*var objectsArray = new Array();
+	 if ($("#homenet_form").data("changed")) {
+       		 $('#homenet_form').submit();
+	}
+}
 
-	$("#homenet_form textarea").each(function() {
- 	var name = $(this).attr('name');
- 	var value = $(this).attr('value');
-	var obj = {
-                           name: name,
-                           value: value
-               };
+  $('#restartsubmit').click(function() {
+     $('#restartbox').modal('hide');
 
-               objectsArray.push(obj);
-});*/
-        $('#homenet_form').submit();
+
+
+$("#pluginad_form :input").change(function() {
+   $("#pluginad_form").data("changed",true);
+});
+
+
+$("#pluginad_form").submit(function(e) {
+       e.preventDefault();
+});
+
+function sendPGConfigData() {
+
+	if ($("#pluginad_form").data("changed")) {
+       		 $('#pluginad_form').submit();
+	}
 
 }
+
+
+
+
+
+});
  </script>

@@ -13,14 +13,36 @@ skip_before_filter  :verify_authenticity_token
   before_filter :admin_user, only: :save_settings
   
   include REXML
+  @restartrequired = false
 
   def settings_menu
+
+   restart = params[:restart] 
+
+   if (restart == "true") then
+	s=%x(cat #{"/usr/local/var/pgguard/pgguard.pid"}  | xargs ps)
+    	check_run = (s =~ /pgguard/)
+
+        if check_run
+           pid = %x(cat #{"/usr/local/var/pgguard/pgguard.pid"})
+           pid_i = pid.to_i
+           if pid_i > 0
+                system ("kill -s TERM #{pid_i}")
+            end
+        end
+        system("/usr/local/bin/pgguard -daemon");
+        sleep(3)
+    end
 
     @ldapconfig = Hash.new
 
     @pgconfig = Hash.new
 
+    @pgeventconfig = Hash.new
+
     @homenetips = Homenet.all
+
+    @restartrequired = false
 
     if (!File.exist?(Rails.configuration.peregrine_configfile)) then
         return;
@@ -32,24 +54,37 @@ skip_before_filter  :verify_authenticity_token
          @pgconfig[elem.name] =  elem.text
     end
 
-    if (!File.exist?(Rails.configuration.peregrine_ldapfile)) then
-        return;
-    end
- 
+    @pgeventconfig = {"ip" => "", "username" => "", "password" => "", "polltime" => "", "ssid" => ""}
+    if (File.exist?(Rails.configuration.peregrine_adconfigfile)) then
+    	    adxmlfile = File.new(Rails.configuration.peregrine_adconfigfile)
+	    adxmldoc = Document.new(adxmlfile)
 
-    ldapfile = File.open(Rails.configuration.peregrine_ldapfile)
-    yp = YAML::load_documents( ldapfile ) { |doc|
-       @ldapconfig["server"] = doc['server']
-       @ldapconfig["port"] = doc['port']
-       @ldapconfig["base"] = doc['base']
-       @ldapconfig["domain"] = doc['domain']
-}
+	    adxmldoc.root.elements['//i7/server'].elements.each do | elem |
+	         @pgeventconfig[elem.name] =  elem.text
+		 puts elem.name
+		 puts elem.text
+	    end
+    end
+
+    @ldapconfig = {"server" => "", "port" => "", "base" => "", "domain" => ""} 
+
+    if (File.exist?(Rails.configuration.peregrine_ldapfile)) then
+    	ldapfile = File.open(Rails.configuration.peregrine_ldapfile)
+    	yp = YAML::load_documents( ldapfile ) { |doc|
+       		@ldapconfig["server"] = doc['server']
+       		@ldapconfig["port"] = doc['port']
+      		@ldapconfig["base"] = doc['base']
+       		@ldapconfig["domain"] = doc['domain']
+       		}
+     end
   end
 
   def save_settings
 
     @pgconfig = Hash.new
     @ldapconfig = Hash.new
+ 
+    @pgeventconfig = Hash.new
 
     @homenetips = Homenet.all
 
@@ -79,40 +114,87 @@ skip_before_filter  :verify_authenticity_token
 
     xmldoc.root.elements['//pgguard'].elements.each do | elem |
          @pgconfig[elem.name] =  elem.text
-    end
-   # @pgconfig.keys.sort
 
-   if (File.exist?(Rails.configuration.peregrine_ldapfile)) then
+   @restartrequired = true
+    end
+
+
+
+    if (params[:configtype] == "PLUGINAD") then
+    	@plugindoc = Nokogiri::XML(File.open(Rails.configuration.peregrine_adconfigfile))
+    
+    	ip =  @plugindoc.at_css "ip"
+    	username  = @plugindoc.at_css "username"
+    	password  = @plugindoc.at_css "password"
+    	polltime =  @plugindoc.at_css "polltime"
+    	ssid =  @plugindoc.at_css "ssid"
+
+    	ip.content = params[:ip]
+    	username.content = params[:username]
+    	password.content = params[:password]
+    	polltime.content = params[:polltime]
+    	ssid.content = params[:ssid]
+
+    	File.open(Rails.configuration.peregrine_adconfigfile, 'w') {|f| f.write(@plugindoc) }
+
+    	xmlfile = File.new(Rails.configuration.peregrine_adconfigfile)
+   	xmldoc = Document.new(xmlfile)
+
+    	xmldoc.root.elements['//i7/server'].elements.each do | elem |
+         	@pgeventconfig[elem.name] =  elem.text
+    	end
+
+	s=%x(cat #{"/usr/local/etc/i7ADPlugin/i7ADPlugin.pid"}  | xargs ps)
+        check_run = (s =~ /i7ADPlugin/)
+
+        if check_run
+           pid = %x(cat #{"/usr/local/etc/i7ADPlugin/i7ADPlugin.pid"})
+           pid_i = pid.to_i
+           if pid_i > 0
+                system ("kill -9 #{pid_i}")
+            end
+        end
+        system("/usr/local/bin/i7ADPlugin -daemon");
+        sleep(3)
+
+        @restartrequired = false
+    end
+
 
    if (params[:configtype] == "AD") then
-      data = YAML.load_file "#{Rails.root}/config/ldap.yml"
+      data = Hash.new
       data["server"] = params[:server]
       data["port"] = params[:port]
       data["base"] = params[:base]
       data["domain"] = params[:domain]
+      if (data["server"] != "" && data["port"] != "" && data["base"] != "" && data["domain"] != "") then
+      		File.open(Rails.configuration.peregrine_ldapfile, "w") { |f| YAML.dump(data, f) }
+    		end
+                @restartrequired = true
+      end
 
-      File.open(Rails.configuration.peregrine_ldapfile) { |f| YAML.dump(data, f) }
+    if (File.exist?(Rails.configuration.peregrine_ldapfile)) then
+  	ldapfile = File.open(Rails.configuration.peregrine_ldapfile)
+	  yp = YAML::load_documents( ldapfile ) { |doc|
+       		@ldapconfig["server"] = doc['server']
+       		@ldapconfig["port"] = doc['port']
+       		@ldapconfig["base"] = doc['base']
+       		@ldapconfig["domain"] = doc['domain']
+  	}
+    else 
+   		 @ldapconfig = {"server" => "", "port" => "", "base" => "", "domain" => ""}
     end
 
-     
-  ldapfile = File.open(Rails.configuration.peregrine_ldapfile)
-  yp = YAML::load_documents( ldapfile ) { |doc|
-       @ldapconfig["server"] = doc['server']
-       @ldapconfig["port"] = doc['port']
-       @ldapconfig["base"] = doc['base']
-       @ldapconfig["domain"] = doc['domain']
-  }
+  
 
-  end
 
 
     if (params[:configtype] == "HOMENET") then 
 	ips = String.new(params[:homenetip]);
+	Homenet.delete_all
 	ips.each_line("\r\n") do  |s| 
 		s.delete!("\r\n")
-		if (Homenet.find_by_net(s) == nil) then
-			Homenet.create(net: s);	
-		end
+		Homenet.create(net: s);	
 	end
         @homenetips = Homenet.all
     end

@@ -62,30 +62,36 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    #today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
-    today = Time.mktime(2013, 1, 1) #TODO: DELETEME after testing
+    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
+    #today = Time.mktime(2013, 1, 1) #TODO: DELETEME after testing
 
     #if there is no query string, then show the total bandwidth consumption.
     #else show specific data as pointed to by "type"
     #
     reportType = params[:type]
+    fromdate = Time.at(params[:from].to_i) if params[:from].present?
+    todate = Time.at(params[:to].to_i) if params[:to].present?
+    if (reportType == "Total bandwidth") then
+                reportType = nil
+    end
+
     case reportType
-    when "internalIP"
+    when "Internal servers"
          statTable = Internalipstat
          appIDTable = nil
          groupByColName = "destip"
          orderByColName = groupByColName
-    when "externalIP"
+    when "External severs"
          statTable = Externalipstat
          appIDTable = nil
          groupByColName = "destip"
          orderByColName = groupByColName
-    when "internalAPP"
+    when "Internal applications"
          statTable = Internalresourcestat
          appIDTable = :appidinternal
          groupByColName = "#{appIDTable}.appname"
          orderByColName = "#{appIDTable}.appid"
-    when "externalAPP"
+    when "External applications"
          statTable = Externalresourcestat
          appIDTable = :appidexternal
          groupByColName = "#{appIDTable}.appname"
@@ -98,14 +104,14 @@ class ReportsController < ApplicationController
                                   select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
                                          #{groupByColName} as resource, deviceid as device, 
                                          sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                                  where("timestamp >= ?", today).
+                                  where("timestamp between ? AND ?", fromdate, todate).
                                   group(:time, orderByColName, :deviceid).order(orderByColName).scoped
        else # APPlication data only
           @IpstatRecs = statTable.joins(:deviceinfo).joins(appIDTable).
                                   select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
                                           #{groupByColName} as resource, deviceid as device, 
                                           sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                                  where("timestamp >= ?", today).
+                                  where("timestamp between ? AND ?", fromdate, todate).
                                   group(:time, orderByColName, :deviceid).order(orderByColName).scoped
        end
 

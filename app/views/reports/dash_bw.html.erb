@@ -8,19 +8,48 @@ hashGraphTimeBasedTotals = Hash[@hashTimeIntervalData.sort_by {|key, value| valu
 currentTime = Time.now.strftime("%H").to_i 
 hashGraphTimeBasedTotals.each do |i, arrayTotals|
    arrayTotals.map! {|e| e/$BW_MEASURE }
-#  arrayTotals.rotate!(currentTime+1)
+  arrayTotals.rotate!(currentTime+1)
 end
+
 
 # Servers (sorted in descending order of Total bytes) for the dataTable
 hashResources = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
 # Devices (sorted in descending order of Total bytes) for the dataTable
 hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
 
-
 %>
+<style>
+.tb5 {
+	border:2px solid #456879;
+	border-radius:10px;
+	height: 22px;
+	width: 230px;
+}
+</style>
 
 <!-- content starts -->
 <div id="content" class="span10">
+
+<form id="report_form" action="" method="GET">
+			  <select id="rpt_type" class="chosen" style="width:200px;">
+				<option>Total bandwidth</option>
+				<option>Internal servers</option>
+				<option>External severs</option>
+				<option>Internal applications</option>
+				<option>External applications</option>
+			  </select>
+			  <select id="rpt_time" class="chosen" style="width:200px;" disable_search="true">
+				<option>Today</option>
+				<option>Last 24 hours</option>
+				<option>Last week</option>
+				<option>Last month</option>
+				<option>Choose date</option>
+			  </select>
+			<input  style="visibility:hidden;" class="input-xlarge datepicker" id="fromdate" value="from" type="text" style="width:200px;" >
+			<input  style="visibility:hidden;" class="input-xlarge datepicker" id="todate" value="to" type="text" style="width:200px;">
+			<button class="btn btn-primary" onclick="sendReportQuery()">Go</button>
+</form>
+
    <div class="row-fluid sortable">		
       <div class="box span12">
          <%= render :partial => 'layouts/title_bar_icons',
@@ -98,6 +127,22 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
 
 <script type="text/javascript">
 
+jQuery(document).ready(function(){
+	jQuery(".chosen").chosen();
+});
+
+	$(function() {
+    $( "#fromdate" ).datepicker({
+      changeMonth: true,
+      changeYear: true
+    });
+  });
+	$(function() {
+    $( "#todate" ).datepicker({
+      changeMonth: true,
+      changeYear: true
+    });
+  });
         Array.max = function( array ){
             return Math.max.apply( Math, array );
         };
@@ -112,13 +157,25 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
             }
             document.body.onresize();
 
-            var myLine = new RGraph.Line('total_bw', <%= hashGraphTimeBasedTotals.values %>);
-            myLine.Set('labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
 
-            myLine.Set('key', <%=raw hashGraphTimeBasedTotals.keys %>);
+	   var rptTime = getParam("time");
+
+
+            var myLine = new RGraph.Line('total_bw', <%= hashGraphTimeBasedTotals.values %>);
+	    if (rptTime == 0) {
+            myLine.Set('labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
+	    } else if (rptTime == 1) {
+                myLine.Set('labels', <%=raw graphLabels24Hrs.rotate((Time.now.strftime("%H").to_i)+1).map { |i| i.to_s } %>);
+            } else if (rptTime == 2) {
+                myLine.Set('labels', <%=raw graphLabelsWeek.map { |i| i.to_s } %>);
+            }  else if (rptTime == 3) {
+                myLine.Set('labels', <%=raw graphLabelsMonth.map { |i| i.to_s } %>);
+            }
+
             myLine.Set('key.color.shape', 'circle');
             myLine.Set('key.position', 'graph');
 
+            myLine.Set('key', <%=raw hashGraphTimeBasedTotals.keys %>);
             myLine.Set('linewidth', 5);
             myLine.Set('background.grid.autofit.numvlines', 24);
             myLine.Set('background.grid.autofit.numhlines', 20);
@@ -156,5 +213,101 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
                 myLine.Draw();
             }
         }
+
+
+
+document.getElementById("rpt_time").onchange = function(){
+var selIndex = document.getElementById("rpt_time").selectedIndex;
+var selValue = document.getElementById("rpt_time").options[selIndex].innerHTML;
+
+if (selValue == "Choose date") {
+	document.getElementById("fromdate").style.visibility = "visible";
+	document.getElementById("todate").style.visibility = "visible";
+} else {
+	document.getElementById("fromdate").style.visibility = "hidden";
+	document.getElementById("todate").style.visibility = "hidden";
+}
+
+}
+
+
+$("#report_form").submit(function(e) {
+       e.preventDefault();
+});
+
+function sendReportQuery() {
+	var selTimeIndex = document.getElementById("rpt_time").selectedIndex;
+	var selTimeValue = document.getElementById("rpt_time").options[selTimeIndex].innerHTML;
+	var selRptIndex = document.getElementById("rpt_type").selectedIndex;
+	var selRptValue = document.getElementById("rpt_type").options[selRptIndex].innerHTML;
+	var fromdateValue = document.getElementById("fromdate").value;	
+	var todateValue = document.getElementById("todate").value;	
+	var fromDate = "";
+	var toDate = "";
+	if (selTimeValue == "Choose date") {
+		fromDate = new Date(fromdateValue);
+		fromDate = fromDate.getTime()/1000.0;
+		toDate = new Date(todateValue);
+		toDate = toDate.getTime()/1000.0;
+	}
+	else if (selTimeValue == "Today" ) {
+		var today = new Date()
+		alert(today);
+		var d1 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+		fromDate = d1.getTime()/1000.0;
+		toDate =  new Date();
+		toDate = toDate.getTime()/1000.0;
+
+	}
+	else if (selTimeValue == "Last 24 hours" ) {
+		toDate =  new Date();
+		toDate = toDate.getTime()/1000.0;
+		fromDate = toDate - (1 * 86400);
+		
+	}
+	else if (selTimeValue == "Last week" ) {
+		toDate =  new Date();
+		toDate = toDate.getTime()/1000;
+		fromDate = toDate - (7 * 86400);
+	}
+	else if (selTimeValue == "Last month" ) {
+		toDate =  new Date();
+		toDate = toDate.getTime()/1000;
+		fromDate = toDate - (30 * 86400);
+	}
+	
+	var url = window.location.href
+	if (url.indexOf("?")>-1){
+		url = url.substr(0,url.indexOf("?"));
+	}
+	url = url.concat("?");
+	url = url.concat("type=");
+	url = url.concat(selRptValue);	
+	url = url.concat("&");
+	url = url.concat("time=");
+	url = url.concat(selTimeIndex);	
+	url = url.concat("&");
+	url = url.concat("from=");
+	url = url.concat(fromDate);	
+	url = url.concat("&");
+	url = url.concat("to=");
+	url = url.concat(toDate);	
+	window.location.assign(url);
+}
+
+function getParam ( sname )
+{
+  var params = location.search.substr(location.search.indexOf("?")+1);
+  var sval = "";
+  params = params.split("&");
+    // split param and value into individual pieces
+    for (var i=0; i<params.length; i++)
+       {
+         temp = params[i].split("=");
+         if ( [temp[0]] == sname ) { sval = temp[1]; }
+       }
+  return sval;
+}
+
 </script>
 
