@@ -68,55 +68,129 @@ class ReportsController < ApplicationController
     #if there is no query string, then show the total bandwidth consumption.
     #else show specific data as pointed to by "type"
     #
-    reportType = params[:type]
-    fromdate = Time.at(params[:from].to_i) if params[:from].present?
-    todate = Time.at(params[:to].to_i) if params[:to].present?
-    if (reportType == "Total bandwidth") then
-                reportType = nil
+    reportType = params['reportType'] || "total"
+    reportTime = params['reportTime'] || "today"
+
+    fromDate = params['fromDate'] || Date.today.to_s
+    begin
+       toDate = params['toDate'] || (Date.parse(fromDate, "YYYY-MM-DD") + 1.day).to_s
+    rescue
+       toDate = Date.today.to_s # Just in case someone has meddled with the query string param and sent an invalid FROM date...
     end
 
+    dbQuery = nil
     case reportType
-    when "Internal servers"
-         statTable = Internalipstat
-         appIDTable = nil
-         groupByColName = "destip"
-         orderByColName = groupByColName
-    when "External severs"
-         statTable = Externalipstat
-         appIDTable = nil
-         groupByColName = "destip"
-         orderByColName = groupByColName
-    when "Internal applications"
-         statTable = Internalresourcestat
-         appIDTable = :appidinternal
-         groupByColName = "#{appIDTable}.appname"
-         orderByColName = "#{appIDTable}.appid"
-    when "External applications"
-         statTable = Externalresourcestat
-         appIDTable = :appidexternal
-         groupByColName = "#{appIDTable}.appname"
-         orderByColName = "#{appIDTable}.appid"
+    when "total"
+         dbQuery = Internalipstat.joins(:deviceinfo).select("deviceid as device, destip as resource, 
+                                                             sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                                                     group(:resource, :device).
+                                                     order(:resource).scoped      
+    when "internalIP"
+         dbQuery = Internalipstat.joins(:deviceinfo).select("deviceid as device, destip as resource, 
+                                                             sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                                                     group(:resource, :device).
+                                                     order(:resource).scoped
+    when "externalIP"
+         dbQuery = Externalipstat.joins(:deviceinfo).select("deviceid as device, destip as resource, 
+                                                             sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                                                     group(:resource, :device).
+                                                     order(:resource).scoped
+    when "internalAPP"
+         dbQuery = Internalresourcestat.joins(:deviceinfo).joins(:appidinternal).select("deviceid as device, appidinternal.appname as resource, 
+                                                                                         sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                                                     where("appidinternal.appid > 0").
+                                                     group("appidinternal.appid", :device).
+                                                     order("appidinternal.appid").scoped
+
+    when "externalAPP"
+         dbQuery = Externalresourcestat.joins(:deviceinfo).joins(:appidexternal).select("deviceid as device, appidexternal.appname as resource, 
+                                                                                         sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                                                     where("appidexternal.appid > 0").
+                                                     group("appidexternal.appid", :device).
+                                                     order("appidexternal.appid").scoped
     end
 
-    if !reportType.nil? 
-       if appIDTable.nil? then # IP addresses only
-          @IpstatRecs = statTable.joins(:deviceinfo).
-                                  select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
-                                         #{groupByColName} as resource, deviceid as device, 
-                                         sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                                  where("timestamp between ? AND ?", fromdate, todate).
-                                  group(:time, orderByColName, :deviceid).order(orderByColName).scoped
-       else # APPlication data only
-          @IpstatRecs = statTable.joins(:deviceinfo).joins(appIDTable).
-                                  select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
-                                          #{groupByColName} as resource, deviceid as device, 
-                                          sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                                  where("timestamp between ? AND ?", fromdate, todate).
-                                  group(:time, orderByColName, :deviceid).order(orderByColName).scoped
-       end
+    case reportTime
+    when "past_day"
+         @timeSlot = "hour"
+         @numTimeSlots = 24
+         fromDate = 24.hours.ago
+         toDate = Time.now
+         dbQuery = dbQuery.select("date_part('hour', timestamp) as time").
+                           where("timestamp > (CURRENT_TIMESTAMP - '24 hour'::interval)")
+    when "past_week"
+         fromDate = 7.days.ago
+         toDate = Time.now
+         @timeSlot = "day"
+         @numTimeSlots = 7
+         startingNum = ActiveRecord::Base.connection.select_value(ActiveRecord::Base.send(:sanitize_sql_array, 
+                        ["select date_part('day', current_timestamp - '6 days'::interval)"]))
 
+         dbQuery = dbQuery.select("date_part('day', timestamp) - #{startingNum} as time").
+                           where("timestamp > (CURRENT_TIMESTAMP - '7 day'::interval)")
+    when "past_month"
+         fromDate = 1.month.ago
+         toDate = Time.now
+         @timeSlot = "week"
+         @numTimeSlots = ((toDate - fromDate)/1.week).ceil + 1
+         startingNum = ActiveRecord::Base.connection.select_value(ActiveRecord::Base.send(:sanitize_sql_array, 
+                        ["select date_part('week', current_timestamp - '1 month'::interval)"]))
+
+         dbQuery = dbQuery.select("date_part('week', timestamp) - #{startingNum} as time").
+                           where("timestamp > (CURRENT_TIMESTAMP - '1 month'::interval)")
+    when "date_range"
+         begin
+            fromDate = Date.parse(params['fromDate'], 'YYYY-MM-DD').to_time
+         rescue
+            fromDate = Date.today #if the incoming parameter is an invalid date format, then pick TODAY as the date!
+            params['fromDate'] = fromDate.to_s
+         end
+         begin
+            toDate = Date.parse(params['toDate'], 'YYYY-MM-DD').to_time + 1.day # end date should be inclusive in the range
+         rescue
+            # in case of parsing error, take FROMDATE + 1 as the end date...
+            params['toDate'] = (Date.parse(params['fromDate'], 'YYYY-MM-DD') + 1.day).to_s
+            toDate = (Date.parse(params['fromDate'], 'YYYY-MM-DD') + 1.day).to_time
+         end
+
+         numDays = ((toDate - fromDate)/1.day).round
+         dbQuery = dbQuery.where("timestamp between '#{fromDate.strftime('%F')}' and '#{toDate.strftime('%F')}'")
+         if numDays > 70 then
+            @timeSlot = "month"
+            @numTimeSlots = ((toDate - fromDate)/1.month).ceil + 1
+            startingNum = ActiveRecord::Base.connection.select_value(ActiveRecord::Base.send(:sanitize_sql_array, 
+                        ["select date_part('month', date '#{fromDate}')"]))
+
+            dbQuery = dbQuery.select("date_part('month', timestamp) - #{startingNum} as time")
+         elsif numDays > 31 then
+            @timeSlot = "week"
+            @numTimeSlots = ((toDate - fromDate)/1.week).ceil + 1
+            startingNum = ActiveRecord::Base.connection.select_value(ActiveRecord::Base.send(:sanitize_sql_array, 
+                        ["select date_part('week', date '#{fromDate}')"]))
+
+            dbQuery = dbQuery.select("date_part('week', timestamp) - #{startingNum} as time")
+         else
+            @timeSlot = "day"
+            @numTimeSlots = numDays
+            startingNum = ActiveRecord::Base.connection.select_value(ActiveRecord::Base.send(:sanitize_sql_array, 
+                        ["select date_part('day', date '#{fromDate}')"]))
+            dbQuery = dbQuery.select("date_part('day', timestamp) - #{startingNum} as time")
+         end
+    else #default is TODAY
+         fromDate = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
+         toDate = fromDate + 24.hours
+         @timeSlot = "hour"
+         @numTimeSlots = 24
+         dbQuery = dbQuery.select("date_part('hour', timestamp) as time").
+                           where("timestamp > date_trunc('day', CURRENT_TIMESTAMP)")
+    end
+    dbQuery = dbQuery.group(:time).order(:time)
+
+    if reportType != "total" then
        #add specific device to the query, if it exists
-       @IpstatRecs = @IpstatRecs.where("deviceid = ?", params[:device]) if !params[:device].nil?
+       dbQuery = dbQuery.where("deviceid = ?", params[:device]) if !params[:device].nil?
+
+       @IpstatRecs = dbQuery
 
        # In case of specific type, we will only show internal/external data
        # otherwise we will aggregate data from INTERNAL and EXTERNAL
@@ -124,38 +198,41 @@ class ReportsController < ApplicationController
 
     else # No query string means total bandwidth (internal IP + external IP)
 
-       internalStatRecs = Internalipstat.joins(:deviceinfo).
-                               select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
-                                       destip as resource, deviceid as device, 
-                                       sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                               where("timestamp >= ?", today).
-                               group(:time, :destip, :deviceid).order(:destip)
+#       internalStatRecs = Internalipstat.joins(:deviceinfo).
+#                               select("timestamp as time, 
+#                                       destip as resource, deviceid as device, 
+#                                       sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+#                               where("timestamp between ? AND ?", fromDate, toDate).
+#                               group(:time, :destip, :deviceid).order(:time, :destip)
 
-       internalStatRecs = internalStatRecs.where("deviceid = ?", params[:device]) if !params[:device].nil?
+#       internalStatRecs = internalStatRecs.where("deviceid = ?", params[:device]) if !params[:device].nil?
 
-       externalStatRecs = Externalipstat.joins(:deviceinfo).
-                               select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
-                                       destip as resource, deviceid as device, 
-                                       sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                               where("timestamp >= ?", today).
-                               group(:time, :destip, :deviceid).order(:destip)
+#       externalStatRecs = Externalipstat.joins(:deviceinfo).
+#                               select("timestamp as time, 
+#                                       destip as resource, deviceid as device, 
+#                                       sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+#                               where("timestamp between ? AND ?", fromDate, toDate).
+#                               group(:time, :destip, :deviceid).order(:time, :destip)
 
-       externalStatRecs = externalStatRecs.where("deviceid = ?", params[:device]) if !params[:device].nil?
+#       externalStatRecs = externalStatRecs.where("deviceid = ?", params[:device]) if !params[:device].nil?
+  
+       dbQuery = dbQuery.where("deviceid = ?", params[:device]) if !params[:device].nil?
 
-       statRecordSets = [internalStatRecs, externalStatRecs]
+       @IpstatRecs = dbQuery
+
+ 
+       statRecordSets = [@IpstatRecs]
     end
 
     statRecordSets.each do |recArray|
        recArray.each do |rec|
-
           # Update the Hashmap holding per hour/day/month stats for each server
           arrayData = @hashTimeIntervalData[rec['resource']]
           if arrayData.nil? then
-             arrayData = @hashTimeIntervalData[rec['resource']] = Array.new(24, 0)
+             arrayData = @hashTimeIntervalData[rec['resource']] = Array.new(@numTimeSlots, 0)
           end
 
-          recTime = rec['time'].split[1].to_i
-          arrayData[recTime] += (rec['inbytes'] + rec['outbytes'])
+          arrayData[rec['time'].to_i] += (rec['inbytes'] + rec['outbytes'])
 
           # Update the Hashmap holding total in/out bytes counters for each server
           arrayData = @hashResourceTotals[rec['resource']]
@@ -178,7 +255,16 @@ class ReportsController < ApplicationController
        end # For each stat record...
     end #statRecordSets
 
-  end
+    case reportTime
+    when "past_day"
+          # in case of past 24 hours, 
+          currentHour = Time.now.strftime("%H.%M").to_f.ceil 
+          @hashTimeIntervalData.each do |k, v|
+             @hashTimeIntervalData[k] = v.rotate(currentHour+1)
+          end
+    end
+
+  end # end of method
 
   # Bandwidth usage per server, for all ports and devices connected to this server
   def dash_bw_server

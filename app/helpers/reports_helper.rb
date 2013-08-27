@@ -1,41 +1,78 @@
 module ReportsHelper
-  #
-  # Generate the 24 hour graph labels, showing the current hour on the right most edge and then
-  # working backwards upto to 24 hours ago.
-  def graphLabels24Hrs
-#  	currentHour = Time.now.strftime("%H").to_i 
-        labelArray = (0..23).to_a #.rotate(currentHour+1)
-  	labelArray.map! do |i|
-  		if (i%2 == 0) then
-  		   if (i < 12) then
-  			  "%02d:00 AM" % i
-  		   elsif (i == 12) then
-  			  "12:00 PM"
-  		   else
-  			 "%02d:00 PM" % (i - 12)
-  		   end
-  		end
-  	end
-  end  
+  def weekLabels(date)
+       currentDate = date.end_of_week
+       labelArray = Array.new
+       (@numTimeSlots-1).downto(0) do |i|
+           labelArray << (currentDate - i.week).to_date.to_s #strftime('%d-%b')
+       end
+       return labelArray
+  end
 
-  def graphLabelsWeek
-        epochTime = Time.now.to_i - (86400 * 6)
-        labelArray = (0..6).to_a
-        labelArray.map! do |i|
-                        date = Time.at(epochTime)
-                        epochTime = epochTime + 86400
-                        labelArray[i] = Date.parse(date.to_s).strftime("%A")
-                end
-  end
-  def graphLabelsMonth
-        epochTime = Time.now.to_i - (86400 * 30)
-        labelArray = (0..29).to_a
-        labelArray.map! do |i|
-                        date = Time.at(epochTime)
-                        epochTime = epochTime + 86400
-                        labelArray[i] = date.day
-                end
-  end
+  def bandwidthGraphTimeSlotLabels
+    labelArray = Array.new(@numTimeSlots)
+    case params['reportTime']
+    when "past_week"
+       labelArray = Date::ABBR_DAYNAMES.dup
+       currentDayOfWeek = Date.today.wday
+       labelArray.rotate!(currentDayOfWeek+1)
+       return labelArray
+    when "past_month"
+       labelArray = weekLabels(Date.today)
+    when "date_range"
+         begin
+            fromDate = Date.parse(params['fromDate'], 'YYYY-MM-DD').to_time
+         rescue
+            fromDate = Date.today #if the incoming parameter is an invalid date format, then pick TODAY as the date!
+            params['fromDate'] = fromDate.to_s
+         end
+         begin
+            toDate = Date.parse(params['toDate'], 'YYYY-MM-DD').to_time
+         rescue
+            # in case of parsing error, take FROMDATE + 1 as the end date...
+            params['toDate'] = (Date.parse(params['fromDate'], 'YYYY-MM-DD') + 1.day).to_s
+            toDate = (Date.parse(params['fromDate'], 'YYYY-MM-DD') + 1.day).to_time
+         end
+
+       case @timeSlot
+       when "month"
+            monthNames = Date::ABBR_MONTHNAMES
+            startMonth = ActiveRecord::Base.connection.select_value(ActiveRecord::Base.send(:sanitize_sql_array, 
+                         ["select date_part('month', date '#{fromDate}')"])).to_i
+            labelArray = Array.new(@numTimeSlots, "")
+            @numTimeSlots.times do |i|
+                ii = ((startMonth + i) % 12) == 0 ? 12 : ((startMonth + i) % 12)
+                labelArray[i] = monthNames[ii] 
+            end
+       when "week"
+           labelArray = weekLabels(toDate)
+       when "day"
+           labelArray = Array.new(@numTimeSlots,"")
+           skipLabel = (@numTimeSlots/10.0).round
+           @numTimeSlots.times do |i|
+               labelArray[i] = (fromDate + i.day).to_date.to_s if (i % skipLabel == 0)
+           end
+           labelArray[@numTimeSlots-1] = toDate.to_date.to_s
+           return labelArray
+       end
+    else #default is TODAY
+       @numTimeSlots.times do |i|
+           next if (i%2 != 0)
+           if (i < 12) then
+               labelArray[i] = "%02d:00 AM" % i
+           elsif (i == 12) then
+               labelArray[i] = "12:00 PM"
+           else
+               labelArray[i] = "%02d:00 PM" % (i - 12)
+           end
+       end
+
+       if params['reportTime'] == "past_day" then
+          currentHour = Time.now.strftime("%H.%M").to_f.ceil
+          labelArray.rotate!(currentHour+1)
+       end
+    end
+    return labelArray
+  end  
 
   #
   # Bandwidth data will be shown in M/K/bytes depending on the variable value below.

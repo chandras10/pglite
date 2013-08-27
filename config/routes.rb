@@ -18,7 +18,8 @@ Pglite::Application.routes.draw do
   match '/dash_inventory', to: 'reports#dash_inventory'
   match '/tbl_inventory', to: 'reports#tbl_inventory'
 
-  match '/dash_bw', to: 'reports#dash_bw'
+  match '/dash_bw', to: 'reports#dash_bw', :via => :get
+  match '/dash_bw', to: 'reports#dash_bw', :via => :post
   match '/dash_bw_server', to: 'reports#dash_bw_server'
 
   match '/tbl_snort', to: 'reports#tbl_snort'

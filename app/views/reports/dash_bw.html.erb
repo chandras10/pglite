@@ -1,63 +1,73 @@
+<style type="text/css">
+</style>
 <%
 
-# Selecting the top 10 servers to display in the bandwidth line graph
-hashGraphTimeBasedTotals = Hash[@hashTimeIntervalData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
+   # Selecting the top 10 servers to display in the bandwidth line graph
+   hashGraphTimeBasedTotals = Hash[@hashTimeIntervalData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
 
-# Move the hashmap values (in circular fashion) so that the current time 
-# is always the last one on the rightmost edge of the graph
-currentTime = Time.now.strftime("%H").to_i 
-hashGraphTimeBasedTotals.each do |i, arrayTotals|
-   arrayTotals.map! {|e| e/$BW_MEASURE }
-  arrayTotals.rotate!(currentTime+1)
-end
+   # Move the hashmap values (in circular fashion) so that the current time 
+   # is always the last one on the rightmost edge of the graph
+   currentTime = Time.now.strftime("%H").to_i 
+   hashGraphTimeBasedTotals.each do |i, arrayTotals|
+      arrayTotals.map! {|e| e/$BW_MEASURE }
+#      arrayTotals.rotate!(currentTime+1)
+   end
 
 
-# Servers (sorted in descending order of Total bytes) for the dataTable
-hashResources = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
-# Devices (sorted in descending order of Total bytes) for the dataTable
-hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
+   # Servers (sorted in descending order of Total bytes) for the dataTable
+   hashResources = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
+   # Devices (sorted in descending order of Total bytes) for the dataTable
+   hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
+
+   case params[:reportType]
+   when "internalIP"
+      resourcesTitle = "Internal Servers"
+   when "internalAPP"
+      resourcesTitle = "Internal Applications"
+   when "externalIP"
+      resourcesTitle = "External Servers"
+   when "externalAPP"
+      resourcesTitle = "External Applications"
+   else
+      resourcesTitle = "Servers"
+   end
 
 %>
-<style>
-.tb5 {
-	border:2px solid #456879;
-	border-radius:10px;
-	height: 22px;
-	width: 230px;
-}
-</style>
-
 <!-- content starts -->
 <div id="content" class="span10">
 
-<form id="report_form" action="" method="GET">
-			  <select id="rpt_type" class="chosen" style="width:200px;">
-				<option>Total bandwidth</option>
-				<option>Internal servers</option>
-				<option>External severs</option>
-				<option>Internal applications</option>
-				<option>External applications</option>
-			  </select>
-			  <select id="rpt_time" class="chosen" style="width:200px;" disable_search="true">
-				<option>Today</option>
-				<option>Last 24 hours</option>
-				<option>Last week</option>
-				<option>Last month</option>
-				<option>Choose date</option>
-			  </select>
-			<input  style="visibility:hidden;" class="input-xlarge datepicker" id="fromdate" value="from" type="text" style="width:200px;" >
-			<input  style="visibility:hidden;" class="input-xlarge datepicker" id="todate" value="to" type="text" style="width:200px;">
-			<button class="btn btn-primary" onclick="sendReportQuery()">Go</button>
-</form>
+        <div class="control-group">
+    			  <select id="reportType" class="chosen">
+    				    <option value="total">Total bandwidth</option>
+    				    <option value="internalIP">Internal Resources</option>
+    				    <option value="externalIP">External Resources</option>
+    				    <option value="internalAPP">Internal Applications</option>
+    				    <option value="externalAPP">External Applications</option>
+    			  </select>
+    			  <select id="reportTime" class="chosen">
+    				   <option value="today">Today</option>
+    				   <option value="past_day">Past 24 hours</option>
+    				   <option value="past_week">Past week</option>
+    				   <option value="past_month">Past month</option>
+    				   <option value="date_range">Choose date</option>
+    			  </select>
+          
+            <button class="btn btn-primary" id="refreshBtn">Refresh</button>
+
+        </div>
+        <div class="control-group" id="dateRange">
+    			  <input   class="datepicker" id="fromDate" value="From" type="text" >
+    			  <input   class="datepicker" id="toDate" value="To" type="text">
+        </div>
 
    <div class="row-fluid sortable">		
       <div class="box span12">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Bandwidth Consumption (Today)",
+                    :locals => { :header_title => "Resource Consumption",
                                  :header_link  => "#" }
          %>
          <div class="box-content">
-            <canvas id="total_bw">[No canvas support]</canvas>
+            <canvas id="bw_graph_canvas">[No canvas support]</canvas>
          </div>
       </div> <!-- box span12 -->
    </div><!-- row-fluid sortable -->
@@ -65,7 +75,7 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
    <div class="row-fluid sorttable">
       <div class="box span6">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Top Servers",
+                    :locals => { :header_title =>  resourcesTitle,
                                  :header_link  => "#" }
          %>
          <div class="box-content">
@@ -95,7 +105,7 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
 
       <div class="box span6">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Top Devices",
+                    :locals => { :header_title => "Client Devices",
                                  :header_link  => "#" }
          %>
          <div class="box-content">
@@ -127,58 +137,30 @@ hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.rev
 
 <script type="text/javascript">
 
-jQuery(document).ready(function(){
-	jQuery(".chosen").chosen();
-});
+   Array.max = function( array ){
+      return Math.max.apply( Math, array );
+   };
+        
+   window.onload = function () {
+      //Resize the canvas element
+      document.body.onresize = function () {
+         var canvas = document.getElementById('bw_graph_canvas');
+         canvas.width = canvas.parentNode.clientWidth * 0.9;
+         canvas.height = canvas.parentNode.clientHeight * 1.5;
+      }
+      document.body.onresize();
 
-	$(function() {
-    $( "#fromdate" ).datepicker({
-      changeMonth: true,
-      changeYear: true
-    });
-  });
-	$(function() {
-    $( "#todate" ).datepicker({
-      changeMonth: true,
-      changeYear: true
-    });
-  });
-        Array.max = function( array ){
-            return Math.max.apply( Math, array );
-        };
-
-        window.onload = function ()
-        {
-            //Resize the canvas element
-            document.body.onresize = function () {
-              var canvas = document.getElementById('total_bw');
-              canvas.width = canvas.parentNode.clientWidth * 0.9;
-              canvas.height = canvas.parentNode.clientHeight * 1.5;
-            }
-            document.body.onresize();
-
-
-	   var rptTime = getParam("time");
-
-
-            var myLine = new RGraph.Line('total_bw', <%= hashGraphTimeBasedTotals.values %>);
-	    if (rptTime == 0) {
-            myLine.Set('labels', <%=raw graphLabels24Hrs.map { |i| i.to_s } %>);
-	    } else if (rptTime == 1) {
-                myLine.Set('labels', <%=raw graphLabels24Hrs.rotate((Time.now.strftime("%H").to_i)+1).map { |i| i.to_s } %>);
-            } else if (rptTime == 2) {
-                myLine.Set('labels', <%=raw graphLabelsWeek.map { |i| i.to_s } %>);
-            }  else if (rptTime == 3) {
-                myLine.Set('labels', <%=raw graphLabelsMonth.map { |i| i.to_s } %>);
-            }
-
+      var rptTime = getParam("time");
+      var myLine = new RGraph.Line('bw_graph_canvas', <%= hashGraphTimeBasedTotals.values %>);
+      
+            myLine.Set('labels', <%=raw bandwidthGraphTimeSlotLabels  %>);
             myLine.Set('key.color.shape', 'circle');
             myLine.Set('key.position', 'graph');
 
             myLine.Set('key', <%=raw hashGraphTimeBasedTotals.keys %>);
             myLine.Set('linewidth', 5);
-            myLine.Set('background.grid.autofit.numvlines', 24);
-            myLine.Set('background.grid.autofit.numhlines', 20);
+            myLine.Set('background.grid.autofit.numvlines', <%= @numTimeSlots-1 %>);
+            //myLine.Set('background.grid.autofit.numhlines', 20);
 
             myLine.Set('colors', ['red', 'black','#DDDF0D','#7798BF', '#ABD874', '#E18D87', '#599FD9', '#F4AD7C', '#D5BBE5']);
             myLine.Set('text.color', '#333');
@@ -196,8 +178,10 @@ jQuery(document).ready(function(){
             myLine.Set('spline', true);
             myLine.Set('title', '<%= "Bandwidth #{bandwidth_label}" %>');
             myLine.Set('gutter.left', 70);
-            //myLine.Set('tickmarks', 'circle');
-
+            myLine.Set('gutter.right', 40);
+            myLine.Set('tickmarks', 'circle');
+            myLine.Set('numxticks', 0);
+            myLine.Set('numyticks', 0);
 
             /**
             * Use the Trace animation to show the chart
@@ -209,91 +193,81 @@ jQuery(document).ready(function(){
                 myLine.Set('shadow.color', '#aaa');
                 myLine.Draw();
             } else {
-                RGraph.Effects.Line.jQuery.UnfoldFromCenterTrace(myLine, {'duration': 1000});
+                //RGraph.Effects.Line.jQuery.UnfoldFromCenterTrace(myLine, {'duration': 1000});
                 myLine.Draw();
             }
-        }
+   } //window.onload
+
+   $(document).ready(function(){
+       var fromDate, toDate;
+
+       // Set approriate values (derived from query string) in the dropdown selections
+       $("#reportType").val("<%= params['reportType'] || 'total' %>");
+       $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
+
+       <% if params['reportTime'] != "date_range" then %>
+          $("#dateRange").hide();
+       <% else %>
+          $("#dateRange").show();
+          fromDate = "<%= params['fromDate'] || Date.today.to_s %>";
+          $("#fromDate").val(fromDate);
+          toDate = "<%= params['toDate'] || Date.today.to_s %>"
+          $("#toDate").val(toDate);
+       <% end %>
+
+	     $(".chosen").chosen();
+       $('.chzn-search').hide(); //Hide the search box within the dropdown
+
+       //$("#reportType").trigger('chosen:updated');
+
+       $("#reportTime").chosen().change(function() {
+           if (this.value == "date_range") {
+               $("#dateRange").show();
+           } else {
+               $("#dateRange").hide();
+           }
+       });
+
+       $("#fromDate" ).datepicker({ 
+              showAnim: "slide",        
+              dateFormat: "yy-mm-dd",
+              onSelect: function(dateText){
+                 fromDate = dateText;
+              },
+              onClose: function( selectedDate ) {
+                 $( "#toDate" ).datepicker( "option", "minDate", selectedDate );
+              }              
+       });
+       $("#toDate" ).datepicker({ 
+              showAnim: "slide",
+              dateFormat: "yy-mm-dd",
+              onSelect: function(dateText){
+                 toDate = dateText;
+              },
+              onClose: function( selectedDate ) {
+                 $( "#fromDate" ).datepicker( "option", "maxDate", selectedDate );
+              } 
+       });
 
 
+  
+  
+       $('#refreshBtn').click(function() {
+            var type = $('#reportType').val();
+            var time = $('#reportTime').val();
 
-document.getElementById("rpt_time").onchange = function(){
-var selIndex = document.getElementById("rpt_time").selectedIndex;
-var selValue = document.getElementById("rpt_time").options[selIndex].innerHTML;
+            var urlString = "/dash_bw?reportType="+ type + "&reportTime=" + time;
+            if (time == "date_range") {
+               urlString += "&fromDate=" + fromDate + "&toDate=" + toDate;
+            }
+            window.location.href= urlString;
+       });
 
-if (selValue == "Choose date") {
-	document.getElementById("fromdate").style.visibility = "visible";
-	document.getElementById("todate").style.visibility = "visible";
-} else {
-	document.getElementById("fromdate").style.visibility = "hidden";
-	document.getElementById("todate").style.visibility = "hidden";
-}
+   }); //document.ready()
 
-}
+   
 
 
-$("#report_form").submit(function(e) {
-       e.preventDefault();
-});
-
-function sendReportQuery() {
-	var selTimeIndex = document.getElementById("rpt_time").selectedIndex;
-	var selTimeValue = document.getElementById("rpt_time").options[selTimeIndex].innerHTML;
-	var selRptIndex = document.getElementById("rpt_type").selectedIndex;
-	var selRptValue = document.getElementById("rpt_type").options[selRptIndex].innerHTML;
-	var fromdateValue = document.getElementById("fromdate").value;	
-	var todateValue = document.getElementById("todate").value;	
-	var fromDate = "";
-	var toDate = "";
-	if (selTimeValue == "Choose date") {
-		fromDate = new Date(fromdateValue);
-		fromDate = fromDate.getTime()/1000.0;
-		toDate = new Date(todateValue);
-		toDate = toDate.getTime()/1000.0;
-	}
-	else if (selTimeValue == "Today" ) {
-		var today = new Date()
-		alert(today);
-		var d1 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-		fromDate = d1.getTime()/1000.0;
-		toDate =  new Date();
-		toDate = toDate.getTime()/1000.0;
-
-	}
-	else if (selTimeValue == "Last 24 hours" ) {
-		toDate =  new Date();
-		toDate = toDate.getTime()/1000.0;
-		fromDate = toDate - (1 * 86400);
-		
-	}
-	else if (selTimeValue == "Last week" ) {
-		toDate =  new Date();
-		toDate = toDate.getTime()/1000;
-		fromDate = toDate - (7 * 86400);
-	}
-	else if (selTimeValue == "Last month" ) {
-		toDate =  new Date();
-		toDate = toDate.getTime()/1000;
-		fromDate = toDate - (30 * 86400);
-	}
-	
-	var url = window.location.href
-	if (url.indexOf("?")>-1){
-		url = url.substr(0,url.indexOf("?"));
-	}
-	url = url.concat("?");
-	url = url.concat("type=");
-	url = url.concat(selRptValue);	
-	url = url.concat("&");
-	url = url.concat("time=");
-	url = url.concat(selTimeIndex);	
-	url = url.concat("&");
-	url = url.concat("from=");
-	url = url.concat(fromDate);	
-	url = url.concat("&");
-	url = url.concat("to=");
-	url = url.concat(toDate);	
-	window.location.assign(url);
-}
 
 function getParam ( sname )
 {
@@ -308,6 +282,7 @@ function getParam ( sname )
        }
   return sval;
 }
+
 
 </script>
 
