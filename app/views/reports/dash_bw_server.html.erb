@@ -122,6 +122,15 @@ resourcesTitle = {
             return Math.max.apply( Math, array );
         };
 
+        var _MS_PER_DAY = 1000 * 60 * 60 * 24;
+        function dateDiffInDays(a, b) {
+           // Discard the time and time-zone information.
+           var utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+           var utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+
+           return Math.floor((utc2 - utc1) / _MS_PER_DAY) + 1; // Adding one extra to make the end date inclusive.
+        }
+
         window.onload = function ()
         {
             //Resize the canvas element
@@ -237,6 +246,14 @@ resourcesTitle = {
 
             var urlString = "/dash_bw?reportType="+ type + "&reportTime=" + time;
             if (time == "date_range") {
+               numDays = dateDiffInDays(new Date(fromDate), new Date(toDate));
+
+               //For now, handle date ranges less than a year
+               if (numDays > 364) {
+                  alert("Date ranges beyond a year are not supported.")
+                  return;
+               }
+                             
                urlString += "&fromDate=" + fromDate + "&toDate=" + toDate;
             }
             window.location.href= urlString;
