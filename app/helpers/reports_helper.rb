@@ -9,7 +9,7 @@ module ReportsHelper
   end
 
   def bandwidthGraphTimeSlotLabels
-    labelArray = Array.new(@numTimeSlots)
+    labelArray = Array.new(@numTimeSlots, "")
     case params['reportTime']
     when "past_week"
        labelArray = Date::ABBR_DAYNAMES.dup
@@ -38,7 +38,6 @@ module ReportsHelper
             monthNames = Date::ABBR_MONTHNAMES
             startMonth = ActiveRecord::Base.connection.select_value(ActiveRecord::Base.send(:sanitize_sql_array, 
                          ["select date_part('month', date '#{fromDate}')"])).to_i
-            labelArray = Array.new(@numTimeSlots, "")
             @numTimeSlots.times do |i|
                 ii = ((startMonth + i) % 12) == 0 ? 12 : ((startMonth + i) % 12)
                 labelArray[i] = monthNames[ii] 
@@ -46,8 +45,9 @@ module ReportsHelper
        when "week"
            labelArray = weekLabels(toDate)
        when "day"
-           labelArray = Array.new(@numTimeSlots,"")
+           Rails.logger.debug "numTimeSlots = #{@numTimeSlots}"
            skipLabel = (@numTimeSlots/10.0).round
+           skipLabel = 1 if (skipLabel == 0) #if the timeslots are less than 10, then print every label...
            @numTimeSlots.times do |i|
                labelArray[i] = (fromDate + i.day).to_date.to_s if (i % skipLabel == 0)
            end

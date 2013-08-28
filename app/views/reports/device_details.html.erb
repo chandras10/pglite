@@ -68,7 +68,7 @@ hashServers = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.r
          %>
 
          <div class="box-content">
-            <h3>MAC ID: &nbsp;&nbsp;&nbsp; &nbsp; <%= params[:device] %></h3>
+            <h3>DEVICE: &nbsp;&nbsp;&nbsp; &nbsp; <%= params[:device] + (" [ #{@devicedetails.devicename} ]" || '')%></h3>
             <br>
             <div>
                <div class="span4">
@@ -175,7 +175,7 @@ hashServers = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.r
    <div class="row-fluid sorttable">
       <div class="box span6">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Bandwidth Consumption - Servers",
+                    :locals => { :header_title => "Total Bandwidth Consumption (Past Month)",
                                  :header_link  => "#" }
          %>
          <div class="box-content">

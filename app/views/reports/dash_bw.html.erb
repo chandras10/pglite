@@ -1,37 +1,17 @@
-<style type="text/css">
-</style>
 <%
 
    # Selecting the top 10 servers to display in the bandwidth line graph
    hashGraphTimeBasedTotals = Hash[@hashTimeIntervalData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
-
-   # Move the hashmap values (in circular fashion) so that the current time 
-   # is always the last one on the rightmost edge of the graph
-   currentTime = Time.now.strftime("%H").to_i 
    hashGraphTimeBasedTotals.each do |i, arrayTotals|
       arrayTotals.map! {|e| e/$BW_MEASURE }
-#      arrayTotals.rotate!(currentTime+1)
    end
 
-
-   # Servers (sorted in descending order of Total bytes) for the dataTable
-   hashResources = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
-   # Devices (sorted in descending order of Total bytes) for the dataTable
-   hashDevices = Hash[@hashDeviceTotals.sort_by {|key, value| value.reduce(:+)}.reverse]
-
-   case params[:reportType]
-   when "internalIP"
-      resourcesTitle = "Internal Servers"
-   when "internalAPP"
-      resourcesTitle = "Internal Applications"
-   when "externalIP"
-      resourcesTitle = "External Servers"
-   when "externalAPP"
-      resourcesTitle = "External Applications"
-   else
-      resourcesTitle = "Servers"
-   end
-
+   resourcesTitle = {
+                      "internalIP"  => "Internal Servers",
+                      "internalAPP" => "Internal Applications",
+                      "externalIP"  => "External Servers",
+                      "externalAPP" => "External Applications"
+                    }
 %>
 <!-- content starts -->
 <div id="content" class="span10">
@@ -66,8 +46,8 @@
                     :locals => { :header_title => "Resource Consumption",
                                  :header_link  => "#" }
          %>
-         <div class="box-content">
-            <canvas id="bw_graph_canvas">[No canvas support]</canvas>
+         <div class="box-content" style="overflow:visible">
+            <canvas id="bw_graph_canvas" style="overflow:visible">[No canvas support]</canvas>
          </div>
       </div> <!-- box span12 -->
    </div><!-- row-fluid sortable -->
@@ -75,7 +55,7 @@
    <div class="row-fluid sorttable">
       <div class="box span6">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title =>  resourcesTitle,
+                    :locals => { :header_title =>  (resourcesTitle[params[:reportType]] || "Servers"),
                                  :header_link  => "#" }
          %>
          <div class="box-content">
@@ -89,9 +69,9 @@
 	          </tr>
 	       </thead>   
 	       <tbody>
-               <% hashResources.each do | server_ip, arrayTotals | %>
+               <% @hashResourceTotals.each do | resource, arrayTotals | %>
                      <tr>
-                        <td><%= link_to server_ip, :action => "dash_bw_server", :server_ip => server_ip %></td>
+                        <td><%= link_to resource, params.merge({:action => "dash_bw_server", :resource => resource}) %></td>
                         <td><%= sprintf("%.2f", arrayTotals[0]/$BW_MEASURE) %></td>
                         <td><%= sprintf("%.2f", arrayTotals[1]/$BW_MEASURE) %></td>
                         <td><%= sprintf("%.2f", arrayTotals.reduce(:+)/$BW_MEASURE) %></td>
@@ -119,7 +99,7 @@
 	                </tr>
 	             </thead>   
 	             <tbody>
-               <% hashDevices.each do | device, arrayTotals | %>                     
+               <% @hashDeviceTotals.each do | device, arrayTotals | %>                     
                   <tr>
                      <td><%= link_to device,  :action => "device_details", :device => device %></td>
                      <td><%= sprintf("%.2f", arrayTotals[0]/$BW_MEASURE) %></td>
@@ -150,7 +130,6 @@
       }
       document.body.onresize();
 
-      var rptTime = getParam("time");
       var myLine = new RGraph.Line('bw_graph_canvas', <%= hashGraphTimeBasedTotals.values %>);
       
             myLine.Set('labels', <%=raw bandwidthGraphTimeSlotLabels  %>);
@@ -264,25 +243,6 @@
        });
 
    }); //document.ready()
-
-   
-
-
-
-function getParam ( sname )
-{
-  var params = location.search.substr(location.search.indexOf("?")+1);
-  var sval = "";
-  params = params.split("&");
-    // split param and value into individual pieces
-    for (var i=0; i<params.length; i++)
-       {
-         temp = params[i].split("=");
-         if ( [temp[0]] == sname ) { sval = temp[1]; }
-       }
-  return sval;
-}
-
 
 </script>
 
