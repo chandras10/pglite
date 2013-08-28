@@ -6,33 +6,18 @@
       arrayTotals.map! {|e| e/$BW_MEASURE }
    end
 
-   availableReportTypes = { "total"       => "Total Bandwidth",
-                            "internalIP"  => "Internal Servers",
-                            "internalAPP" => "Internal Applications",
-                            "externalIP"  => "External Servers",
-                            "externalAPP" => "External Applications",
-                            "deviceAPP"   => "MobileDevice Applications"
-                          }
-
-   availableTimeLines = {
-                            "today"       => "Today",
-                            "past_day"    => "Past 24 Hours",
-                            "past_week"   => "Past Week",
-                            "past_month"  => "Past Month",
-                            "date_range"  => "Choose Dates"
-                        }
 %>
 <!-- content starts -->
 <div id="content" class="span10">
 
         <div class="control-group">
     			  <select id="reportType" class="chosen">
-                <% availableReportTypes.keys.sort.reverse.each do |key| %>
-    				    <option value="<%= key %>"><%= availableReportTypes[key] %></option>
+                <% @availableBandwidthReportTypes.keys.sort.reverse.each do |key| %>
+    				    <option value="<%= key %>"><%= @availableBandwidthReportTypes[key] %></option>
                 <% end %>
     			  </select>
     			  <select id="reportTime" class="chosen">
-               <% availableTimeLines.each do |key, value| %>
+               <% @availableTimeLines.each do |key, value| %>
     				   <option value="<%= key %>"><%= value %></option>
                <% end %>
     			  </select>
@@ -60,7 +45,7 @@
    <div class="row-fluid sorttable">
       <div class="box span6">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title =>  (availableReportTypes[params[:reportType]] || "Servers"),
+                    :locals => { :header_title =>  (@availableBandwidthReportTypes[params[:reportType]] || "Servers"),
                                  :header_link  => "#" }
          %>
          <div class="box-content">

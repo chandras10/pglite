@@ -49,6 +49,8 @@ class ReportsController < ApplicationController
   # Total bandwidth dashboard showing b/w usage
   def dash_bw
 
+    set_report_constants
+
     # Total (IN + OUTbytes) consumption per Server/App, per hour/day/month etc.
     # Key: Server_IP_address/Application Name, Value: 'integer' array holding Mbytes consumed/hr/day/month etc.
     @hashTimeIntervalData = Hash.new
@@ -135,6 +137,8 @@ class ReportsController < ApplicationController
 
   # Bandwidth usage per server, for all ports and devices connected to this server
   def dash_bw_server
+
+    set_report_constants
 
     # Total (IN + OUTbytes) consumption per Port of the SELECTED server, per hour/day/month etc.
     # Key: Port, Value: 'integer' array holding Mbytes consumed/hr/day/month etc.
@@ -227,31 +231,30 @@ class ReportsController < ApplicationController
   # SNORT Alerts dashboard
   def dash_snort
 
-    @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
+    set_report_constants
 
-    today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
-    #today = Time.mktime(2013, 03, 21) #TODO: DELETEME after testing
+    dbQuery = Alertdb.select("priority as priority, sigid as sigid, message as message, count(*) as cnt").
+                                         group(:priority, :sigid, :message).order(:priority, :sigid)
+    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+    #add specific device to the query, if it exists
+    if (params[:device].present?)
+       dbQuery = dbQuery.where("srcmac = ? OR dstmac = ?", params[:device], params[:device])
+    else
+       dbQuery = dbQuery.joins(:deviceinfo)
+    end
 
-    snortAlertRecs = Alertdb.joins(:deviceinfo).
-                        select("to_char(timestamp, 'YYYY-MM-DD HH') as time, 
-                                priority as priority, sigid as sigid, message as message").
-                        where("timestamp >= ?", today).
-                        order(:priority, :sigid)
-
-    @hashTimeIntervalData = Hash.new
+    @hashSnortTimeIntervalData = Hash.new
     @hashSnortAlerts = Hash.new
 
-    snortAlertRecs.each do |rec|
+    dbQuery.each do |rec|
       rec_priority = rec['priority'];
 
-      arrayData = @hashTimeIntervalData[rec_priority]
+      arrayData = @hashSnortTimeIntervalData[rec_priority]
       if arrayData.nil? then
-         arrayData = @hashTimeIntervalData[rec_priority] = Array.new(24, 0)
+         arrayData = @hashSnortTimeIntervalData[rec_priority] = Array.new(@numTimeSlots, 0)
       end
 
-      hour = rec['time'].split[1] if !rec['time'].nil?
-      recTime = if hour.nil? then 0 else hour.to_i end
-      arrayData[recTime] += 1
+      arrayData[rec['time'].to_i] += rec['cnt'].to_i
 
       arrayData = @hashSnortAlerts[rec['sigid']]
       if arrayData.nil? then
@@ -259,19 +262,17 @@ class ReportsController < ApplicationController
          arrayData[1] = rec['message']
          arrayData[2] = rec_priority
       end
-      arrayData[0] += 1
+      arrayData[0] += rec['cnt'].to_i
 
     end #for each SNORT alert record...
   end
 
   
   def tbl_snort
-        @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
-        today = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
-        #today = Time.mktime(2013, 03, 18) #TODO: DELETEME after testing
 
-        # Do we need filter the records based on selected device?
-        macid = params[:device]
+      macid = params[:device]
+      set_report_constants
+
         if (macid.nil?) then
            @snortAlertRecs = Alertdb.select("to_char(timestamp, 'YYYY-MM-DD HH:MI:SS') as time, 
                                              priority as priority, sigid as sigid, message as message, 
@@ -304,26 +305,11 @@ class ReportsController < ApplicationController
       @devicedetails = @devicedetails.first
     end
 
-    this_year = Time.mktime(Time.now.year, 01, 01) 
+    params['reportTime'] = "past_month"
+
     #find all the Snort alerts
-    @snortAlertRecs = Alertdb.select("timestamp as time, 
-                                      priority as priority, sigid as sigid, message as message, 
-                                      protocol as protocol, srcip as srcip, srcport as srcport, 
-                                      destip as dstip, destport as dstport,
-                                      srcmac as srcmac, dstmac as dstmac").
-                              where("timestamp >= ? AND (srcmac = ? OR dstmac = ?)", this_year, macid, macid).
-                              order(:priority, :sigid)
-
-    #
-    # Create a hashmap of  record counts, grouped by "MONTH" and then grouped by "PRIORITY".
-    # NOTE: This wonderful ruby code (it is legible code) is credited to this 
-    # link: http://stackoverflow.com/questions/5639921/group-a-ruby-array-of-dates-by-month-and-year-into-a-hash
-    #
-    @hashSnortAlerts = Hash[ @snortAlertRecs.group_by { |a| a["time"][5..6] }.map { |month, recs|
-                              [month, recs.group_by {|a| a["priority"] } ]
-                             }
-                           ]
-
+    dash_snort
+    @snortAlertCount = Alertdb.where("srcmac = ? OR dstmac = ?", macid, macid).count
     
     #
     # Get all the CVE notices for the given device
@@ -337,9 +323,7 @@ class ReportsController < ApplicationController
 
     #
     # Get the consumed bandwidth details (for last month) for this device
-    params['reportTime'] = "past_month"
     dash_bw
-    params['reportTime'] = nil
 
     #
     # Get all the apps for this device
@@ -372,19 +356,31 @@ class ReportsController < ApplicationController
   #
   private
 
+  def set_report_constants
+     @availableBandwidthReportTypes = { "total"       => "Total Bandwidth",
+                                        "internalIP"  => "Internal Servers",
+                                        "internalAPP" => "Internal Applications",
+                                        "externalIP"  => "External Servers",
+                                        "externalAPP" => "External Applications",
+                                        "deviceAPP"   => "MobileDevice Applications"
+                                      }
+
+     @availableTimeLines = {
+                            "today"       => "Today",
+                            "past_day"    => "Past 24 Hours",
+                            "past_week"   => "Past Week",
+                            "past_month"  => "Past Month",
+                            "date_range"  => "Choose Dates"
+                           }
+
+     @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
+  end
+
   def createBandwidthStatsQuery(dbQuery, reportType)
 
     #if there is no query string, then show the total bandwidth consumption.
     #else show specific data as pointed to by "type"
     #
-    reportTime = params['reportTime'] || "today"
-
-    fromDate = params['fromDate'] || Date.today.to_s
-    begin
-       toDate = params['toDate'] || (Date.parse(fromDate, "YYYY-MM-DD") + 1.day).to_s
-    rescue
-       toDate = Date.today.to_s # Just in case someone has meddled with the query string param and sent an invalid FROM date...
-    end
 
     case reportType
     when "internalIP", "externalIP"
@@ -402,6 +398,25 @@ class ReportsController < ApplicationController
                                                      where("appidexternal.appid > 0").
                                                      group("appidexternal.appid", :device).
                                                      order("appidexternal.appid").scoped
+    end
+
+    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+
+    #add specific device to the query, if it exists
+    dbQuery = dbQuery.where("deviceid = ?", params[:device]) if !params[:device].nil?
+
+    return dbQuery
+  end
+
+  def addTimeLinesToDatabaseQuery(dbQuery)
+
+    reportTime = params['reportTime'] || "today"
+
+    fromDate = params['fromDate'] || Date.today.to_s
+    begin
+       toDate = params['toDate'] || (Date.parse(fromDate, "YYYY-MM-DD") + 1.day).to_s
+    rescue
+       toDate = Date.today.to_s # Just in case someone has meddled with the query string param and sent an invalid FROM date...
     end
 
     case reportTime
@@ -480,10 +495,8 @@ class ReportsController < ApplicationController
     end
     dbQuery = dbQuery.group(:time).order(:time)
 
-    #add specific device to the query, if it exists
-    dbQuery = dbQuery.where("deviceid = ?", params[:device]) if !params[:device].nil?
-
     return dbQuery
+
   end
 
 end

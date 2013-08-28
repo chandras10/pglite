@@ -1,11 +1,13 @@
 <%
-monthArray=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-snortCountByMonthByPriority = Hash[@hashSnortAlerts.sort.map do |month, records|
-                                      cntValues = Array.new(4, 0) # One counter for each Snort Priority
-                                      records.sort.reverse.map {|priority, recs| cntValues[priority-1] = recs.count}
-                                      [month.to_i - 1, cntValues]
-                                   end
-                              ] if !@hashSnortAlerts.nil?
+  monthArray=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  arrayBarGraphTotals = Array.new(@numTimeSlots, 0)
+  @numTimeSlots.times do |i|
+    arrayBarGraphTotals[i] = Array.new
+    @hashSnortTimeIntervalData.each do |key, value|
+      arrayBarGraphTotals[i] << value[i]
+    end
+  end
+
 
 cveCountByMonthByScore = Hash[@hashCveAlerts.sort.map do |month, records|
                                  # 
@@ -23,14 +25,6 @@ cveCountByMonthByScore = Hash[@hashCveAlerts.sort.map do |month, records|
                                  [month.to_i - 1, cntValues]
                               end
                          ] if !@hashCveAlerts.nil?
-
-
-monthwiseSnortTotals = Array.new(12)
-12.times do |i|
-    snortCounters = snortCountByMonthByPriority[i] if !snortCountByMonthByPriority.nil?
-    if (snortCounters.nil?) then snortCounters = Array.new(4,0) end
-    monthwiseSnortTotals[i] = snortCounters
-end
 
 monthwiseCveTotals = Array.new(12)
 12.times do |i|
@@ -128,7 +122,7 @@ hashServers = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.r
                      </tr>
                      <tr>
                         <td><h6>Snort Alerts:</h6></td>
-                        <td><span class="btn btn-medium"><%= if !@devicedetails.nil? then if @snortAlertRecs.nil? then 0 else @snortAlertRecs.count end end%></span></td>
+                        <td><span class="btn btn-medium"><%= if !@devicedetails.nil? then @snortAlertCount end%></span></td>
                      </tr>
                      <tr>
                         <td><h6>Jailbroken:</h6></td>
@@ -251,12 +245,11 @@ hashServers = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.r
 
             document.body.onresize();
 
-            var snortBar = new RGraph.Bar('snort_barchart', <%= monthwiseSnortTotals %>);
-            snortBar.Set('chart.background.grid.autofit.numvlines', 12);
-            //snortBar.Set('chart.background.grid.autofit.numhlines', 5);
+            var snortBar = new RGraph.Bar('snort_barchart', <%= arrayBarGraphTotals %>);
+            snortBar.Set('chart.background.grid.autofit.numvlines', <%= @numTimeSlots %>);
             snortBar.Set('grouping', 'stacked');
             
-            snortBar.Set('labels', <%=raw monthArray %>);
+            snortBar.Set('labels', <%=raw bandwidthGraphTimeSlotLabels %>);
             snortBar.Set('key', ['Very Low', 'Low', 'Med', 'High']);
             snortBar.Set('key.position.gutter.boxed', true);
             snortBar.Set('key.position', 'gutter');
