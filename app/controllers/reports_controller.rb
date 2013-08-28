@@ -172,9 +172,11 @@ class ReportsController < ApplicationController
        statRecordSets = [dbQuery]
     else # No query string means total bandwidth (internal IP + external IP)
 
-       internalStatsQuery = Internalipstat.select("deviceid as device, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+       internalStatsQuery = Internalipstat.select("deviceid as device, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                                           where("destip = ?", params['resource']).group(:service)
        internalStatsQuery = createBandwidthStatsQuery(internalStatsQuery, "internalIP")
-       externalStatsQuery = Externalipstat.select("deviceid as device, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+       externalStatsQuery = Externalipstat.select("deviceid as device, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+                                           where("destip = ?", params['resource']).group(:service)
        externalStatsQuery = createBandwidthStatsQuery(externalStatsQuery, "externalIP")
  
        statRecordSets = [internalStatsQuery, externalStatsQuery]

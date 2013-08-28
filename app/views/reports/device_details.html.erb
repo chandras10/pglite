@@ -191,7 +191,7 @@ hashServers = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.r
               <tbody>
                 <% hashServers.each do | server_ip, arrayTotals | %>
                   <tr>
-                     <td><%= link_to server_ip, :action => "dash_bw_server", :server_ip => server_ip %></td>
+                     <td><%= link_to server_ip, :action => "dash_bw_server", :resource => server_ip %></td>
                      <td><%= sprintf("%.2f", arrayTotals[1]/$BW_MEASURE) %></td>
                      <td><%= sprintf("%.2f", arrayTotals[0]/$BW_MEASURE) %></td>
                      <td><%= sprintf("%.2f", arrayTotals.reduce(:+)/$BW_MEASURE) %></td>
