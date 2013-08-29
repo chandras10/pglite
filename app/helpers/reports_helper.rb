@@ -9,8 +9,15 @@ module ReportsHelper
   end
 
   def bandwidthGraphTimeSlotLabels
-    labelArray = Array.new(@numTimeSlots, "")
     case params['reportTime']
+    when "past_hour"
+       labelArray = Array.new(@numTimeSlots, "")
+       interval = 60/(@numTimeSlots-1)
+       pastHour = (Time.now - 1.hour)    
+       @numTimeSlots.times do |i|
+           t = pastHour + (i * interval).minutes
+           labelArray[i] = ("%02d" % t.hour) + ":" + ("%02d" % t.min)
+       end
     when "past_week"
        labelArray = Date::ABBR_DAYNAMES.dup
        currentDayOfWeek = Date.today.wday
@@ -19,6 +26,8 @@ module ReportsHelper
     when "past_month"
        labelArray = weekLabels(Date.today)
     when "date_range"
+       labelArray = Array.new(@numTimeSlots, "")
+
          begin
             fromDate = Date.parse(params['fromDate'], 'YYYY-MM-DD').to_time
          rescue
@@ -55,6 +64,7 @@ module ReportsHelper
            return labelArray
        end
     else #default is TODAY
+       labelArray = Array.new(@numTimeSlots, "")
        @numTimeSlots.times do |i|
            next if (i%2 != 0)
            if (i < 12) then

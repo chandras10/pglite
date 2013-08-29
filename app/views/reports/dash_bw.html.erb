@@ -1,10 +1,29 @@
 <%
-
+   hostNames = Hash.new
+   
+   if params['reportType'].nil? || params['reportType'] == "total" || params['reportType'] == "internalIP" || params['reportType'] == "externalIP"
+      dnsResolver = Resolv::DNS.new
+   Hostname.all.each do |h|
+      hostNames[h.ip_address] = h.name
+   end
+  end
+   
    # Selecting the top 10 servers to display in the bandwidth line graph
    hashGraphTimeBasedTotals = Hash[@hashTimeIntervalData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
    hashGraphTimeBasedTotals.each do |i, arrayTotals|
+   if params['reportType'].nil? || params['reportType'] == "total" || params['reportType'] == "internalIP" || params['reportType'] == "externalIP"
+      if hostNames[i].nil? then
+          begin
+             name = dnsResolver.getname(i).to_s
+             Hostname.create(ip_address: i, name: name)
+             hostNames[i] = name
+          rescue
+          end
+      end
+   end
       arrayTotals.map! {|e| e/$BW_MEASURE }
    end
+
 
 %>
 <!-- content starts -->
@@ -59,9 +78,11 @@
 	          </tr>
 	       </thead>   
 	       <tbody>
-               <% @hashResourceTotals.each do | resource, arrayTotals | %>
+               <% @hashResourceTotals.each do | resource, arrayTotals | 
+                     resourceName = hostNames[resource].nil? ? resource : hostNames[resource]
+                %>
                      <tr>
-                        <td><%= link_to resource, params.merge({:action => "dash_bw_server", :resource => resource}) %></td>
+                        <td><%= link_to resourceName, params.merge({:action => "dash_bw_server", :resource => resource}) %></td>
                         <td><%= sprintf("%.2f", arrayTotals[0]/$BW_MEASURE) %></td>
                         <td><%= sprintf("%.2f", arrayTotals[1]/$BW_MEASURE) %></td>
                         <td><%= sprintf("%.2f", arrayTotals.reduce(:+)/$BW_MEASURE) %></td>

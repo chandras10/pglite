@@ -75,7 +75,8 @@
                           <% when "macid" %>
                                    <%= link_to deviceinfo[col], :action=> "device_details", :device => deviceinfo[col] %>
                           <% when "auth_source" %>
-                                   <%= @auth_src[deviceinfo[col]].description if !deviceinfo[col].nil?%>
+                                   <%= (@auth_src.detect {|a| a.id == deviceinfo[col]}).description if !deviceinfo[col].nil? %>
+                                   <% #@auth_src[deviceinfo[col]].description if !deviceinfo[col].nil? %>
                           <% when "weight" %>
 				  <% if (!deviceinfo[col].nil?) then %>
                           		<%      if ((deviceinfo[col] & 0x00FF0000) > 0) then %> Yes <% else %> No <% end %>

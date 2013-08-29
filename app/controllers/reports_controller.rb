@@ -69,6 +69,7 @@ class ReportsController < ApplicationController
     #else show specific data as pointed to by "type"
     #
     reportType = params['reportType'] || "total"
+    reportType = "total" if (!reportType.nil? && reportType == "deviceAPP" )
 
     if (reportType != "total")
        case reportType
@@ -155,6 +156,7 @@ class ReportsController < ApplicationController
     @hashDeviceTotals = Hash.new
 
     reportType = params['reportType'] || "total"
+    reportType = "total" if (!reportType.nil? && reportType == "deviceAPP" )
 
     if (reportType != "total")
        case reportType
@@ -367,6 +369,7 @@ class ReportsController < ApplicationController
 
      @availableTimeLines = {
                             "today"       => "Today",
+                            "past_hour"   => "Past Hour",
                             "past_day"    => "Past 24 Hours",
                             "past_week"   => "Past Week",
                             "past_month"  => "Past Month",
@@ -420,6 +423,13 @@ class ReportsController < ApplicationController
     end
 
     case reportTime
+    when "past_hour"
+         @timeSlot = "minute"
+         @numTimeSlots = 5
+         fromDate = 1.hour.ago
+         toDate = Time.now
+         dbQuery = dbQuery.select("MOD(cast(date_part('minute', timestamp) as INT), #{@numTimeSlots}) as time").
+                           where("timestamp > (CURRENT_TIMESTAMP - '1 hour'::interval)")         
     when "past_day"
          @timeSlot = "hour"
          @numTimeSlots = 24
