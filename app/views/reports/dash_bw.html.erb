@@ -1,6 +1,6 @@
 <%
    hostNames = Hash.new
-   dnsResolver = Resolve::DNS.new
+   dnsResolver = Resolv::DNS.new
    
    case params['reportType']
    when "internalIP"
