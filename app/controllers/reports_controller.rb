@@ -442,10 +442,7 @@ class ReportsController < ApplicationController
          toDate = Time.now
          @timeSlot = "day"
          @numTimeSlots = 7
-         startingNum = ActiveRecord::Base.connection.select_value(ActiveRecord::Base.send(:sanitize_sql_array, 
-                        ["select date_part('day', current_timestamp - '6 days'::interval)"]))
-
-         dbQuery = dbQuery.select("date_part('day', timestamp) - #{startingNum} as time").
+         dbQuery = dbQuery.select("EXTRACT(day from timestamp - (current_timestamp - '7 day'::interval)) as time").
                            where("timestamp > (CURRENT_TIMESTAMP - '7 day'::interval)")
     when "past_month"
          fromDate = 1.month.ago
@@ -491,9 +488,7 @@ class ReportsController < ApplicationController
          else
             @timeSlot = "day"
             @numTimeSlots = numDays
-            startingNum = ActiveRecord::Base.connection.select_value(ActiveRecord::Base.send(:sanitize_sql_array, 
-                        ["select date_part('day', date '#{fromDate}')"]))
-            dbQuery = dbQuery.select("date_part('day', timestamp) - #{startingNum} as time")
+            dbQuery = dbQuery.select("EXTRACT(day from timestamp - date '#{fromDate}') as time")
          end
     else #default is TODAY
          fromDate = Time.mktime(Time.now.year, Time.now.month, Time.now.day)
