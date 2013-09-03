@@ -42,6 +42,10 @@ Pglite::Application.configure do
   config.peregrine_policyfile_dtd = "/usr/local/etc/pgguard/pg_policy.dtd"
   config.peregrine_pgguard_pidfile = "/usr/local/var/pgguard/pgguard.pid"
   config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"
+  
+  config.use_ssl = true
+  config.ssl_port = 3001
+  config.force_ssl = true
 
 
 end

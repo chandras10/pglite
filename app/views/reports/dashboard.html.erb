@@ -76,7 +76,7 @@
 			         class="well span3 top-block" href="/dash_bw">
 			         <span class="icon-briefcase icon-3x"></span>
 				       <div>Assets</div>
-				       <div><%= Ipstat.select(:destip).uniq.length %></div>
+				       <div><%= Internalipstat.select(:destip).uniq.length %></div>
 			      </a>
 				
 			      <a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." 

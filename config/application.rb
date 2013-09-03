@@ -71,6 +71,8 @@ module Pglite
     config.exceptions_app = self.routes
 
     config.authentication = (File.exists?("/usr/local/etc/pgguard/ldap.yml") ? "ActiveDirectory" : "Local")
+
+    config.use_ssl = false
   end
 
 end
