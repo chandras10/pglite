@@ -21,16 +21,27 @@
    # Selecting the top 10 servers to display in the bandwidth line graph
    hashGraphTimeBasedTotals = Hash[@hashTimeIntervalData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
    hashGraphTimeBasedTotals.each do |i, arrayTotals|
-   if params['reportType'].nil? || params['reportType'] == "total" || params['reportType'] == "internalIP" || params['reportType'] == "externalIP"
-      if hostNames[i].nil? then
-          begin
-             name = dnsResolver.getname(i).to_s
-             Hostname.create(ip_address: i, name: name)
-             hostNames[i] = name
-          rescue
-          end
+      if hostNames[i].nil? && ((params['reportType'] == "externalIP") || (params['reportType'] == "internalIP")) then 
+         hostname = `wbinfo --WINS-by-ip=#{i} | cut -f2`.strip if (params['reportType'] == "internalIP")
+         if hostname.nil? then
+            begin
+               hostname = dnsResolver.getname(i).to_s
+            rescue
+               #Ignore any exceptions for now...
+            end
+         end
+
+         if !hostname.nil? then
+            begin
+               Hostname.create(ip_address: i, host_type: ((params['reportType'] == "externalIP") ? 1 : 2), name: name)
+               hostNames[i] = hostname
+            rescue
+               #Ignore any exceptions for now...
+            end
+         end
+
       end
-   end
+
       arrayTotals.map! {|e| e/$BW_MEASURE }
    end
 
@@ -120,12 +131,20 @@
 	                </tr>
 	             </thead>   
 	             <tbody>
-               <% @hashDeviceTotals.each do | device, arrayTotals | %>                     
+               <% @hashDeviceTotals.each do | device, clientData | %>
+               <% if !clientData[:user].nil? && !clientData[:user].empty? then 
+                     linkText = clientData[:user]
+                  elsif !clientData[:ipaddress].nil? && !clientData[:ipaddress].empty? then 
+                     linkText = clientData[:ipaddress]
+                  else
+                     linkText = device
+                  end
+               %>
                   <tr>
-                     <td><%= link_to device,  :action => "device_details", :device => device %></td>
-                     <td><%= sprintf("%.2f", arrayTotals[0]/$BW_MEASURE) %></td>
-                     <td><%= sprintf("%.2f", arrayTotals[1]/$BW_MEASURE) %></td>
-                     <td><%= sprintf("%.2f", arrayTotals.reduce(:+)/$BW_MEASURE) %></td>
+                     <td><%= link_to linkText, :action => "device_details", :device => device %></td>
+                     <td><%= sprintf("%.2f", clientData[:totals][0]/$BW_MEASURE) %></td>
+                     <td><%= sprintf("%.2f", clientData[:totals][1]/$BW_MEASURE) %></td>
+                     <td><%= sprintf("%.2f", clientData[:totals].reduce(:+)/$BW_MEASURE) %></td>
                   </tr>
                <% end %>
                </tbody>

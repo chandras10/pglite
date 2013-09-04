@@ -114,12 +114,12 @@ class ReportsController < ApplicationController
 
           if (params[:device].nil?) then
              # Update the Hashmap holding total in/out bytes counters for each device (or client)
-             arrayData = @hashDeviceTotals[rec['device']]
-             if arrayData.nil? then
-                arrayData = @hashDeviceTotals[rec['device']] = Array.new(2, 0)
+             clientData = @hashDeviceTotals[rec['device']]
+             if clientData.nil? then
+                clientData = @hashDeviceTotals[rec['device']] = {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
              end
-             arrayData[0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
-             arrayData[1] += rec['inbytes']
+             clientData[:totals][0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
+             clientData[:totals][1] += rec['inbytes']
           end
 
        end # For each stat record...
@@ -387,8 +387,8 @@ class ReportsController < ApplicationController
 
     case reportType
     when "internalIP", "externalIP"
-         dbQuery = dbQuery.joins(:deviceinfo).select("destip as resource").
-                                                     group(:resource, :device).
+         dbQuery = dbQuery.joins(:deviceinfo).select("destip as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
+                                                     group(:resource, 'deviceinfo.username', 'deviceinfo.ipaddr', :device).
                                                      order(:resource).scoped
     when "internalAPP"
          dbQuery = dbQuery.joins(:deviceinfo).joins(:appidinternal).select("appidinternal.appname as resource").
