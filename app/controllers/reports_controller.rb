@@ -391,15 +391,15 @@ class ReportsController < ApplicationController
                                                      group(:resource, 'deviceinfo.username', 'deviceinfo.ipaddr', :device).
                                                      order(:resource).scoped
     when "internalAPP"
-         dbQuery = dbQuery.joins(:deviceinfo).joins(:appidinternal).select("appidinternal.appname as resource").
+         dbQuery = dbQuery.joins(:deviceinfo).joins(:appidinternal).select("appidinternal.appname as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
                                                      where("appidinternal.appid > 0").
-                                                     group("appidinternal.appid", :device).
+                                                     group("appidinternal.appid", 'deviceinfo.username', 'deviceinfo.ipaddr', :device).
                                                      order("appidinternal.appid").scoped
 
     when "externalAPP"
-         dbQuery = dbQuery.joins(:deviceinfo).joins(:appidexternal).select("appidexternal.appname as resource").
+         dbQuery = dbQuery.joins(:deviceinfo).joins(:appidexternal).select("appidexternal.appname as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
                                                      where("appidexternal.appid > 0").
-                                                     group("appidexternal.appid", :device).
+                                                     group("appidexternal.appid", 'deviceinfo.username', 'deviceinfo.ipaddr', :device).
                                                      order("appidexternal.appid").scoped
     end
 
