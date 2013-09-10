@@ -87,15 +87,18 @@ module ReportsHelper
   #
   # Bandwidth data will be shown in M/K/bytes depending on the variable value below.
   #  2 ** 0 = one byte; 1K = 2 ** 10;  1M = 2 ** 20
-  # 
+  # Update: Recently, for HappiestMinds Trials, the backend is logging the stats
+  # in Kbytes and not bytes as it was done earlier. So the changes below reflect
+  # corresponding changes for the UI as well.
+  #
   $BW_MEASURE = 2 ** 10
 
   def bandwidth_label
       label = "(bytes)"
       if ($BW_MEASURE > 1000000) then
-         label = "(Mbytes)"
+         label = "(Gbytes)"
       elsif ($BW_MEASURE > 1000) then
-         label = "(Kbytes)"
+         label = "(Mbytes)"
       end
   end
 
