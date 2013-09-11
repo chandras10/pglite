@@ -1,4 +1,4 @@
-class Internalipstat < ActiveRecord::Base
+class Intincomingipstat < ActiveRecord::Base
   self.table_name = "intincomingipstat"
 
   attr_accessible :timestamp, :deviceid, :destip, :destport, :inbytes, :outbytes

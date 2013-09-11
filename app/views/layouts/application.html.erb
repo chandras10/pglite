@@ -102,6 +102,7 @@
 						<li><a class="ajax-link" href="/dashboard"><i class="icon-bar-chart"></i><span class="hidden-tablet"> Dashboard</span></a></li>
 						<li><a class="ajax-link" href="/dash_inventory"><i class="icon-bar-chart"></i><span class="hidden-tablet"> Inventory</span></a></li>
 						<li><a class="ajax-link" href="/dash_bw"><i class="icon-dashboard"></i><span class="hidden-tablet"> Bandwidth</span></a></li>
+            <li><a class="ajax-link" href="/dash_bw_pivottable"><i class="icon-table"></i><span class="hidden-tablet"> Bandwidth (Pivot Table)</span></a></li>
 						<li><a class="ajax-link" href="/dash_snort"><i class="icon-eye-open"></i><span class="hidden-tablet"> Intrusion Detection (IDS)</span></a></li>
             <li><a class="ajax-link" href="/tbl_vulnerability"><i class="icon-warning-sign"></i><span class="hidden-tablet"> Vulnerability Database</span></a></li>
 
@@ -210,6 +211,8 @@
 <%= javascript_include_tag "intro" %>
 <%= javascript_include_tag "ColReorder.min" %>
 <%= javascript_include_tag "autocomplete_tags" %>
+<%= javascript_include_tag "pivot.coffee" %>
+
 
 
 <!-- %= debug(params) if Rails.env.development? % -->

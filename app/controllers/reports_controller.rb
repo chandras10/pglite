@@ -69,26 +69,27 @@ class ReportsController < ApplicationController
     #else show specific data as pointed to by "type"
     #
     reportType = params['reportType'] || "total"
-    reportType = "total" if (!reportType.nil? && reportType == "deviceAPP" )
 
     if (reportType != "total")
        case reportType
           when "internalIP"
-             dbQuery = Internalipstat.select("deviceid as device, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = Internalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
           when "externalIP"
-             dbQuery = Externalipstat.select("deviceid as device, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = Externalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+          when "byodIP"
+             dbQuery = Intincomingipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
           when "internalAPP"
-             dbQuery = Internalresourcestat.select("deviceid as device, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = Internalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
           when "externalAPP"
-             dbQuery = Externalresourcestat.select("deviceid as device, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = Externalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
        end
        dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
        statRecordSets = [dbQuery]
     else # No query string means total bandwidth (internal IP + external IP)
 
-       internalStatsQuery = Internalipstat.select("deviceid as device, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+       internalStatsQuery = Internalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
        internalStatsQuery = createBandwidthStatsQuery(internalStatsQuery, "internalIP")
-       externalStatsQuery = Externalipstat.select("deviceid as device, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+       externalStatsQuery = Externalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
        externalStatsQuery = createBandwidthStatsQuery(externalStatsQuery, "externalIP")
  
        statRecordSets = [internalStatsQuery, externalStatsQuery]
@@ -114,9 +115,9 @@ class ReportsController < ApplicationController
 
           if (params[:device].nil?) then
              # Update the Hashmap holding total in/out bytes counters for each device (or client)
-             clientData = @hashDeviceTotals[rec['device']]
+             clientData = @hashDeviceTotals[rec['client']]
              if clientData.nil? then
-                clientData = @hashDeviceTotals[rec['device']] = {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
+                clientData = @hashDeviceTotals[rec['client']] = {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
              end
              clientData[:totals][0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
              clientData[:totals][1] += rec['inbytes']
@@ -353,6 +354,47 @@ class ReportsController < ApplicationController
     end
   end
 
+  def dash_bw_pivottable
+
+    set_report_constants
+    @availableBandwidthReportTypes = { 
+                                        "internalIP"  => "Internal Servers",
+                                        "byodIP"   => "BYOD Servers"
+                                      }
+
+    reportType = params['reportType'] || "internalIP"
+
+    #
+    # Get the WHERE clause for time-based query and append it to the SQL below. 
+    # I had to do some regular expression gimmick to extract only the WHERE clause because
+    # I am employing 'find_by_sql' for the DB queries. (Not efficient but works...)
+    #
+    dbQuery = Internalipstat
+    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
+
+    case reportType
+    when "internalIP"
+       @dbRecords = Internalipstat.find_by_sql("with top_ports as 
+                                               (SELECT destport, sum(inbytes)+sum(outbytes) as total_bw from internalipstat 
+                                                group by destport order by total_bw desc LIMIT 10), 
+                                                ports as (select destport from top_ports) 
+                                                select d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip as Internal_Server, destport as Port, 
+                                                       sum(inbytes) as inbytes, sum(outbytes) as outbytes  from internalipstat stat, deviceinfo d 
+                                                where destport in (select destport from ports) and d.macid = stat.deviceid and #{timeQueryString[0][1]}
+                                                group by d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip, destport order by destip, destport")
+    when "byodIP"
+       @dbRecords = Intincomingipstat.find_by_sql("with top_ports as 
+                                                  (SELECT destport, sum(inbytes)+sum(outbytes) as total_bw from intincomingipstat 
+                                                  group by destport order by total_bw desc LIMIT 10), 
+                                                  ports as (select destport from top_ports) 
+                                                  select d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip as Internal_Server, destport as Port, 
+                                                         sum(inbytes) as inbytes, sum(outbytes) as outbytes  from intincomingipstat stat, deviceinfo d 
+                                                  where destport in (select destport from ports) and d.macid = stat.deviceid and #{timeQueryString[0][1]}
+                                                  group by d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip, destport order by destip, destport")
+    end # Which reportType?
+  end
+  
   #
   #-----------------------------------------------------------------------------
   #
@@ -364,7 +406,7 @@ class ReportsController < ApplicationController
                                         "internalAPP" => "Internal Applications",
                                         "externalIP"  => "External Servers",
                                         "externalAPP" => "External Applications",
-                                        "deviceAPP"   => "MobileDevice Applications"
+                                        "byodIP"   => "BYOD Servers"
                                       }
 
      @availableTimeLines = {
@@ -386,20 +428,20 @@ class ReportsController < ApplicationController
     #
 
     case reportType
-    when "internalIP", "externalIP"
+    when "internalIP", "externalIP", "byodIP"
          dbQuery = dbQuery.joins(:deviceinfo).select("destip as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
-                                                     group(:resource, 'deviceinfo.username', 'deviceinfo.ipaddr', :device).
+                                                     group(:resource, 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
                                                      order(:resource).scoped
     when "internalAPP"
          dbQuery = dbQuery.joins(:deviceinfo).joins(:appidinternal).select("appidinternal.appname as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
                                                      where("appidinternal.appid > 0").
-                                                     group("appidinternal.appid", 'deviceinfo.username', 'deviceinfo.ipaddr', :device).
+                                                     group("appidinternal.appid", 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
                                                      order("appidinternal.appid").scoped
 
     when "externalAPP"
          dbQuery = dbQuery.joins(:deviceinfo).joins(:appidexternal).select("appidexternal.appname as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
                                                      where("appidexternal.appid > 0").
-                                                     group("appidexternal.appid", 'deviceinfo.username', 'deviceinfo.ipaddr', :device).
+                                                     group("appidexternal.appid", 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
                                                      order("appidexternal.appid").scoped
     end
 
@@ -495,6 +537,7 @@ class ReportsController < ApplicationController
          toDate = fromDate + 24.hours
          @timeSlot = "hour"
          @numTimeSlots = 24
+
          dbQuery = dbQuery.select("date_part('hour', timestamp) as time").
                            where("timestamp > date_trunc('day', CURRENT_TIMESTAMP)")
     end

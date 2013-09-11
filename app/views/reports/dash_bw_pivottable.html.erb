@@ -1,0 +1,224 @@
+<%
+%>
+<!-- content starts -->
+<%= javascript_include_tag "pivot.coffee" %>
+<style>
+.label {
+   font-size: 16px;
+}
+.label-info {
+  background-color: #98AFC7;
+}
+.table th {
+  background-color: #C2DFFF;
+}
+.table th, .table td{
+     padding: 5px;
+}
+.table td .pvtVal, 
+.table td .pvtTotal, 
+.table td .pvtGrandTotal{
+     text-align: right;
+}
+
+</style>
+<div id="content" class="span10">
+        <div class="control-group">
+    			  <select id="reportType" class="chosen">
+                <% @availableBandwidthReportTypes.keys.sort.reverse.each do |key| %>
+    				    <option value="<%= key %>"><%= @availableBandwidthReportTypes[key] %></option>
+                <% end %>
+    			  </select>
+    			  <select id="reportTime" class="chosen">
+               <% @availableTimeLines.each do |key, value| %>
+    				   <option value="<%= key %>"><%= value %></option>
+               <% end %>
+    			  </select>
+          
+            <button class="btn btn-primary" id="refreshBtn">Refresh</button>
+
+        </div>
+        <div class="control-group" id="dateRange">
+    			  <input   class="datepicker" id="fromDate" value="From" type="text" >
+    			  <input   class="datepicker" id="toDate" value="To" type="text">
+        </div>
+
+   <div class="row-fluid sorttable">
+      <div class="box span12">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Resource Consumption (Pivot)",
+                                 :header_link  => "#" }
+         %>
+         <div id="statsPivot" class="box-content" style="overflow:auto">
+         </div>
+      </div> <!-- box span12 -->
+   </div>
+</div><!-- content ends -->
+
+
+<script type="text/javascript">
+   var _MS_PER_DAY = 1000 * 60 * 60 * 24;
+   function dateDiffInDays(a, b) {
+      // Discard the time and time-zone information.
+      var utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+      var utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+
+      return Math.floor((utc2 - utc1) / _MS_PER_DAY) + 1; // Adding one extra to make the end date inclusive.
+   }
+        
+   $(document).ready(function(){
+       var fromDate, toDate;
+
+       // Set approriate values (derived from query string) in the dropdown selections
+       $("#reportType").val("<%= params['reportType'] || 'total' %>");
+       $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
+
+       <% if params['reportTime'] != "date_range" then %>
+          $("#dateRange").hide();
+       <% else %>
+          $("#dateRange").show();
+          fromDate = "<%= params['fromDate'] || Date.today.to_s %>";
+          $("#fromDate").val(fromDate);
+          toDate = "<%= params['toDate'] || Date.today.to_s %>"
+          $("#toDate").val(toDate);
+       <% end %>
+
+       $("#reportTime").chosen().change(function() {
+           if (this.value == "date_range") {
+               $("#dateRange").show();
+           } else {
+               $("#dateRange").hide();
+           }
+       });
+
+       $("#fromDate" ).datepicker({ 
+              showAnim: "slide",        
+              dateFormat: "yy-mm-dd",
+              onSelect: function(dateText){
+                 fromDate = dateText;
+              },
+              onClose: function( selectedDate ) {
+                 $( "#toDate" ).datepicker( "option", "minDate", selectedDate );
+              }              
+       });
+       $("#toDate" ).datepicker({ 
+              showAnim: "slide",
+              dateFormat: "yy-mm-dd",
+              onSelect: function(dateText){
+                 toDate = dateText;
+              },
+              onClose: function( selectedDate ) {
+                 $( "#fromDate" ).datepicker( "option", "maxDate", selectedDate );
+              } 
+       });
+
+
+  
+  
+       $('#refreshBtn').click(function() {
+            var type = $('#reportType').val();
+            var time = $('#reportTime').val();
+
+            var urlString = "/dash_bw_pivottable?reportType="+ type + "&reportTime=" + time;
+            if (time == "date_range") {
+               numDays = dateDiffInDays(new Date(fromDate), new Date(toDate));
+
+               //For now, handle date ranges less than a year
+               if (numDays > 364) {
+                  alert("Date ranges beyond a year are not supported.")
+                  return;
+               }
+               urlString += "&fromDate=" + fromDate + "&toDate=" + toDate;
+            }
+
+            window.location.href= urlString;
+       });
+
+       function formatNumber(nStr) {
+                                           label = " M";
+                                           num = parseFloat(nStr);
+                                           if (num > 1024.0) {
+                                              nStr = ((num/1024).toFixed(1)).toString();
+                                              label = " G"
+                                           }
+
+                                           nStr += '';
+                                           x = nStr.split('.');
+                                           x1 = x[0];
+                                           x2 = x.length > 1 ? '.' + x[1] : '';
+                                           var rgx = /(\d+)(\d{3})/;
+                                           while (rgx.test(x1)) {
+                                              x1 = x1.replace(rgx, '$1' + ',' + '$2');
+                                           }
+                                           return x1 + x2 + label;         
+       }
+
+       var totalBW = function() {
+          return function() {
+             return {
+                sumINbytes: 0,
+                sumOUTbytes: 0,
+                push: function(record) {
+                   if (!isNaN(parseInt(record.inbytes))) {
+                      this.sumINbytes += parseInt(record.inbytes);
+                   }
+
+                   if (!isNaN(parseInt(record.outbytes))) {
+                      this.sumOUTbytes += parseInt(record.outbytes);
+                   }
+                },
+                value: function() { return ((this.sumINbytes + this.sumOUTbytes)/1024).toFixed(1);},
+                format: function(nStr) {   return formatNumber(nStr); },
+                label: "TotalBW"
+             };
+          };
+       };
+
+       var upload = function() {
+          return function() {
+             return {
+                sumINbytes: 0,
+                push: function(record) {
+                   if (!isNaN(parseInt(record.inbytes))) {
+                      this.sumINbytes += parseInt(record.inbytes);
+                   }
+                },
+                value: function() { return ((this.sumINbytes)/1024).toFixed(1);},
+                format: function(nStr) { return formatNumber(nStr); },
+                label: "Upload"
+             };
+          };
+       };
+       var download = function() {
+          return function() {
+             return {
+                sumOUTbytes: 0,
+                push: function(record) {
+                   if (!isNaN(parseInt(record.outbytes))) {
+                      this.sumOUTbytes += parseInt(record.outbytes);
+                   }
+                },
+                value: function() { return ((this.sumOUTbytes)/1024).toFixed(1);},
+                format: function(nStr) { return formatNumber(nStr); },
+                label: "Download"
+             };
+          };
+       };
+
+       $(function() {
+           $("#statsPivot").pivotUI(<%=raw @dbRecords.to_json %>, 
+             {
+                rows: ["internal_server"],
+                cols: ["port"],
+                hiddenAttributes: ["inbytes", "outbytes"],
+                aggregators: [totalBW, upload, download]
+             });
+       });
+
+       $(".chosen").chosen();
+       $('.chzn-search').hide(); //Hide the search box within the dropdown
+
+   }); //document.ready()
+
+</script>
+
