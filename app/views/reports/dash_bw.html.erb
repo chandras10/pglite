@@ -46,6 +46,14 @@
    end
 
 
+   if params['reportType'] == "byodIP" then
+      serverListTitle = "Clients"
+      clientListTitle = @availableBandwidthReportTypes[params[:reportType]]
+   else
+      serverListTitle = @availableBandwidthReportTypes[params[:reportType]] || "Servers"
+      clientListTitle = "Clients"
+   end
+
 %>
 <!-- content starts -->
 <div id="content" class="span10">
@@ -83,9 +91,9 @@
    </div><!-- row-fluid sortable -->
 
    <div class="row-fluid sorttable">
-      <div class="box span6">
+      <div class="box span6" id="serverList">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title =>  (@availableBandwidthReportTypes[params[:reportType]] || "Servers"),
+                    :locals => { :header_title =>  serverListTitle,
                                  :header_link  => "#" }
          %>
          <div class="box-content">
@@ -115,9 +123,9 @@
          </div> <!-- box-content -->
       </div> <!-- box span6 -->
 
-      <div class="box span6">
+      <div class="box span6" id="clientList">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Client Devices",
+                    :locals => { :header_title => clientListTitle,
                                  :header_link  => "#" }
          %>
          <div class="box-content">
@@ -276,9 +284,6 @@
                  $( "#fromDate" ).datepicker( "option", "maxDate", selectedDate );
               } 
        });
-
-
-  
   
        $('#refreshBtn').click(function() {
             var type = $('#reportType').val();
@@ -297,6 +302,16 @@
             }
             window.location.href= urlString;
        });
+
+       /*
+        * BYOD Servers is a quirky case (unlike others) where the BYODs act as servers and other devices on the network are connecting to them via
+        * SSH or other advertised ports. In all other cases, BYODs are always clients in the TCP/IP connection except here they are the Servers.
+        * Instead of doing code changes all over the place, just swapping the two tables based the switched role of the BYODs to make the page
+        * consistent of having the left-side table as servers and right-side table as clients, always.
+        */
+       <% if params['reportType'] == 'byodIP' then %>
+             jQuery("#serverList").insertAfter(jQuery('#clientList'));
+       <% end %>
 
    }); //document.ready()
 
