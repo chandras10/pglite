@@ -162,16 +162,19 @@ class ReportsController < ApplicationController
     if (reportType != "total")
        case reportType
           when "internalIP"
-             dbQuery = Internalipstat.select("deviceid as device, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = Internalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
              dbQuery = dbQuery.where("destip = ?", params['resource'])
           when "externalIP"
-             dbQuery = Externalipstat.select("deviceid as device, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = Externalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = dbQuery.where("destip = ?", params['resource'])
+          when "byodIP"
+             dbQuery = Intincomingipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
              dbQuery = dbQuery.where("destip = ?", params['resource'])
           when "internalAPP"
-             dbQuery = Internalresourcestat.select("deviceid as device, appidinternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = Internalresourcestat.select("deviceid as client, appidinternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
              dbQuery = dbQuery.where("appidinternal.appname = ?", params['resource'])
           when "externalAPP"
-             dbQuery = Externalresourcestat.select("deviceid as device, appidexternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = Externalresourcestat.select("deviceid as client, appidexternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
              dbQuery = dbQuery.where("appidexternal.appname = ?", params['resource'])
        end
        dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
@@ -179,10 +182,10 @@ class ReportsController < ApplicationController
        statRecordSets = [dbQuery]
     else # No query string means total bandwidth (internal IP + external IP)
 
-       internalStatsQuery = Internalipstat.select("deviceid as device, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+       internalStatsQuery = Internalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                                            where("destip = ?", params['resource']).group(:service)
        internalStatsQuery = createBandwidthStatsQuery(internalStatsQuery, "internalIP")
-       externalStatsQuery = Externalipstat.select("deviceid as device, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes").
+       externalStatsQuery = Externalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes").
                                            where("destip = ?", params['resource']).group(:service)
        externalStatsQuery = createBandwidthStatsQuery(externalStatsQuery, "externalIP")
  
@@ -210,12 +213,12 @@ class ReportsController < ApplicationController
        arrayData[1] += rec['outbytes']
 
        # Update the Hashmap holding total in/out bytes counters for each device (or client)
-       arrayData = @hashDeviceTotals[rec['device']]
-       if arrayData.nil? then
-          arrayData = @hashDeviceTotals[rec['device']] = Array.new(2, 0)
+       clientData = @hashDeviceTotals[rec['client']]
+       if clientData.nil? then
+          clientData = @hashDeviceTotals[rec['client']] =  {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
        end
-       arrayData[0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
-       arrayData[1] += rec['inbytes']
+       clientData[:totals][0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
+       clientData[:totals][1] += rec['inbytes']
 
     end # For each Ipstat record...
   end
