@@ -34,6 +34,26 @@ class ConfigurationController < ApplicationController
         # Missing policy file?
         #
         @fwRules << default_ANY_ANY_rule
+
+        #
+        # Default values for Device Authorization
+        #
+        id = Time.new.to_i
+        authSources = Authsources.all
+        authSources.each do |source|
+           @fwObjects["obj_" + id.to_s] = {"type" => "devicestate", "value" => source.description} if !source.description.empty?
+           id += 1
+        end
+
+        #
+        # Default values for Operating System
+        #
+        operatingSystems = Deviceinfo.select("operatingsystem").where("operatingsystem is not NULL and operatingsystem <> ''").uniq
+        operatingSystems.each do |rec|
+           @fwObjects["obj_" + id.to_s] = {"type" => "osname", "value" => rec.operatingsystem }
+           id += 1
+        end
+
         render :policy
         return;
     end
@@ -110,6 +130,7 @@ class ConfigurationController < ApplicationController
                          "ipv4subnet" => "IPv4Subnet",
                          "ipv4" => "IPv4",
                          "deviceclass" => "DeviceClass",
+                         "devicestate" => "DeviceState",
                          "devicetype" => "DeviceType",
                          "osversion" => "OSVersion",
                          "dvi" => "DVI",

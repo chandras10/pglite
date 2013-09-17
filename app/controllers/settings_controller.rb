@@ -61,8 +61,6 @@ skip_before_filter  :verify_authenticity_token
 
 	    adxmldoc.root.elements['//i7/server'].elements.each do | elem |
 	         @pgeventconfig[elem.name] =  elem.text
-		 puts elem.name
-		 puts elem.text
 	    end
     end
 

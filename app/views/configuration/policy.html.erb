@@ -7,6 +7,7 @@
     #
     objLabels = {
                "deviceclass" => {"label" => "Device Class", "icon" => "icon-tags" },
+               "devicestate" => {"label" => "Device State (Authorization)", "icon" => "icon-thumbs-up"},
                "devicetype"  => {"label" => "Device Type",  "icon" => "icon-hdd" },
                "osname"      => {"label" => "Operating System", "icon" => "icon-flag" },
                "userrole"    => {"label" => "User Role", "icon" => "icon-star",
@@ -234,12 +235,14 @@
                 <h3 class="<%=type%>"><%= objLabels[type]["label"] %></h3>
                 <div class="objectList">
                     <!-- controls for creating new object values -->
-                    <button class="btn btn-mini btn-primary new-object-btn"><i class="icon-plus icon-white"></i> </button>
-                    <% if !objLabels[type]["autocompleteurl"].nil? %>
-                          <input type="text" class="new-object-input-fld <%=type.downcase%>" 
-                                 data-autocompleteurl="<%= objLabels[type]['autocompleteurl'] %>" style="display:none">
-                    <% else %>
-                          <input type="text" class="new-object-input-fld <%=type.downcase%>" style="display:none">
+                    <% if (type != "devicestate") then %>
+                       <button class="btn btn-mini btn-primary new-object-btn"><i class="icon-plus icon-white"></i> </button>
+                       <% if !objLabels[type]["autocompleteurl"].nil? %>
+                             <input type="text" class="new-object-input-fld <%=type.downcase%>" 
+                                    data-autocompleteurl="<%= objLabels[type]['autocompleteurl'] %>" style="display:none">
+                       <% else %>
+                             <input type="text" class="new-object-input-fld <%=type.downcase%>" style="display:none">
+                       <% end %>
                     <% end %>
 
                     <ul class="objects" name="<%=type%>">
