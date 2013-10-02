@@ -105,12 +105,12 @@
 	          <div class="sortable row-fluid" style="#position: absolute; overflow: hidden; vertical-align: center">
 	             <div class="well span4 top-block" >
 		              <div>Laptop</div>
-                  <%= link_to content_tag(:span, ''), {:action => "tbl_inventory", :column => "deviceclass", :value => "Desktop/Laptop"}, :class=>"icon-laptop icon-4x" %>
+                  <%= link_to content_tag(:span, ''), {:controller => "deviceinfos", :action => "index", :column => "deviceclass", :value => "Desktop/Laptop"}, :class=>"icon-laptop icon-4x" %>
 		              <div><%= hashDeviceClass["Desktop/Laptop"] %> </div>
                </div>
 	             <div class="well span4 top-block" >
 		              <div>Phone</div>
-                  <%= link_to content_tag(:span, ''), {:action => "tbl_inventory", :column => "deviceclass", :value => "MobileDevice"}, :class=>"icon-mobile-phone icon-4x" %>
+                  <%= link_to content_tag(:span, ''), {:controller => "deviceinfos", :action => "index", :column => "deviceclass", :value => "MobileDevice"}, :class=>"icon-mobile-phone icon-4x" %>
 		              <div><%= hashDeviceClass["MobileDevice"] %> </div>
                </div>
             </div> <!-- sortable -->

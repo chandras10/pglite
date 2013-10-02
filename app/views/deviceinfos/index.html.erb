@@ -1,2 +1,53 @@
-<h1>Deviceinfos#index</h1>
-<p>Find me in app/views/deviceinfos/index.html.erb</p>
+<style>
+/*
+ * Need to set min-width for HTML table elements to get the horizontal scrolling to work within the viewport. 
+ * See: http://www.datatables.net/forums/discussion/12392/horizontal-scrolling-issue-with-lots-of-columns-table-overflowing-scrolling-not-working-correctly/p1
+ */
+table tbody td {
+    min-width: 100px;
+    border: 1px solid #ccc;
+}
+
+.ui-buttonset .ui-button {
+    margin-left: .25em;
+    margin-right: .25em;
+ }
+</style>
+
+<div id="content" class="span10">
+   <div class="row-fluid sortable">     
+      <div class="box span12">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Device Inventory",
+                                 :header_link  => "#" }
+         %>
+         <div class="box-content">
+            <table id="devices" class="display" data-source="<%= deviceinfos_url(format: "json") %>">
+            <thead>  
+              <tr>
+                <th>Macid</th>
+                <th>Username</th>
+                <th>Groupname</th>
+                <th>Location</th>
+                <th>Device Type</th>
+                <th>Operating System</th>
+                <th>OS Version</th>
+                <th>Device Class</th>
+                <th>Jailbroken</th>
+                <th>DVI</th>
+                <th>IP Address</th>
+                <th>First Seen</th>
+                <th>Last Seen</th>
+                <th>Authorized</th>
+                <th>Device Name </th>
+                <th>Vendor Name</th>
+                <th>Parent Device</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            </table>
+         </div>
+      </div>
+   </div>
+</div>

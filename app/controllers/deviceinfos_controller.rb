@@ -1,12 +1,14 @@
 class DeviceinfosController < ApplicationController
+  before_filter :signed_in_user, only: [:index]  
   # GET /deviceinfos
   # GET /deviceinfos.json
-  def index
-    @deviceinfos = Deviceinfo.all
 
+  def index
+    @authSources = Authsources.all
+    @deviceinfos = Deviceinfo.all
     respond_to do |format|
       format.html # index.html.erb
-      format.json { render json: @deviceinfos }
+      format.json { render json: DevicesDatatable.new(view_context)}
     end
   end
 
@@ -19,6 +21,10 @@ class DeviceinfosController < ApplicationController
       format.html # show.html.erb
       format.json { render json: @deviceinfo }
     end
+  end
+
+  def authorize
+     redirect_to '/tbl_inventory'
   end
 
 end

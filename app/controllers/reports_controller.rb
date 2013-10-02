@@ -1,5 +1,5 @@
 class ReportsController < ApplicationController
-  before_filter :signed_in_user, only: [:dashboard, :dash_inventory, :tbl_inventory, 
+  before_filter :signed_in_user, only: [:dashboard, :dash_inventory, 
                                         :dash_bw, :dash_bw_server,
                                         :dash_snort, :tbl_snort,
                                         :device_details, :tbl_vulnerability]
@@ -23,28 +23,6 @@ class ReportsController < ApplicationController
     
   end
 
-  def tbl_inventory
-    @deviceinfos = Deviceinfo.scoped
-
-    columnName = params[:column]
-    value = params[:value] 
-    if (columnName.present?)
-       case columnName
-       when "auth_source"
-          @deviceinfos = @deviceinfos.where("((auth_source is NULL) OR (auth_source = 0))")
-       when "operatingsystem" && (!value.present? || value.empty?) 
-          @deviceinfos = @deviceinfos.where("((operatingsystem is NULL) OR (operatingsystem = ''))")
-       when "devicetype" && (!value.present? || value.empty?) 
-          @deviceinfos = @deviceinfos.where("((devicetype is NULL) OR (devicetype = ''))")
-       else
-          @deviceinfos = @deviceinfos.where("#{columnName} = ?", value)
-       end
-    end
-
-    @auth_src = Authsources.order('id')
-
-  end 
- 
 
   # Total bandwidth dashboard showing b/w usage
   def dash_bw

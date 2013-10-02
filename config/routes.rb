@@ -2,7 +2,7 @@ Pglite::Application.routes.draw do
 
   resources :users
   resources :sessions, only: [:new, :create, :destroy]
-  resources :deviceinfos
+  resources :deviceinfos, :collection => { :authorize => :put }
 
   resources :autocomplete_tags, only: [] do
      get :usernames, :on => :collection
@@ -16,7 +16,7 @@ Pglite::Application.routes.draw do
   
   match '/dashboard', to: 'reports#dashboard'
   match '/dash_inventory', to: 'reports#dash_inventory'
-  match '/tbl_inventory', to: 'reports#tbl_inventory'
+  match '/tbl_inventory', to: 'deviceinfos#index'
 
   match '/dash_bw', to: 'reports#dash_bw'
   match '/dash_bw_server', to: 'reports#dash_bw_server'
