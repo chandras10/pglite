@@ -41,5 +41,14 @@ jQuery ->
   $('#ToolTables_devices_2').click ->
      oTT = TableTools.fnGetInstance('devices')
      anSelected = oTT.fnGetSelected()
+     devices = []
      for device in anSelected
-       alert(device.id)
+       devices.push device.id
+     $.ajax '/deviceinfos/authorize' ,
+       dataType: 'json'
+       type: 'POST'
+       data: { _method: 'PUT', authenticity_token: AUTH_TOKEN, ids: devices}
+       error: (jqXHR, textStatus, errorThrown) ->
+         alert("AJAX ERROR: #{textStatus}")
+       success: (data, textStatus, jqXHR) ->
+         oTable.fnDraw()

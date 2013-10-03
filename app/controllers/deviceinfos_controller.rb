@@ -24,6 +24,7 @@ class DeviceinfosController < ApplicationController
   end
 
   def authorize
+     Deviceinfo.update_all(["auth_source=?", 2], :macid => params[:ids])
      redirect_to '/tbl_inventory'
   end
 

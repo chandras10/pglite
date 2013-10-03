@@ -3,6 +3,7 @@ class DevicesDatatable
 
   def initialize(view)
     @view = view
+    @authSources = Authsources.all    
   end
 
   def as_json(options = {})
