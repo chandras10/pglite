@@ -21,8 +21,15 @@ table tbody td {
                     :locals => { :header_title => "Device Inventory",
                                  :header_link  => "#" }
          %>
+         <div id="auth_device_dialog_placeholder" title="Authorize/Unauthorize Selected Devices?">
+               <label for="select_auth_source">Authorization Source: </label>
+               <select id="select_auth_source" class="chosen">
+               <% @authSources.each do |a| %>
+                  <option value="<%= a.id%>"><%= a.description %></option>
+               <% end %>
+               </select>
+         </div>         
          <div class="box-content">
-         <%= form_tag authorize_deviceinfos_path, :method => :put, :id => 'form_devicelist' do %>
             <table id="devices" class="display" data-source="<%= deviceinfos_url(format: "json") %>">
             <thead>  
               <tr>
@@ -49,7 +56,6 @@ table tbody td {
             </tbody>
             </table>
          </div>
-         <% end %>
       </div>
    </div>
 </div>

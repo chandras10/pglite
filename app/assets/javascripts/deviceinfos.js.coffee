@@ -2,6 +2,7 @@
 # All this logic will automatically be available in application.js.
 # You can use CoffeeScript in this file: http://jashkenas.github.com/coffee-script/
 jQuery ->
+  ($('#auth_device_dialog_placeholder')).hide() 
   oTable = $('#devices').dataTable
     sDom: "RTC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>" #'Clfrtip'
     sPaginationType: "bootstrap"
@@ -41,14 +42,29 @@ jQuery ->
   $('#ToolTables_devices_2').click ->
      oTT = TableTools.fnGetInstance('devices')
      anSelected = oTT.fnGetSelected()
-     devices = []
-     for device in anSelected
-       devices.push device.id
-     $.ajax '/deviceinfos/authorize' ,
-       dataType: 'json'
-       type: 'POST'
-       data: { _method: 'PUT', authenticity_token: AUTH_TOKEN, ids: devices}
-       error: (jqXHR, textStatus, errorThrown) ->
-         alert("AJAX ERROR: #{textStatus}")
-       success: (data, textStatus, jqXHR) ->
-         oTable.fnDraw()
+     if anSelected.length > 0
+        $('#auth_device_dialog_placeholder').dialog
+          resizable: false
+          modal: true
+          buttons:
+            "Cancel": ->
+              jQuery(this).dialog "close"
+            "OK": ->
+              auth_src = $('#select_auth_source').val()
+              jQuery(this).dialog "close"
+              devices = []
+              for device in anSelected
+                devices.push device.id
+              $.ajax '/deviceinfos/authorize' ,
+                dataType: 'json'
+                type: 'POST'
+                data: { _method: 'PUT', authenticity_token: AUTH_TOKEN, auth_type: auth_src, ids: devices}
+                error: (jqXHR, textStatus, errorThrown) ->
+                  alert("AJAX ERROR: #{textStatus}")
+                success: (data, textStatus, jqXHR) ->
+                  oTable.fnDraw()
+     else
+       noty
+         text: 'Please select one or more devices to change the authorization.'
+         type: 'information'
+
