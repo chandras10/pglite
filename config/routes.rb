@@ -2,7 +2,11 @@ Pglite::Application.routes.draw do
 
   resources :users
   resources :sessions, only: [:new, :create, :destroy]
-  resources :deviceinfos, :collection => { :authorize => :put }
+  resources :deviceinfos do 
+    collection do 
+      put 'authorize'
+    end
+  end
 
   resources :autocomplete_tags, only: [] do
      get :usernames, :on => :collection

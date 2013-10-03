@@ -18,25 +18,26 @@ private
 
   def data
     devices.map do |device|
-      [
-        link_to(device.macid, device),
-        h(device.username),
-        h(device.groupname),
-        h(device.location),
-        h(device.devicetype),
-        h(device.operatingsystem),
-        h(device.osversion),
-        h(device.deviceclass),
-        h(((device.weight & 0x00FF0000) > 0) ? "Yes" : "No"),
-        h(device.dvi),
-        h(device.ipaddr),
-        h(device.created_at.strftime("%B %e, %Y")),
-        h(device.updated_at.strftime("%B %e, %Y")),
-        h(((@authSources.detect {|a| a.id == device.auth_source}).description if !@authSources.nil? ) || device.auth_source),
-        h(device.devicename),
-        h(device.vendorname),
-        h(device.parentmacid)
-      ]
+      {
+        macid: link_to(device.macid, device),
+        username: h(device.username),
+        groupname: h(device.groupname),
+        location: h(device.location),
+        devicetype: h(device.devicetype),
+        operatingsystem: h(device.operatingsystem),
+        osversion: h(device.osversion),
+        deviceclass: h(device.deviceclass),
+        jailbroken: h(((device.weight & 0x00FF0000) > 0) ? "Yes" : "No"),
+        dvi: h(device.dvi),
+        ipaddr: h(device.ipaddr),
+        created_at: h(device.created_at.strftime("%B %e, %Y")),
+        updated_at: h(device.updated_at.strftime("%B %e, %Y")),
+        auth_source: h(((@authSources.detect {|a| a.id == device.auth_source}).description if !@authSources.nil? ) || device.auth_source),
+        devicename: h(device.devicename),
+        vendorname: h(device.vendorname),
+        parentmacid: h(device.parentmacid),
+        "DT_RowId" =>  h(device.macid)
+      }
     end
   end
 

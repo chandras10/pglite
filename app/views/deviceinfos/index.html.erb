@@ -22,6 +22,7 @@ table tbody td {
                                  :header_link  => "#" }
          %>
          <div class="box-content">
+         <%= form_tag authorize_deviceinfos_path, :method => :put, :id => 'form_devicelist' do %>
             <table id="devices" class="display" data-source="<%= deviceinfos_url(format: "json") %>">
             <thead>  
               <tr>
@@ -48,6 +49,7 @@ table tbody td {
             </tbody>
             </table>
          </div>
+         <% end %>
       </div>
    </div>
 </div>

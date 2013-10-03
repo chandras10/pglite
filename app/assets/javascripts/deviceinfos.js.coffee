@@ -3,7 +3,7 @@
 # You can use CoffeeScript in this file: http://jashkenas.github.com/coffee-script/
 jQuery ->
   oTable = $('#devices').dataTable
-    sDom: "TC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>" #'Clfrtip'
+    sDom: "RTC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>" #'Clfrtip'
     sPaginationType: "bootstrap"
     bJQueryUI: true
     bProcessing: true
@@ -18,9 +18,28 @@ jQuery ->
     oTableTools: {
       sRowSelect: "multi", aButtons: ["select_all", "select_none", {sExtends: "text", sButtonText: "Authorize"}]
     }
+    aoColumns: [
+                   { mData: "macid"},
+                   { mData: "username"},
+                   { mData: "groupname"},
+                   { mData: "location"},
+                   { mData: "devicetype"},
+                   { mData: "operatingsystem"},
+                   { mData: "osversion"},
+                   { mData: "deviceclass"},
+                   { mData: "jailbroken"},
+                   { mData: "dvi"},
+                   { mData: "ipaddr"},
+                   { mData: "created_at"},
+                   { mData: "updated_at"},
+                   { mData: "auth_source"},
+                   { mData: "devicename"},
+                   { mData: "vendorname"},
+                   { mData: "parentmacid"}
+                 ]      
 
   $('#ToolTables_devices_2').click ->
      oTT = TableTools.fnGetInstance('devices')
-     anSelected = oTT.fnGetSelectedData()
+     anSelected = oTT.fnGetSelected()
      for device in anSelected
-       alert($(device[0]).text())
+       alert(device.id)
