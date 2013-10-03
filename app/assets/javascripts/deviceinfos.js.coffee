@@ -3,8 +3,17 @@
 # You can use CoffeeScript in this file: http://jashkenas.github.com/coffee-script/
 jQuery ->
   $('#auth_device_dialog_placeholder').hide()
+  #
+  # Allow only Administrative users to change device attributes. Right now, we are using the datatable's TableTool button array
+  # to let the user modify the attributes. Hence we will add the 'T' option to sDom parameter only for admins.
+  # This means other users will not see any buttons and hence cannot modify anything at all!
+  #
+  if bAdminUser == "true"
+     dataTableOpts = "RTC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"
+  else
+     dataTableOpts = "RC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"
   oTable = $('#devices').dataTable
-    sDom: "RTC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>" #'Clfrtip'
+    sDom: dataTableOpts
     sPaginationType: "bootstrap"
     bJQueryUI: true
     bProcessing: true

@@ -14,6 +14,10 @@ table tbody td {
  }
 </style>
 
+<%= javascript_tag do %>
+  var bAdminUser = "<%= current_user.admin? %>"
+<% end %>
+
 <div id="content" class="span10">
    <div class="row-fluid sortable">     
       <div class="box span12">
