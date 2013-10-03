@@ -11,6 +11,7 @@ Pglite::Application.routes.draw do
   resources :autocomplete_tags, only: [] do
      get :usernames, :on => :collection
      get :groupnames, :on => :collection
+     get :countrycodes, :on => :collection
   end
 
   root to: 'reports#dashboard'

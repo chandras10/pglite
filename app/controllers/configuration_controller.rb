@@ -58,6 +58,12 @@ class ConfigurationController < ApplicationController
         return;
     end
 
+    codes = IsoCountryCodes.for_select
+    countryCodes = Hash.new
+    codes.each do |c|
+      countryCodes[c[1]] = c[0]
+    end
+
     file = File.new(Rails.configuration.peregrine_policyfile)
     xmldoc = Document.new(file)
 
@@ -69,6 +75,8 @@ class ConfigurationController < ApplicationController
         elsif (objType == "ipv4list") then
            objType = "ipv4"
            obj.attributes["value"] = obj.attributes["value"].gsub(/\s+or\s+/, ", ")
+        elsif (objType == "geolocation") then
+           obj.attributes["value"] = "#{obj.attributes['value']} - #{countryCodes[obj.attributes['value']]}"
         end
 
         @fwObjects[obj.attributes["id"]] = {"type" => objType, "value" => obj.attributes["value"]}
@@ -136,7 +144,8 @@ class ConfigurationController < ApplicationController
                          "dvi" => "DVI",
                          "username" => "UserName",
                          "userrole" => "UserRole",
-                         "location" => "Location"
+                         "location" => "Location",
+                         "geolocation" => "GeoLocation"
                       }
 
     #
@@ -152,6 +161,7 @@ class ConfigurationController < ApplicationController
     # at least one source and destination ("ANY" could be the value, too)
     #
     policyJSON = JSON.parse params[:policy_json]
+    Rails.logger.debug "JSON = #{policyJSON}"
 
     policyXML = Builder::XmlMarkup.new(:indent => 1)
     policyXML.instruct! :xml, :version => "1.0", :encoding => "ISO-8859-1"
@@ -160,7 +170,13 @@ class ConfigurationController < ApplicationController
     # Enumerate all the sources and destinations as FWObject nodes
     policyXML.FWPolicy do
        policyJSON["objects"].each do |obj|
-          policyXML.FWObject('id' => obj['id'], 'type' => objTypeMappings[obj['type']], 'value' => obj['value'])
+
+          if (obj['type'] == "geolocation") then
+             policyXML.FWObject('id' => obj['id'], 'type' => objTypeMappings[obj['type']], 'value' => obj['value'].strip[0..1])
+          else
+             policyXML.FWObject('id' => obj['id'], 'type' => objTypeMappings[obj['type']], 'value' => obj['value'])
+          end
+
 
           if (obj['type'] == "ipv4list") then
              obj['value'] = obj['value'].gsub(/\s+or\s+/, ", ")

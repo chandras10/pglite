@@ -20,3 +20,14 @@ $('#accordion .objectList .userrole').autocomplete
              groupname: request.term
           success: (data) ->
              response(data)
+
+$('#accordion .objectList .geolocation').autocomplete
+   minLength: 1
+   source: (request, response) ->
+      $.ajax 
+          url: $('#accordion .objectList .geolocation').data('autocompleteurl')
+          dataType: "json"
+          data:
+             countrycode: request.term
+          success: (data) ->
+             response(data)

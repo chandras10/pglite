@@ -35,4 +35,16 @@ class AutocompleteTagsController < ApplicationController
 
        render json: groupList
 	end
+
+  def countrycodes
+   countryCodes = IsoCountryCodes.for_select
+   countryList = []
+   countryCodes.each do |c|
+     if (!params[:countrycode].nil? and c[0].downcase.start_with? params[:countrycode].downcase)
+       countryList << "#{c[1]} - #{c[0]}"
+     end
+   end
+   render json: countryList.sort
+  end
+
 end
