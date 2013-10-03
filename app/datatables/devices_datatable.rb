@@ -20,7 +20,7 @@ private
   def data
     devices.map do |device|
       {
-        macid: link_to(device.macid, device),
+        macid: link_to(device.macid, :action=> "device_details", :controller=> "reports", :device => device.macid),
         username: h(device.username),
         groupname: h(device.groupname),
         location: h(device.location),
