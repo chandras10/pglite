@@ -2,7 +2,7 @@
 # All this logic will automatically be available in application.js.
 # You can use CoffeeScript in this file: http://jashkenas.github.com/coffee-script/
 jQuery ->
-  ($('#auth_device_dialog_placeholder')).hide() 
+  $('#auth_device_dialog_placeholder').hide()
   oTable = $('#devices').dataTable
     sDom: "RTC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>" #'Clfrtip'
     sPaginationType: "bootstrap"
@@ -11,7 +11,7 @@ jQuery ->
     bServerSide: true
     sAjaxSource: $('#devices').data('source')
     bDeferRender: true
-    bStateSave: false
+    bStateSave: true
     sScrollX: "100%"
     bScrollCollapse: true
     aoColumnDefs: [{bVisible: false, bSearchable: false, aTargets: [-1]}] # Hide Parent device column
@@ -38,6 +38,8 @@ jQuery ->
                    { mData: "vendorname"},
                    { mData: "parentmacid"}
                  ]      
+
+  $('.ColVis_MasterButton').removeClass('ColVis_Button').addClass('DTTT_button')
 
   $('#ToolTables_devices_2').click ->
      oTT = TableTools.fnGetInstance('devices')
