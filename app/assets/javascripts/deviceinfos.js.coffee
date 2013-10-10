@@ -12,6 +12,7 @@ jQuery ->
      dataTableOpts = "RTC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"
   else
      dataTableOpts = "RC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"
+  
   oTable = $('#devices').dataTable
     sDom: dataTableOpts
     sPaginationType: "bootstrap"

@@ -14,6 +14,8 @@ Pglite::Application.routes.draw do
      get :countrycodes, :on => :collection
   end
 
+  resources :i7alerts
+
   root to: 'reports#dashboard'
 
   match '/signin', to: 'sessions#new'

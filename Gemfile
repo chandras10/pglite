@@ -46,7 +46,7 @@ gem 'thin'
 gem 'jquery-datatables-rails'
 gem 'jquery-ui-rails'
 
-gem 'tokyocabinet', '~> 1.29.1'
+#gem 'tokyocabinet', '~> 1.29.1'
 gem 'geoip', '1.3.0'
 gem 'iso_country_codes'
 

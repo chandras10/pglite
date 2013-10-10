@@ -1,0 +1,54 @@
+<style>
+/*
+ * Need to set min-width for HTML table elements to get the horizontal scrolling to work within the viewport. 
+ * See: http://www.datatables.net/forums/discussion/12392/horizontal-scrolling-issue-with-lots-of-columns-table-overflowing-scrolling-not-working-correctly/p1
+ */
+table tbody td {
+    min-width: 100px;
+    border: 1px solid #ccc;
+}
+
+.ui-buttonset .ui-button {
+    margin-left: .25em;
+    margin-right: .25em;
+}
+
+td a:hover {
+  font-size:150%;
+  text-decoration:none;
+}
+</style>
+
+<div id="content" class="span10">
+   <div class="row-fluid sortable">     
+      <div class="box span12">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Alerts",
+                                 :header_link  => "#" }
+         %>
+         <div class="box-content">
+            <table id="alerts" class="display" data-source="<%= i7alerts_url(format: "json") %>">
+            <thead>  
+              <tr>
+                <th>Time</th>
+                <th>Priority</th>
+                <th>Alert Type</th>
+                <th>Alert ID</th>
+                <th>Protocol</th>
+                <th>Source MAC</th>
+                <th>Source IP</th>
+                <th>Source Port</th>
+                <th>Destination MAC</th>
+                <th>Destination IP</th>
+                <th>Destination Port</th>
+                <th>Pcap</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            </table>
+         </div>
+      </div>
+   </div>
+</div>
