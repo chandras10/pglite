@@ -73,4 +73,5 @@ Pglite::Application.configure do
   config.peregrine_pgguard_pidfile = "/usr/local/var/pgguard/pgguard.pid"
   config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"
 
+  config.i7alerts_ignore_classes=%w[0, 4, 5, 6, 7]
 end
