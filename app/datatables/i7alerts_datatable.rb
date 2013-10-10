@@ -3,8 +3,6 @@ class I7alertsDatatable
 
   def initialize(view)
     @view = view
-    @alertdefs = I7alertdef.all
-    @alertclassdefs = I7alertclassdef.all
   end
 
   def as_json(options = {})
@@ -20,13 +18,11 @@ private
 
   def data
     alerts.map do |alert|
-      alertdef = @alertdefs.detect {|x| x.id == alert.id}
-      alertclassdef = @alertclassdefs.detect{|x| x.id == alertdef.classid} if !alertdef.nil?
       {
         timestamp: h(alert.timestamp.strftime("%B %e, %Y %T")),
-        priority: h((!alertdef.nil?) ? alertdef.priority : ""),
-        classname: h((!alertclassdef.nil?) ? alertclassdef.description : ""),
-        id: "<a href='#' title='" + (!alertdef.nil? ? alertdef.description : "") + "'>#{alert.id}</a>",
+        priority: h(alert.priority),
+        classtype: h(alert.classtype),
+        id: "<a href='#' title='" + alert.description + "'>#{alert.id}</a>",
         proto: h(alert.proto),
         srcmac: h(alert.srcmac),
         srcip: h(alert.srcip),
@@ -45,7 +41,14 @@ private
   end
 
   def fetch_alerts
-    alerts = I7alert.order("#{sort_column} #{sort_direction}")
+    Rails.logger.debug "CHANDRA: #{Rails.configuration.i7alerts_ignore_classes}"
+    alerts = I7alert.select('timestamp, i7alertdef.id as id, i7alertdef.priority as priority, 
+                              i7alertdef.description as description, i7alertclassdef.description as classtype, 
+                              proto, srcmac, srcip, srcport, dstmac, dstip, dstport, pcap, message').
+                      joins('LEFT OUTER JOIN i7alertdef ON i7alertdef.id = i7alert.id 
+                             LEFT OUTER JOIN i7alertclassdef ON i7alertclassdef.id = i7alertdef.classid').
+                      where("i7alertdef.classid NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})")
+    alerts = alerts.order("#{sort_column} #{sort_direction}")
     alerts = alerts.page(page).per_page(per_page)
     if params[:sSearch].present?
       alerts = alerts.where("id ILIKE :search or srcmac ILIKE :search or dstmac ILIKE :search or 
@@ -65,7 +68,7 @@ private
   end
 
   def sort_column
-    columns = %w[timestamp priority classname id srcmac dstmac proto srcip srcport dstip dstport pcap message]
+    columns = %w[timestamp id srcmac dstmac proto srcip srcport dstip dstport pcap message]
     columns[params[:iSortCol_0].to_i]
   end
 

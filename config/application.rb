@@ -73,6 +73,7 @@ module Pglite
     config.authentication = (File.exists?("/usr/local/etc/pgguard/ldap.yml") ? "ActiveDirectory" : "Local")
 
     config.use_ssl = false
+
   end
 
 end

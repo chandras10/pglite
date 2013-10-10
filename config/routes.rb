@@ -44,7 +44,7 @@ Pglite::Application.routes.draw do
   # Batch Reports
   match '/dvi_report', to:  'batch_reports#dvi_report'
 
-
+  match '/alerts', to: 'i7alerts#index'
   
   match '/500', to: 'errors#internal_error'
   match '/404', to: 'errors#internal_error'
