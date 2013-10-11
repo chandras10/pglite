@@ -23,6 +23,7 @@ class ConfigurationController < ApplicationController
                       "sources" => [],
                       "destinations" => [],
                       "log" => "false",
+                      "alert" => "false",
                       "action" => "allow"
     }
 
@@ -114,7 +115,8 @@ class ConfigurationController < ApplicationController
                       "position" => rule.attributes["position"],
                       "sources" => sourceArray,
                       "destinations" => destArray,
-                      "log" => rule.attributes["log"].downcase,
+                      "log" => (rule.attributes["log"].present? ? rule.attributes["log"].downcase : "false"),
+                      "alert" => (!rule.attributes["alert"].nil? ? rule.attributes["alert"].downcase : "false"),
                       "action" => rule.attributes["action"].downcase
         }
     end
@@ -161,7 +163,6 @@ class ConfigurationController < ApplicationController
     # at least one source and destination ("ANY" could be the value, too)
     #
     policyJSON = JSON.parse params[:policy_json]
-    Rails.logger.debug "JSON = #{policyJSON}"
 
     policyXML = Builder::XmlMarkup.new(:indent => 1)
     policyXML.instruct! :xml, :version => "1.0", :encoding => "ISO-8859-1"
@@ -193,7 +194,7 @@ class ConfigurationController < ApplicationController
              sourceArray = Array.new
              destArray = Array.new
 
-             policyXML.PolicyRule("position"=>rule["position"], "id"=>rule["id"], "log"=>rule["log"].capitalize, "action"=>rule["action"].downcase) {
+             policyXML.PolicyRule("position"=>rule["position"], "id"=>rule["id"], "log"=>rule["log"].capitalize,  "alert"=>rule["alert"].capitalize, "action"=>rule["action"].downcase) {
                 rule["sources"].each do |src|
                    policyXML.Src("operator"=>src["opr"]) {
                       policyXML.ObjectRef("ref"=>src["ref"])
@@ -214,6 +215,7 @@ class ConfigurationController < ApplicationController
                       "sources" => sourceArray,
                       "destinations" => destArray,
                       "log" => rule["log"].downcase,
+                      "alert" => rule["alert"].downcase,
                       "action" => rule["action"].downcase
              }
 

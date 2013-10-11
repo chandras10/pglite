@@ -269,10 +269,11 @@
             <div>
                 <table id="policyRuleHeader" style="width:100%"><tr style="text-align: center">
                     <th style="width:5%"><!--handle--></th>
-                    <th style="width:25%"> Source </th>
-                    <th style="width:25%"> Destination </th>
+                    <th style="width:35%"> Source </th>
+                    <th style="width:30%"> Destination </th>
                     <th style="width:5%"> Action </th>
-                    <th style="width:5%"> Logging </th>
+                    <th style="width:5%"> Log </th>
+                    <th style="width:5%"> Alert </th>
                     <th style="width:5%"> Delete </th>                             
                 </tr></table>
             </div> 
@@ -280,20 +281,22 @@
 
             <!-- rule template (hidden) used for creating new rules -->
             <div class="rule" id="ruleTemplate" style="display:none"><table style="width:100%"><tr>
-                <td class="handle"><i class="icon32 icon-pin"></i></td>
-                <td class="sources references">
+                <td class="handle" style="width:5%"><i class="icon32 icon-pin"></i></td>
+                <td class="sources references" style="width:35%">
                     <li class="object"><div id="<%= objANY %>" class="objBtn">ANY</div></li>
                 </td>
-                <td class="destinations references">
+                <td class="destinations references" style="width:35%">
                     <li class="object"><div id="<%= objANY %>" class="objBtn">ANY</div></li>
                 </td>
-                <td class="option accessToggler">
+                <td class="option accessToggler" style="width:5%">
                     <h3 style="display:none">DENY</h3>
                     <h3>ALLOW</h3>
                 </td>
-                <td class="option loggingToggler">
-                    <img class="icon32 icon-blue icon-check" style="display:none"></img>
-                    <img class="icon32 icon-blue icon-remove"></img>
+                <td class="option " style="width:5%">
+                   <input type="checkbox" class="loggingToggler">
+                </td>
+                <td class="option" style="width:5%">
+                   <input type="checkbox" class="alertToggler">
                 </td>
                 <td class="option"><span class="icon32 icon-color icon-close"></span></td>
             </tr></table></div>
@@ -302,18 +305,18 @@
             <div id="ruleList" class="ui-layout-center">
                 <% @fwRules.each do | fwRule | %>
                 <div class="rule" id="<%= fwRule["id"] %>"><table><tr>
-                    <td class="handle"><i class="icon32 icon-pin"></i></td>
-                    <td class="sources references">
+                    <td class="handle" style="width:5%"><i class="icon32 icon-pin"></i></td>
+                    <td class="sources references" style="width:35%">
                         <%= render :partial => 'policy_rule_obj_refs', :locals  => { :objLabels => objLabels, :objANY => objANY,
                                                                                      :fwRule => fwRule, :targetList => "sources"
                                                                                    } %>
                     </td>
-                    <td class="destinations references">
+                    <td class="destinations references" style="width:35%">
                         <%= render :partial => 'policy_rule_obj_refs', :locals  => { :objLabels => objLabels, :objANY => objANY,
                                                                                      :fwRule => fwRule, :targetList => "destinations"
                                                                                    } %>
                     </td>
-                    <td class="option accessToggler">
+                    <td class="option accessToggler" style="width:5%">
                         <% if (fwRule["action"] == "allow") then %>
                             <h3>ALLOW</h3>
                             <h3 style="display:none">DENY</h3>
@@ -322,14 +325,19 @@
                             <h3>DENY</h3>
                         <% end %>                        
                     </td>
-                    <td class="option loggingToggler">
+                    <td class="option" style="width:5%">
                         <% if (fwRule["log"] == "true") then %>
-                            <img class="icon32 icon-blue icon-check" ></img>
-                            <img class="icon32 icon-blue icon-remove" style="display:none"></img>
+                            <input type="checkbox" class="loggingToggler" checked>
                         <% else %>
-                            <img class="icon32 icon-blue icon-check" style="display:none"></img>
-                            <img class="icon32 icon-blue icon-remove"></img>
-                        <% end %>                        
+                            <input type="checkbox" class="loggingToggler">
+                        <% end %>
+                    </td>
+                    <td class="option" style="width:5%">
+                        <% if (fwRule["alert"] == "true") then %>
+                            <input type="checkbox" class="alertToggler" checked>
+                        <% else %>
+                            <input type="checkbox" class="alertToggler">
+                        <% end %>
                     </td>
                     <td class="option"><span class="icon32 icon-color icon-close"></span></td>
                 </tr></table></div>
@@ -634,7 +642,9 @@
 
      //Should the policy rule be logged when passed or not.
      $('.loggingToggler').live('click', function() {
-         $(this).find('img').toggle();
+         bDirty = true;
+     });
+     $('.alertToggler').live('click', function() {
          bDirty = true;
      });
 
@@ -758,7 +768,8 @@
                     sources: getObjectsInRule($('.sources.references', this)),
                     destinations: getObjectsInRule($('.destinations.references', this)),
                     action: $('.accessToggler h3:visible', this).html(),
-                    log:  ($('.loggingToggler img:visible', this).attr('class').indexOf('icon-check') !== -1) ? "true" : "false"
+                    log:  ($('.loggingToggler', this).is(':checked') ? "true" : "false"),
+                    alert: ($('.alertToggler', this).is(':checked') ? "true" : "false")
                  }
         }).get();
 
