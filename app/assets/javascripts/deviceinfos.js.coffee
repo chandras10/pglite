@@ -25,7 +25,7 @@ jQuery ->
     sScrollX: "100%"
     bScrollCollapse: true
     aoColumnDefs: [{bVisible: false, bSearchable: false, aTargets: [-1]}] # Hide Parent device column
-    oColVis: { aiExclude: [ 0, 16 ], bRestore: true}
+    oColVis: { bRestore: true}
     oTableTools: {
       sRowSelect: "multi", aButtons: ["select_all", "select_none", {sExtends: "text", sButtonText: "Authorize"}]
     }
