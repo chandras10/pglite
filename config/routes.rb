@@ -28,6 +28,8 @@ Pglite::Application.routes.draw do
   match '/dash_bw', to: 'reports#dash_bw'
   match '/dash_bw_server', to: 'reports#dash_bw_server'
   match '/dash_bw_pivottable', to: 'reports#dash_bw_pivottable'
+  match '/dash_bw_world', to: 'reports#dash_bw_world'
+  match '/dash_bw_country', to: 'reports#dash_bw_country'
 
   match '/tbl_snort', to: 'reports#tbl_snort'
   match '/dash_snort', to: 'reports#dash_snort'

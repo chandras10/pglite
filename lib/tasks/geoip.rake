@@ -1,6 +1,4 @@
 require 'geoip'
-require 'tokyocabinet'
-include TokyoCabinet
 namespace :db do 
 
   task update_cc_externalip: :environment do	

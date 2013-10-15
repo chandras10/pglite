@@ -2,7 +2,8 @@ class ReportsController < ApplicationController
   before_filter :signed_in_user, only: [:dashboard, :dash_inventory, 
                                         :dash_bw, :dash_bw_server,
                                         :dash_snort, :tbl_snort,
-                                        :device_details, :tbl_vulnerability]
+                                        :device_details, :tbl_vulnerability,
+                                        :dash_bw_world, :dash_bw_country]
 
   def dashboard
     @deviceinfos = Deviceinfo.scoped
@@ -381,6 +382,58 @@ class ReportsController < ApplicationController
     end # Which reportType?
   end
   
+  def dash_bw_world
+    set_report_constants
+
+    @countryCodes = IsoCountryCodes.for_select
+    #
+    # Get the WHERE clause for time-based query and append it to the SQL below.
+    # I had to do some regular expression gimmick/hack to extract only the WHERE clause because
+    # I am employing 'find_by_sql' for the DB queries. (Not efficient but works...)
+    #
+    dbQuery = Externalipstat
+    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
+
+
+    bwLimit = 0
+    @dbRecords = Externalipstat.select('cc, sum(inbytes) as download, sum(outbytes) as upload').
+                           where("destip NOT like '10.%' and #{timeQueryString[0][1]}").
+                           having('sum(inbytes) > ? or sum(outbytes) > ?', bwLimit, bwLimit).
+                           group('cc').
+                           order('cc')
+
+    @totalBWPerCountry = Hash.new
+    @dbRecords.each do |r|
+       code = (r.cc.nil? ? "--" : r.cc.downcase)
+       @totalBWPerCountry[code] = r.download.to_i + r.upload.to_i
+    end
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: @totalBWPerCountry}
+    end
+  end
+
+  def dash_bw_country
+    #
+    # Get the WHERE clause for time-based query and append it to the SQL below.
+    # I had to do some regular expression gimmick/hack to extract only the WHERE clause because
+    # I am employing 'find_by_sql' for the DB queries. (Not efficient but works...)
+    #
+    dbQuery = Externalipstat
+    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
+
+    @dbRecords = Externalipstat.select('destip, destport, sum(inbytes) as download, sum(outbytes) as upload, sum(inbytes)+sum(outbytes) as total').
+                           where("destip NOT like '10.%' and #{timeQueryString[0][1]} and cc = ?", params[:country]).
+                           group('destip, destport')
+
+    respond_to do |format|
+       format.json { render json: @dbRecords }
+    end
+  end
+
   #
   #-----------------------------------------------------------------------------
   #

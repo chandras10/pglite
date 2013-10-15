@@ -104,10 +104,12 @@
 				<div class="well nav-collapse sidebar-nav">
 					<ul class="nav nav-tabs nav-stacked main-menu">
 						<li class="nav-header hidden-tablet">Dashboards</li>
-						<li><a class="ajax-link" href="/dashboard"><i class="icon-bar-chart"></i><span class="hidden-tablet"> Dashboard</span></a></li>
+						<li><a class="ajax-link" href="/dashboard"><i class="icon-home"></i><span class="hidden-tablet"> Home</span></a></li>
 						<li><a class="ajax-link" href="/dash_inventory"><i class="icon-bar-chart"></i><span class="hidden-tablet"> Inventory</span></a></li>
+            <li class="nav-header hidden-tablet">Bandwidth Statistics</li>
 						<li><a class="ajax-link" href="/dash_bw"><i class="icon-dashboard"></i><span class="hidden-tablet"> Bandwidth</span></a></li>
             <li><a class="ajax-link" href="/dash_bw_pivottable"><i class="icon-table"></i><span class="hidden-tablet"> Bandwidth (Pivot Table)</span></a></li>
+            <li class="nav-header hidden-tablet">Network Monitoring</li>
 						<li><a class="ajax-link" href="/dash_snort"><i class="icon-eye-open"></i><span class="hidden-tablet"> Intrusion Detection (IDS)</span></a></li>
             <li><a class="ajax-link" href="/tbl_vulnerability"><i class="icon-warning-sign"></i><span class="hidden-tablet"> Vulnerability Database</span></a></li>
             <li><a class="ajax-link" href="/alerts"><i class="icon-exclamation-sign"></i><span class="hidden-tablet"> Alerts</span></a></li>
@@ -208,6 +210,8 @@
 <%= javascript_include_tag "jquery.raty.min" %>
 <%= javascript_include_tag "jquery.autogrow-textarea" %>
 <%= javascript_include_tag "jquery.uploadify-3.1.min" %>
+<%= javascript_include_tag "jquery.vmap.min" %>
+<%= javascript_include_tag "jquery.vmap.world" %>
 <!-- history.js for cross-browser state change on ajax -->
 <%= javascript_include_tag "jquery.history" %>
 <%= javascript_include_tag "charisma" %>
