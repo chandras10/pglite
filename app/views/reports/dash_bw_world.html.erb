@@ -1,18 +1,24 @@
 <style>
 .hoverShow {
+    float:left;
     background-color: #333333;
     border-color: #FFFFFF #000000 #000000 #FFFFFF;
     border-style: solid;
     border-width: 2px;
     color: #FFFFFF;
     font-family: arial;
-    font-size: 1em;
-    width: 50%;
+    font-size: 1.2em;
+    width: 90%;
+}
+.hoverShow img {
+    float:right;
+}
+.hoverTable {
+    float:left;
 }
 td.right {
   text-align: right;
 }
-
 </style>
 <div id="content" class="span10">
         <div class="control-group">
@@ -45,28 +51,20 @@ td.right {
          %>
          <div class="box-content" >
              <input type="hidden" id="countryCode" value=""> 
-             <div id="loading-indicator" style="display: block;">
+             <div id="loading-indicator" style="display: none;">
                 <%= image_tag("ajax-loader-8.gif") %>
              </div>
-
              <div class="hoverShow" style="display: none;">
-               <table class="hoverTable" cellpadding="2" border="0">
+               <table class="hoverTable" cellpadding="10" border="0">
                  <tbody>
-                    <tr><td><b>Servers: </b></td><td id="serverCount"></td></tr>
+                    <tr><td><b>Servers: </b></td><td id="serverCount" style='text-align: right'></td></tr>
                     <tr><td><b>Upload: </b></td><td id="uploadSize" style='text-align: right'></td></tr>
                     <tr><td><b>Download: </b></td><td id="downloadSize" style='text-align: right'></td></tr>
                     <tr><td><b>Total: </b></td><td id="totalSize" style='text-align: right'></td></tr>
                  </tbody>
                </table>
+               <%= image_tag("flags_iso/128/in.png", :id => 'countryFlag', :alt => 'Country Flag') %>
             </div>
-            <div>
-<ul class="f32">
-    <li class="flag au">&nbsp;</li>
-  </ul>            
-            </div>
-            <br>
-            <br>
-            <div>
             <table id="servers" class="display" data-source="/dash_bw_country_details.json%>">
             <thead>  
               <tr>
@@ -80,7 +78,6 @@ td.right {
             <tbody>
             </tbody>
             </table>
-             </div>
          </div>
 
       </div>

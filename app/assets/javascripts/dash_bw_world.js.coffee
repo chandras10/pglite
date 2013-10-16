@@ -41,6 +41,8 @@ jQuery ->
            $('#countryCode').val(code.toUpperCase())
            $('.hoverShow').hide()
            $('#loading-indicator').show()
+           $('#countryFlag').attr('src', '/assets/flags_iso/128/'+code+'.png')
+           $('#countryFlag').attr('alt', region)
            $.ajax '/dash_bw_country.json' ,
                 dataType: 'json'
                 type: 'GET'

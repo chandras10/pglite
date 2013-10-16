@@ -21,7 +21,7 @@ private
   def data
     servers.map do |rec|
       {
-        server: link_to(rec.server, :action=> "device_details", :controller=> "reports"),
+        server: link_to(rec.server, params.merge({:action=> "dash_bw_server", :controller=> "reports", :resource=> rec.server})),
         port: h(rec.port),
         upload: h(rec.upload),
         download: h(rec.download),
