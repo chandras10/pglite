@@ -1,7 +1,3 @@
-<%
-
-%>
-<!-- content starts -->
 <style>
 .hoverShow {
     background-color: #333333;
@@ -13,6 +9,10 @@
     font-size: 1em;
     width: 50%;
 }
+td.right {
+  text-align: right;
+}
+
 </style>
 <div id="content" class="span10">
         <div class="control-group">
@@ -44,6 +44,7 @@
                                  :header_link  => "#" }
          %>
          <div class="box-content" >
+             <input type="hidden" id="countryCode" value=""> 
              <div id="loading-indicator" style="display: block;">
                 <%= image_tag("ajax-loader-8.gif") %>
              </div>
@@ -52,11 +53,33 @@
                <table class="hoverTable" cellpadding="2" border="0">
                  <tbody>
                     <tr><td><b>Servers: </b></td><td id="serverCount"></td></tr>
-                    <tr><td><b>Upload: </b></td><td id="uploadSize"></td></tr>
-                    <tr><td><b>Download: </b></td><td id="downloadSize"></td></tr>
-                    <tr><td><b>Total: </b></td><td id="totalSize"></td></tr>
+                    <tr><td><b>Upload: </b></td><td id="uploadSize" style='text-align: right'></td></tr>
+                    <tr><td><b>Download: </b></td><td id="downloadSize" style='text-align: right'></td></tr>
+                    <tr><td><b>Total: </b></td><td id="totalSize" style='text-align: right'></td></tr>
                  </tbody>
                </table>
+            </div>
+            <div>
+<ul class="f32">
+    <li class="flag au">&nbsp;</li>
+  </ul>            
+            </div>
+            <br>
+            <br>
+            <div>
+            <table id="servers" class="display" data-source="/dash_bw_country_details.json%>">
+            <thead>  
+              <tr>
+                <th>Server</th>
+                <th>Port</th>
+                <th>Upload</th>
+                <th>Download</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            </table>
              </div>
          </div>
 
@@ -80,8 +103,10 @@
                                            label = " MB";
                                            num = parseFloat(nStr);
                                            if (num > 1024.0) {
-                                              nStr = ((num/1024).toFixed(1)).toString();
+                                              nStr = ((num/1024).toFixed(2)).toString();
                                               label = " GB"
+                                           } else {
+                                              nStr = num.toFixed(2).toString();
                                            }
 
                                            nStr += '';
@@ -92,7 +117,7 @@
                                            while (rgx.test(x1)) {
                                               x1 = x1.replace(rgx, '$1' + ',' + '$2');
                                            }
-                                           return x1 + x2 + label;         
+                                           return x1 + x2 + label;
        }
 
    $(document).ready(function(){

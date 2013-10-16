@@ -1,12 +1,29 @@
 jQuery ->
    $('#loading-indicator').hide()
-   $('#loading-indicator').ajaxStart ->
-       $('.hoverShow').hide()
-       $(this).show()
-   $('#loading-indicator').ajaxStop ->
-       $(this).hide()
-       $('.hoverShow').show()
-
+   oTable = $('#servers').dataTable
+      sDom: "Rlfrtp"
+      sPaginationType: "bootstrap"
+      bJQueryUI: true
+      bProcessing: true
+      bServerSide: true
+      sAjaxSource: '/dash_bw_country_details?reportTime=' + $('#reportTime').val()
+      fnServerParams: (aoData) ->
+        aoData.push
+          name: "country"
+          value: $('#countryCode').val()
+      fnDrawCallback: (oSettings) ->
+          $('#serverCount').text(oSettings.fnRecordsTotal())
+      bDeferRender: true
+      bStateSave: true
+      sScrollX: "100%"
+      bScrollCollapse: true
+      aoColumns: [
+                   { mData: "server"},
+                   { mData: "port", sClass: "right"},
+                   { mData: "upload", sClass: "right"},
+                   { mData: "download", sClass: "right"},
+                   { mData: "total", sClass: "right"}
+                 ]             
    $('#vmap').vectorMap 
          map: 'world_en'
          backgroundColor: null
@@ -21,22 +38,25 @@ jQuery ->
          normalizeFunction: 'polynomial',
          onRegionClick: (event, code, region) ->
            $('#countryDetails .box-header').text(region)
-
-           $.ajax '/dash_bw_country.json?sEcho=1' ,
+           $('#countryCode').val(code.toUpperCase())
+           $('.hoverShow').hide()
+           $('#loading-indicator').show()
+           $.ajax '/dash_bw_country.json' ,
                 dataType: 'json'
                 type: 'GET'
                 data: {authenticity_token: AUTH_TOKEN, reportTime: $('#reportTime').val(), country: code.toUpperCase()}
                 error: (jqXHR, textStatus, errorThrown) ->
+                  $('#loading-indicator').hide()
                   alert("AJAX ERROR: #{textStatus}")
                 success: (data, textStatus, jqXHR) ->
                   totalBW = uploadBW = downloadBW = 0
-                  if data
-                     $('#serverCount').text(data.length)
-
-                     for line in data
-                       totalBW    += parseInt(line.total, 10)
-                       uploadBW   += parseInt(line.upload, 10)
-                       downloadBW += parseInt(line.download, 10)
-                     $('#uploadSize').text(formatNumber(uploadBW))
-                     $('#downloadSize').text(formatNumber(downloadBW))
-                     $('#totalSize').text(formatNumber(totalBW))
+                  if data && data[0].total != null
+                     totalBW    += parseInt(data[0].total, 10)
+                     uploadBW   += parseInt(data[0].upload, 10)
+                     downloadBW += parseInt(data[0].download, 10)
+                  $('#uploadSize').text(formatNumber(uploadBW))
+                  $('#downloadSize').text(formatNumber(downloadBW))
+                  $('#totalSize').text(formatNumber(totalBW))
+                  $('#loading-indicator').hide()
+                  $('.hoverShow').show()
+                  oTable.fnDraw()

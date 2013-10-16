@@ -425,12 +425,26 @@ class ReportsController < ApplicationController
     dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
     timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
 
-    @dbRecords = Externalipstat.select('destip, destport, sum(inbytes) as download, sum(outbytes) as upload, sum(inbytes)+sum(outbytes) as total').
-                           where("destip NOT like '10.%' and #{timeQueryString[0][1]} and cc = ?", params[:country]).
-                           group('destip, destport')
+    @dbRecords = Externalipstat.select('sum(inbytes) as download, sum(outbytes) as upload, sum(inbytes)+sum(outbytes) as total').
+                           where("destip NOT like '10.%' and #{timeQueryString[0][1]} and cc = ?", params[:country])
 
     respond_to do |format|
        format.json { render json: @dbRecords }
+    end
+  end
+
+  def dash_bw_country_details
+    dbQuery = Externalipstat
+    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
+
+    @dbRecords = Externalipstat.select('destip as server, destport as port, sum(inbytes) as download, sum(outbytes) as upload, sum(inbytes)+sum(outbytes) as total').
+                           where("destip NOT like '10.%' and #{timeQueryString[0][1]} and cc = ?", params[:country]).
+                           group('destip, destport').
+                           order('destip, destport')
+
+    respond_to do |format|
+      format.json { render json: BandwidthDatatable.new(view_context, @dbRecords, timeQueryString)}
     end
   end
 
