@@ -1,17 +1,17 @@
 class BandwidthDatatable
   delegate :params, :h, :link_to,  to: :@view
 
-  def initialize(view, recs, timeCondition)
+  def initialize(view, timeCondition)
     @view = view
-    @dbRecords = recs
     @timeCondition = timeCondition[0][1]
   end
 
   def as_json(options = {})
+    numServers =  Externalipstat.uniq.select('destip, destport').where("#{@timeCondition} and cc = ?", params[:country]).length
     {
       sEcho: params[:sEcho].to_i,
-      iTotalRecords: @dbRecords.length,
-      iTotalDisplayRecords: servers.total_entries,
+      iTotalRecords: numServers,
+      iTotalDisplayRecords: numServers,
       aaData: data
     }
   end
@@ -32,7 +32,7 @@ private
   end
 
   def servers
-    @dbRecords = fetch_servers
+    fetch_servers
   end
 
   def fetch_servers

@@ -11,8 +11,6 @@ jQuery ->
         aoData.push
           name: "country"
           value: $('#countryCode').val()
-      fnDrawCallback: (oSettings) ->
-          $('#serverCount').text(oSettings.fnRecordsTotal())
       bDeferRender: true
       bStateSave: true
       sScrollX: "100%"
@@ -51,11 +49,13 @@ jQuery ->
                   $('#loading-indicator').hide()
                   alert("AJAX ERROR: #{textStatus}")
                 success: (data, textStatus, jqXHR) ->
-                  totalBW = uploadBW = downloadBW = 0
+                  servers = totalBW = uploadBW = downloadBW = 0
                   if data && data[0].total != null
                      totalBW    += parseInt(data[0].total, 10)
                      uploadBW   += parseInt(data[0].upload, 10)
                      downloadBW += parseInt(data[0].download, 10)
+                     servers    += parseInt(data[0].servercount, 10)
+                  $('#serverCount').text(servers)
                   $('#uploadSize').text(formatNumber(uploadBW))
                   $('#downloadSize').text(formatNumber(downloadBW))
                   $('#totalSize').text(formatNumber(totalBW))
