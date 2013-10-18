@@ -48,6 +48,11 @@ private
 
   def fetch_devices
     devices = Deviceinfo.order("#{sort_column} #{sort_direction}")
+
+    if params[:column].present? and params[:value].present?
+       devices = devices.where("#{params[:column]} = '"+ params[:value] + "'")
+    end
+    
     devices = devices.page(page).per_page(per_page)
     if params[:sSearch].present?
       devices = devices.where("macid ILIKE :search or username ILIKE :search or groupname ILIKE :search or 

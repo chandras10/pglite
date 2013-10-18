@@ -8,6 +8,7 @@ class DeviceinfosController < ApplicationController
   def index
     @authSources = Authsources.all
     @deviceinfos = Deviceinfo.all
+
     respond_to do |format|
       format.html # index.html.erb
       format.json { render json: DevicesDatatable.new(view_context)}

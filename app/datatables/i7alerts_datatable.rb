@@ -41,7 +41,6 @@ private
   end
 
   def fetch_alerts
-    Rails.logger.debug "CHANDRA: #{Rails.configuration.i7alerts_ignore_classes}"
     alerts = I7alert.select('timestamp, i7alertdef.id as id, i7alertdef.priority as priority, 
                               i7alertdef.description as description, i7alertclassdef.description as classtype, 
                               proto, srcmac, srcip, srcport, dstmac, dstip, dstport, pcap, message').

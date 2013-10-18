@@ -109,8 +109,8 @@ class ActiveDirectoryUser
 
     if conn.bind and entry = conn.search(:filter => "sAMAccountName=#{login}", :attributes => attrs).first
        user = self.new(entry)
-       user.loginName = Encryptor.encrypt(login.downcase, :key => KEY_TO_LOGIN)
-       user.passwd = Encryptor.encrypt(pass.downcase, :key => KEY_TO_PASSWD)
+       user.loginName = Encryptor.encrypt(login, :key => KEY_TO_LOGIN)
+       user.passwd = Encryptor.encrypt(pass, :key => KEY_TO_PASSWD)
        return user
     else
       return nil

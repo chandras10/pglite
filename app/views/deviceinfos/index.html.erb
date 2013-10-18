@@ -30,7 +30,8 @@ table tbody td {
                </select>
          </div>         
          <div class="box-content">
-            <table id="devices" class="display" data-source="<%= deviceinfos_url(format: "json") %>">
+            <!-- table id="devices" class="display" data-source="<%= deviceinfos_url(format: "json") %>" -->
+            <table id="devices" class="display" data-source="<%= deviceinfos_url(params.merge(format: "json")) %>">
             <thead>  
               <tr>
                 <th>Macid</th>
