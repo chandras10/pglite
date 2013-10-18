@@ -20,6 +20,19 @@ td a:hover {
 </style>
 
 <div id="content" class="span10">
+   <div class="control-group">
+      <select id="reportTime" class="chosen">
+      <% @availableTimeLines.each do |key, value| %>
+         <option value="<%= key %>"><%= value %></option>
+      <% end %>
+      </select>
+          
+      <button class="btn btn-primary" id="refreshBtn">Refresh</button>
+   </div>
+   <div class="control-group" id="dateRange">
+      <input   class="datepicker" id="fromDate" value="From" type="text" >
+      <input   class="datepicker" id="toDate" value="To" type="text">
+   </div>
    <div class="row-fluid sortable">     
       <div class="box span12">
          <%= render :partial => 'layouts/title_bar_icons',
@@ -52,3 +65,105 @@ td a:hover {
       </div>
    </div>
 </div>
+
+<script type="text/javascript">
+   var _MS_PER_DAY = 1000 * 60 * 60 * 24;
+   function dateDiffInDays(a, b) {
+      // Discard the time and time-zone information.
+      var utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+      var utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+
+      return Math.floor((utc2 - utc1) / _MS_PER_DAY) + 1; // Adding one extra to make the end date inclusive.
+   }
+        
+       function formatNumber(nStr) {
+                                           label = " MB";
+                                           num = parseFloat(nStr);
+                                           if (num > 1024.0) {
+                                              nStr = ((num/1024).toFixed(2)).toString();
+                                              label = " GB"
+                                           } else {
+                                              nStr = num.toFixed(2).toString();
+                                           }
+
+                                           nStr += '';
+                                           x = nStr.split('.');
+                                           x1 = x[0];
+                                           x2 = x.length > 1 ? '.' + x[1] : '';
+                                           var rgx = /(\d+)(\d{3})/;
+                                           while (rgx.test(x1)) {
+                                              x1 = x1.replace(rgx, '$1' + ',' + '$2');
+                                           }
+                                           return x1 + x2 + label;
+       }
+
+   $(document).ready(function(){
+       var fromDate, toDate;
+
+       // Set approriate values (derived from query string) in the dropdown selections
+       $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
+
+       <% if params['reportTime'] != "date_range" then %>
+          $("#dateRange").hide();
+       <% else %>
+          $("#dateRange").show();
+          fromDate = "<%= params['fromDate'] || Date.today.to_s %>";
+          $("#fromDate").val(fromDate);
+          toDate = "<%= params['toDate'] || Date.today.to_s %>"
+          $("#toDate").val(toDate);
+       <% end %>
+
+       $("#reportTime").chosen().change(function() {
+           if (this.value == "date_range") {
+               $("#dateRange").show();
+           } else {
+               $("#dateRange").hide();
+           }
+       });
+
+       $("#fromDate" ).datepicker({ 
+              showAnim: "slide",        
+              dateFormat: "yy-mm-dd",
+              onSelect: function(dateText){
+                 fromDate = dateText;
+              },
+              onClose: function( selectedDate ) {
+                 $( "#toDate" ).datepicker( "option", "minDate", selectedDate );
+              }              
+       });
+       $("#toDate" ).datepicker({ 
+              showAnim: "slide",
+              dateFormat: "yy-mm-dd",
+              onSelect: function(dateText){
+                 toDate = dateText;
+              },
+              onClose: function( selectedDate ) {
+                 $( "#fromDate" ).datepicker( "option", "maxDate", selectedDate );
+              } 
+       });
+
+
+  
+  
+       $('#refreshBtn').click(function() {
+            var time = $('#reportTime').val();
+
+            var urlString = "/alerts?reportTime=" + time;
+            if (time == "date_range") {
+               numDays = dateDiffInDays(new Date(fromDate), new Date(toDate));
+
+               //For now, handle date ranges less than a year
+               if (numDays > 364) {
+                  alert("Date ranges beyond a year are not supported.")
+                  return;
+               }
+               urlString += "&fromDate=" + fromDate + "&toDate=" + toDate;
+            }
+
+            window.location.href= urlString;
+       });
+
+       $(".chosen").chosen();
+       $('.chzn-search').hide(); //Hide the search box within the dropdown
+   }); //document.ready()
+</script>
