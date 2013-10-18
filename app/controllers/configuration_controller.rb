@@ -83,6 +83,24 @@ class ConfigurationController < ApplicationController
         @fwObjects[obj.attributes["id"]] = {"type" => objType, "value" => obj.attributes["value"]}
     end
 
+    #
+    # Added any new Authorization sources (from the database) to the policy model.
+    #
+    dbAuthSources = Authsources.pluck(:description)
+    policyAuthSources = Array.new
+    @fwObjects.each do |k, v|
+       if v["type"] == "devicestate"
+         policyAuthSources << v["value"]
+       end
+    end
+
+    newAuthSources = dbAuthSources - policyAuthSources
+    id = Time.new.to_i
+    newAuthSources.each do |n|
+       @fwObjects["obj_" + id.to_s] = {"type" => "devicestate", "value" => n} if !n.empty?
+       id += 1
+    end
+
     xmldoc.elements.each("FWPolicy/Policy/PolicyRule") do |rule|
         sourceArray = Array.new
         rule.elements.each("Src") do |src|
