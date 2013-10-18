@@ -144,6 +144,7 @@ class ConfigurationController < ApplicationController
                          "devicetype" => "DeviceType",
                          "osversion" => "OSVersion",
                          "dvi" => "DVI",
+                         "dti" => "DTI",
                          "username" => "UserName",
                          "userrole" => "UserRole",
                          "location" => "Location",

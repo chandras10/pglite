@@ -42,6 +42,9 @@
 <li class="object">
     <div id="<%= objRef %>" class="objBtn" name="<%= type %>">
         <i class="<%= iconClass %>" title="<%= iconTitle %>"></i>
+        <% if ["dvi", "dti"].include? type then %>
+             <span class="badge"><%= "#{iconTitle} " %></span>
+        <% end %>
 	<b style="font-size:1.25em"><%=operators[refList["operator"]] %></b>
 <%          if (obj["value"] == "any") then %> 
 		ANY

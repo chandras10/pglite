@@ -21,6 +21,7 @@
                "portrange"   => {"label" => "Service Group", "icon" => "icon-certificate" },
                "osversion"   => {"label" => "OS Version", "icon" => "icon-star" },
                "dvi"         => {"label" => "DVI", "icon" => "icon-star" },
+               "dti"         => {"label" => "DTI", "icon" => "icon-star" },
                "geolocation" => {"label" => "Country Code", "icon" => "icon-globe",
                                  "autocompleteurl" => "autocomplete_tags/countrycodes" }
     }
@@ -55,10 +56,9 @@
      #splitterContainer {
         /*background: #999;*/
         height:   95%;
-        width:    90%;
+        width:    100%;
         margin:   5px auto;
         padding: 0 0px;
-        width:    100%;
         overflow: auto;
      }
      .pane {
@@ -267,7 +267,7 @@
 
         <div id="rightPane" class="pane ui-layout-center">
             <div>
-                <table id="policyRuleHeader" style="width:100%"><tr style="text-align: center">
+                <table id="policyRuleHeader"><tr style="text-align: center">
                     <th style="width:5%"><!--handle--></th>
                     <th style="width:35%"> Source </th>
                     <th style="width:30%"> Destination </th>
@@ -378,10 +378,18 @@
      }).disableSelection();
 
      //If an object is dropped in the policy rule, then hide the default "ANY" object on that rule.
-     function hideANYobject(o) {
+     function modifyObjectRef(o) {
         var anyObj = $(o).find('#' + '<%= objANY %>');
         if (typeof anyObj == 'undefined') return;
         anyObj.parent().hide();
+        
+        //Add DVI/DTI badges to bring more clarity to the Rule objects displayed.
+        $(o).children().each(function() {
+            var name = $(this).find('div').attr('name');
+            if ((name == "dvi" || name == "dti")  && ($(this).find('div span').length == 0)){
+               $(this).find('div').find('i').after('<span class="badge">'+ name.toUpperCase() + '</span');
+            }
+        });
      }
 
      function initReferences() {
@@ -393,7 +401,7 @@
             dropOnEmpty: true,
             forcePlaceholderSize: true,
             forceHelperSize: false,
-            receive: function (evt, ui) { bDirty = true; hideANYobject(evt.target); },
+            receive: function (evt, ui) { bDirty = true; modifyObjectRef(evt.target); },
          }).disableSelection();
      }
 
@@ -420,7 +428,7 @@
 
          var name = $(this).attr('name');
          var contextMenuToselect = "objectRefMenu";
-         if (name == 'osversion' || name == 'dvi') {
+         if (name == 'osversion' || name == 'dvi' || name == 'dti') {
             contextMenuToselect = 'objectRefMenuWithOperators';
          }
             $(this).contextMenu(contextMenuToselect, {
@@ -620,8 +628,12 @@
               return;
          }
          var obj = $(o);
-	 obj.find('b').remove();
-         obj.find('i').after('<b style="font-size:1.25em">'+ op +'</b>');
+         obj.find('b').remove();
+         if ($(o).attr('name') == "dvi" || $(o).attr('name') == "dti") {
+            obj.find('span').after('<b class="operatorClass" style="font-size:1.25em">'+ op +'</b>');
+         } else {
+            obj.find('i').after('<b class="operatorClass" style="font-size:1.25em">'+ op +'</b>');
+         }
          bDirty = true;
      }
 
@@ -685,9 +697,14 @@
 
      function getObjectsInRule(list) {
          return $('li.object > .objBtn:visible', list).map(function(k, v) {
-            var objRef = $(this).attr("id");
+            var objRef = $(this).attr("id");            
+	        var op = "eq";
             var value = $(this).text().trim() || "";
-	    var op = "eq";
+            var name = $(this).attr("name");
+
+            if (name == "dvi" || name == "dti") {
+                value = value.replace(/D[V,T]I\s*(.*)/, "\$1"); //Discard DTI/DVI prefix from the value...
+            }
             //return { ref: objRef, negation: ((value.indexOf("== ") !== -1) ? "eq" : "ne") }
 	   if(value.indexOf("NOT") == 0) {
 		op = "ne";
@@ -699,7 +716,8 @@
 		op = "lt";
 	    } else if(value.indexOf(">") == 0) {
 		op = "gt";
-	    } 
+	    }
+
 	    return { ref: objRef, opr: op }
 
          }).get();
