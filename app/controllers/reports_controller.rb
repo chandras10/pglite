@@ -367,7 +367,8 @@ class ReportsController < ApplicationController
     case reportType
     when "internalIP"
        @dbRecords = Internalipstat.find_by_sql("with top_ports as 
-                                               (SELECT destport, sum(inbytes)+sum(outbytes) as total_bw from internalipstat 
+                                               (SELECT destport, sum(inbytes)+sum(outbytes) as total_bw from internalipstat
+                                                where #{timeQueryString[0][1]} 
                                                 group by destport order by total_bw desc LIMIT 10),
                                                 ports as (select destport from top_ports) 
                                                 select d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip as Internal_Server, destport as Port, 
@@ -378,6 +379,7 @@ class ReportsController < ApplicationController
     when "byodIP"
        @dbRecords = Intincomingipstat.find_by_sql("with top_ports as 
                                                   (SELECT destport, sum(inbytes)+sum(outbytes) as total_bw from intincomingipstat 
+                                                   where #{timeQueryString[0][1]} 
                                                   group by destport order by total_bw desc LIMIT 10), 
                                                   ports as (select destport from top_ports) 
                                                   select d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip as Internal_Server, destport as Port, 

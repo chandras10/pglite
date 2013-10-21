@@ -84,15 +84,6 @@
 </div> <!-- div id=content -->
 
 <script type="text/javascript">
-   var _MS_PER_DAY = 1000 * 60 * 60 * 24;
-   function dateDiffInDays(a, b) {
-      // Discard the time and time-zone information.
-      var utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
-      var utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-
-      return Math.floor((utc2 - utc1) / _MS_PER_DAY) + 1; // Adding one extra to make the end date inclusive.
-   }
-        
         
         window.onload = function ()
         {
@@ -133,7 +124,6 @@
         }
 
    $(document).ready(function(){
-       var fromDate, toDate;
 
        // Set approriate values (derived from query string) in the dropdown selections
        $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
@@ -146,42 +136,7 @@
           $("#fromDate").val(fromDate);
           toDate = "<%= params['toDate'] || Date.today.to_s %>"
           $("#toDate").val(toDate);
-       <% end %>
-
-       $(".chosen").chosen();
-       $('.chzn-search').hide(); //Hide the search box within the dropdown
-
-       $("#reportTime").chosen().change(function() {
-           if (this.value == "date_range") {
-               $("#dateRange").show();
-           } else {
-               $("#dateRange").hide();
-           }
-       });
-
-       $("#fromDate" ).datepicker({ 
-              showAnim: "slide",        
-              dateFormat: "yy-mm-dd",
-              onSelect: function(dateText){
-                 fromDate = dateText;
-              },
-              onClose: function( selectedDate ) {
-                 $( "#toDate" ).datepicker( "option", "minDate", selectedDate );
-              }              
-       });
-       $("#toDate" ).datepicker({ 
-              showAnim: "slide",
-              dateFormat: "yy-mm-dd",
-              onSelect: function(dateText){
-                 toDate = dateText;
-              },
-              onClose: function( selectedDate ) {
-                 $( "#fromDate" ).datepicker( "option", "maxDate", selectedDate );
-              } 
-       });
-
-
-  
+       <% end %>  
   
        $('#refreshBtn').click(function() {
             var time = $('#reportTime').val();
@@ -199,6 +154,10 @@
             }
             window.location.href= urlString;
        });
+
+       $(".chosen").chosen();
+       $('.chzn-search').hide(); //Hide the search box within the dropdown
+
 
    }); //document.ready()
 

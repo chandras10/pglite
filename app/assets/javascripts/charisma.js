@@ -343,3 +343,70 @@ $.extend( $.fn.dataTableExt.oPagination, {
 		}
 	}
 });
+
+Array.max = function( array ){
+      return Math.max.apply( Math, array );
+};
+
+var _MS_PER_DAY = 1000 * 60 * 60 * 24;
+function dateDiffInDays(a, b) {
+      // Discard the time and time-zone information.
+      var utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+      var utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+
+      return Math.floor((utc2 - utc1) / _MS_PER_DAY) + 1; // Adding one extra to make the end date inclusive.
+}
+
+var fromDate, toDate;
+
+       $("#reportTime").chosen().change(function() {
+           if (this.value == "date_range") {
+               $("#dateRange").show();
+           } else {
+               $("#dateRange").hide();
+           }
+       });
+
+       $("#fromDate" ).datepicker({ 
+              showAnim: "slide",        
+              dateFormat: "yy-mm-dd",
+              onSelect: function(dateText){
+                 fromDate = dateText;
+              },
+              onClose: function( selectedDate ) {
+                 $( "#toDate" ).datepicker( "option", "minDate", selectedDate );
+              }              
+       });
+       $("#toDate" ).datepicker({ 
+              showAnim: "slide",
+              dateFormat: "yy-mm-dd",
+              onSelect: function(dateText){
+                 toDate = dateText;
+              },
+              onClose: function( selectedDate ) {
+                 $( "#fromDate" ).datepicker( "option", "maxDate", selectedDate );
+              } 
+       });
+
+       $(".chosen").chosen();
+       $('.chzn-search').hide(); //Hide the search box within the dropdown       
+
+       function formatNumber(nStr) {
+                                           label = " M";
+                                           num = parseFloat(nStr);
+                                           if (num > 1024.0) {
+                                              nStr = ((num/1024).toFixed(1)).toString();
+                                              label = " G"
+                                           }
+
+                                           nStr += '';
+                                           x = nStr.split('.');
+                                           x1 = x[0];
+                                           x2 = x.length > 1 ? '.' + x[1] : '';
+                                           var rgx = /(\d+)(\d{3})/;
+                                           while (rgx.test(x1)) {
+                                              x1 = x1.replace(rgx, '$1' + ',' + '$2');
+                                           }
+                                           return x1 + x2 + label;         
+       }
+
