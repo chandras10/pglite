@@ -1,4 +1,5 @@
 class DevicesDatatable
+  include DatatablesHelper
   delegate :params, :h, :link_to,  to: :@view
 
   def initialize(view)
@@ -63,21 +64,11 @@ private
     devices
   end
 
-  def page
-    params[:iDisplayStart].to_i/per_page + 1
-  end
-
-  def per_page
-    params[:iDisplayLength].to_i > 0 ? params[:iDisplayLength].to_i : 10
-  end
 
   def sort_column
     columns = %w[macid username groupname location devicetype operatingsystem osversion deviceclass weight dvi ipaddr created_at updated_at auth_source devicename vendorname parentmacid]
     columns[params[:iSortCol_0].to_i]
   end
 
-  def sort_direction
-    params[:sSortDir_0] == "desc" ? "desc" : "asc"
-  end
 end
 
