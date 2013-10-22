@@ -67,6 +67,14 @@ table li{
        $("#reportType").val("<%= params['reportType'] || 'total' %>");
        $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
 
+       $("#reportTime").chosen().change(function() {
+           if (this.value == "date_range") {
+               $("#dateRange").show();
+           } else {
+               $("#dateRange").hide();
+           }
+       });
+
        <% if params['reportTime'] != "date_range" then %>
           $("#dateRange").hide();
        <% else %>

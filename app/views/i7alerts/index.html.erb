@@ -103,6 +103,14 @@ td a:hover {
        // Set approriate values (derived from query string) in the dropdown selections
        $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
 
+       $("#reportTime").chosen().change(function() {
+           if (this.value == "date_range") {
+               $("#dateRange").show();
+           } else {
+               $("#dateRange").hide();
+           }
+       });
+
        <% if params['reportTime'] != "date_range" then %>
           $("#dateRange").hide();
        <% else %>
@@ -112,14 +120,6 @@ td a:hover {
           toDate = "<%= params['toDate'] || Date.today.to_s %>"
           $("#toDate").val(toDate);
        <% end %>
-
-       $("#reportTime").chosen().change(function() {
-           if (this.value == "date_range") {
-               $("#dateRange").show();
-           } else {
-               $("#dateRange").hide();
-           }
-       });
 
        $("#fromDate" ).datepicker({ 
               showAnim: "slide",        

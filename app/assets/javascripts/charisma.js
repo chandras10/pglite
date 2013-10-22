@@ -359,13 +359,6 @@ function dateDiffInDays(a, b) {
 
 var fromDate, toDate;
 
-       $("#reportTime").chosen().change(function() {
-           if (this.value == "date_range") {
-               $("#dateRange").show();
-           } else {
-               $("#dateRange").hide();
-           }
-       });
 
        $("#fromDate" ).datepicker({ 
               showAnim: "slide",        
@@ -387,9 +380,6 @@ var fromDate, toDate;
                  $( "#fromDate" ).datepicker( "option", "maxDate", selectedDate );
               } 
        });
-
-       $(".chosen").chosen();
-       $('.chzn-search').hide(); //Hide the search box within the dropdown       
 
        function formatNumber(nStr) {
                                            label = " M";
