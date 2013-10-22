@@ -1,5 +1,19 @@
 <div id="content" class="span10">
 <!-- content starts -->
+   <div class="control-group">
+            <select id="reportTime" class="chosen">
+               <% @availableTimeLines.each do |key, value| %>
+               <option value="<%= key %>"><%= value %></option>
+               <% end %>
+            </select>
+          
+            <button class="btn btn-primary" id="refreshBtn">Refresh</button>
+   </div>
+   <div class="control-group" id="dateRange">
+            <input   class="datepicker" id="fromDate" value="From" type="text" >
+            <input   class="datepicker" id="toDate" value="To" type="text">
+   </div>
+
 			
    <div class="row-fluid sortable">		
       <div class="box span12">
@@ -8,60 +22,20 @@
                                  :header_link  => "#" }
          %>
          <div class="box-content">
-            <table id="dataTable" class="table table-striped table-bordered bootstrap-datatable">
+            <table id="snortAlerts" class="display" data-source="/tbl_snort.json?reportTime=past_month">
                <thead>
-	          <tr>
-	             <th>Snort ID</th>
-                <th>Time    </th>
-                <th>Message </th>
-		          <th>Priority</th>
-                <th>Protocol</th>
-                <th>Source</th>
-		          <th>Destination</th>
-	   	       <th>MAC (src) </th>
-                <th>MAC (dst) </th>
-	          </tr>
-	       </thead>  
-                  <tfoot>
-                                <tr>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-                            <th rowspan="1" colspan="1"></th>
-          </tr>
-         </tfoot> 
-	       <tbody>
-                  <% @snortAlertRecs.each do |rec| %>
-                     <tr>
-                        <td><%= link_to rec.sigid, "http://www.snort.org/search/sid/1-#{rec.sigid}", :target => "_blank" %></td>
-                        <td><%= rec.time %></td>
-                        <td><%= rec.message %></td>
-
-                        <% case rec['priority']
-                           when 1 %>
-                              <td><span class='label label-important'> High </span></td>
-                        <% when 2 %>
-                              <td><span class='label label-warning'> Medium </span></td>
-                        <% when 3 %>
-                              <td><span class='label label-success'> Low </span></td>
-                        <% when 4 %>
-                              <td><span class='label label-info'> Very Low </span></td>
-                        <% else %>
-                              <td><span class='label'><%=rec['priority'] %></span></td>
-                        <% end %>
-
-                        <td><%= rec.protocol %></td>
-                        <td><%= "#{rec.srcip}: #{rec.srcport}" %></td>
-                        <td><%= "#{rec.dstip}: #{rec.dstport}" %></td>
-                        <td><%= rec.srcmac %></td>
-                        <td><%= rec.dstmac %></td>
-                     </tr>
-                  <% end %>
+	               <tr><th>Snort ID</th>
+                     <th>Time    </th>
+                     <th>Message </th>
+		                 <th>Priority</th>
+                     <th>Protocol</th>
+                     <th>Source</th>
+		                 <th>Destination</th>
+	   	               <th>MAC (src) </th>
+                     <th>MAC (dst) </th>
+	              </tr>
+	             </thead>  
+      	       <tbody>
                </tbody>
             </table>
 
@@ -71,38 +45,50 @@
 </div><!-- content ends -->
 
 <script type="text/javascript">
-//datatable
 $(document).ready(function() {
-  var oTable = $('#dataTable').dataTable({
-      "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span12'i><'span12 center'p>>",
-      "bJQueryUI": true,
-      "sPaginationType": "bootstrap",
-      "oLanguage": {
-      "sSearch": "Search all columns: ",
-      "sLengthMenu": "_MENU_ records per page"
-      }
-    } );
+       // Set approriate values (derived from query string) in the dropdown selections
+       $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
 
-/* Add a select menu for each TH element in the table footer */
-  $("tfoot th").each( function ( i ) {
-    switch(i)
-    {
-      case 0:
-      case 2:
-      case 3:
-        this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, true) );
-        break;
-      case 1:
-        this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i, false, true) );
-        break;
-      default: 
-        this.innerHTML = fnCreateSelect( oTable.fnGetColumnData(i) );
-    }
+       $("#reportTime").chosen().change(function() {
+           if (this.value == "date_range") {
+               $("#dateRange").show();
+           } else {
+               $("#dateRange").hide();
+           }
+       });
 
-    $('select', this).change( function () {
-      oTable.fnFilter( $(this).val(), i );
-    } );
-  } );
+       <% if params['reportTime'] != "date_range" then %>
+          $("#dateRange").hide();
+       <% else %>
+          $("#dateRange").show();
+          fromDate = "<%= params['fromDate'] || Date.today.to_s %>";
+          $("#fromDate").val(fromDate);
+          toDate = "<%= params['toDate'] || Date.today.to_s %>"
+          $("#toDate").val(toDate);
+       <% end %>  
+  
+       $('#refreshBtn').click(function() {
+            var time = $('#reportTime').val();
+
+            var urlString = "/tbl_snort?reportTime=" + time;
+            if (time == "date_range") {
+               numDays = dateDiffInDays(new Date(fromDate), new Date(toDate));
+
+               //For now, handle date ranges less than a year
+               if (numDays > 364) {
+                  alert("Date ranges beyond a year are not supported.")
+                  return;
+               }
+               urlString += "&fromDate=" + fromDate + "&toDate=" + toDate;
+            }
+
+            window.location.href= urlString;
+       });
+
+       $(".chosen").chosen();
+       $('.chzn-search').hide(); //Hide the search box within the dropdown
 
 });
 </script>
+
+<%= javascript_include_tag "snort_alerts.js.coffee" %>

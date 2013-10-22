@@ -4,30 +4,33 @@
   
   hashDeviceClass = Hash.new(0)
   hashOperatingSystem  = Hash.new(0)
-  hashDeviceType = Hash.new(0)
 
 
   @deviceinfos.each do |devinfo|
     
-    devinfo.devicetype = "Unknown" if (devinfo.devicetype.nil? || devinfo.devicetype.empty?)
     devinfo.deviceclass = "Unknown" if (devinfo.deviceclass.nil? || devinfo.deviceclass.empty?)
     devinfo.operatingsystem = "Unknown" if (devinfo.operatingsystem.nil? || devinfo.operatingsystem.empty?)
 
-    hashDeviceType[devinfo.devicetype] += 1
     hashDeviceClass[devinfo.deviceclass] += 1
     hashOperatingSystem[devinfo.operatingsystem] += 1
   end
   
-  #authDevices = @deviceinfos.select { |d| (!d["auth_source"].nil? && d["auth_source"] != 0)}
+  no_of_days = ((@license_info.valid_until - Time.zone.now) / 1.day).to_i
 %>
 
+<style>
+.icon-home:before,
+.icon-flag:before{
+  content: "";
+}
+</style>
 <div id="content" class="span10">
 <!-- content starts -->
    <div class="sortable row-fluid">
       <!-- Summary counters - START -->
       <a data-rel="tooltip" title="Total number of unique devices detected so far." 
-         class="well span3 top-block" href="/tbl_inventory">
-         <span class="icon32 icon-red icon-web"></span>
+         class="well span2 top-block" href="/tbl_inventory">
+         <span class="icon32 icon-red icon-home"></span>
 	       <div>Total Devices</div>
 	       <div><%= @deviceinfos.count %></div>
 	       <span class="notification green">
@@ -36,7 +39,7 @@
       </a>
 
       <a data-rel="tooltip" title="Total number of unique users detected." 
-         class="well span3 top-block" href="/tbl_inventory">
+         class="well span2 top-block" href="/tbl_inventory">
          <span class="icon32 icon-green icon-users"></span>
 	       <div>Total Users</div>
 	       <div><%= Deviceinfo.count(:username, :conditions => "username <> ''", :distinct => true) %></div>
@@ -46,28 +49,37 @@
       </a>
 
       <a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." 
-         class="well span3 top-block" href="/dash_bw">
+         class="well span2 top-block" href="/dash_bw">
          <span class="icon32 icon-blue icon-briefcase-new"></span>
 	       <div>Assets</div>
 	       <div><%= Internalipstat.select(:destip).uniq.length %></div>
 	       <span class="notification">0</span>
       </a>
 				
-      <a data-rel="tooltip" title="Total Vulnerability/Intrusion alerts raised so far." 
-         class="well span3 top-block" href="/tbl_snort">
+      <a data-rel="tooltip" title="Total Intrusion alerts raised so far." 
+         class="well span2 top-block" href="/tbl_snort">
 	       <span class="icon32 icon-color icon-alert"></span>
 	       <div>Security Alerts</div>
-	       <div><%= (if !@snortAlertRecs.nil? then @snortAlertRecs.count else 0 end) + (if !@cveAlertRecs.nil? then @cveAlertRecs.count else 0 end) %></div>
+	       <div><%= Alertdb.count %></div>
 	       <span class="notification red">
-            <%= 
-               snortCountToday = cveCountToday = 0
-               snortCountToday = @snortAlertRecs.select{ |x| x.time >= today }.count if !@snortAlertRecs.nil? 
-               cveCountToday = @cveAlertRecs.select{|x| x.date >= today}.count if !@cveAlertRecs.nil?
-
-               snortCountToday +  cveCountToday          
-
-            %>
+            <%= Alertdb.where("timestamp > date_trunc('day', CURRENT_TIMESTAMP)").count %>
          </span>
+      </a>
+      <a data-rel="tooltip" title="Total Vulnerabilities discovered so far." 
+         class="well span2 top-block" href="/tbl_vulnerability">
+         <span class="icon32  icon-color icon-flag"></span>
+         <div>Vulnerability Notices</div>
+         <div><%= DviVuln.count %></div>
+      </a>
+      <a data-rel="tooltip" title="License expires at <%= @license_info.valid_until %>" 
+         class="well span2 top-block">
+         <span class="icon32 icon-color icon-info"></span>
+         <div>License</div>
+          <% if (no_of_days < 0) then %>
+            <div class="red"> Expired </div>
+          <% else %>
+                  <div class="green"><%= no_of_days %> more days</div>
+          <% end %>
       </a>
 
       <!-- Summary counters - END -->
@@ -76,6 +88,17 @@
 
 
    <div class="row-fluid sortable">		
+
+      <div class="box span4">
+         <%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title => "Bandwidth Consumed (Past Month)",
+                                 :header_link  => "/dash_bw" }
+         %>
+         <div class="box-content">
+            <canvas id="bandwidth_stats" >[No canvas support]</canvas>
+         </div> <!-- box-content -->
+      </div> <!-- box span4 -->
+
       <div class="box span4">
          <%= render :partial => 'layouts/title_bar_icons',
                     :locals => { :header_title => "Operating Systems",
@@ -83,16 +106,6 @@
          %>
          <div class="box-content">
             <canvas id="devinfo_os_hbar">[No canvas support]</canvas>
-         </div> <!-- box-content -->
-      </div> <!-- box span4 -->
-
-      <div class="box span4">
-         <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Device Types",
-                                 :header_link  => "/tbl_inventory" }
-         %>
-         <div class="box-content">
-            <canvas id="dev_type_pie" >[No canvas support]</canvas>
          </div> <!-- box-content -->
       </div> <!-- box span4 -->
 
@@ -131,9 +144,9 @@
 
    </div><!-- row-fluid sortable -->
 </div><!-- content ends -->
-
-
 <script type="text/javascript">
+   var graphData;
+
    function roundNumber(rnum, rlength) {
      var newnumber = Math.round(rnum*Math.pow(10,rlength))/Math.pow(10,rlength);
      return parseFloat(newnumber);
@@ -141,9 +154,44 @@
 
 
    window.onload = function (){
+
+   $.ajax({url: '/dash_inventory_bandwidth_stats.json'}).done(
+      function(data) {
+
+         var deviceClassTypes = [];
+         var values = [];
+         for (key in data) {
+             deviceClassTypes.push(key);
+             values.push(data[key]);
+         }
+
+         var Labels = ['Download (LAN) ', 'Upload (LAN)', 'Download (WAN)', 'Upload (WAN)' ];
+         var tooltipArray = [];
+
+         for (var i=0; i < deviceClassTypes.length; i++) {
+             tooltipArray = tooltipArray.concat(Labels);
+         }
+
+
+         var hBar = new RGraph.Bar('bandwidth_stats', values);
+         hBar.Set('grouping', 'grouped');
+         hBar.Set('vmargin', 20);
+         hBar.Set('labels', deviceClassTypes);
+         hBar.Set('tooltips', tooltipArray);
+         hBar.Set('key', Labels);
+         hBar.Set('key.position', 'graph');
+         hBar.Set('key.position.gutter.boxed', false);
+         hBar.Set('colors', ['Gradient(white:#3366CC:#3366CC)',
+                             'Gradient(white:#DC3912:#DC3912)',
+                             'Gradient(white:#FF9900:#FF9900)',
+                             'Gradient(white:#109618:#109618)']);
+         hBar.Set('noaxes', true);
+         hBar.Set('ylabels', false);
+         hBar.Draw();
+      });
+
      var labels = <%=raw hashOperatingSystem.keys %>;
      var data = <%=raw hashOperatingSystem.values %>;
-     var deviceTypeLabels = <%=raw hashDeviceType.keys %>;
 
      //
      var total = 0;
@@ -158,53 +206,19 @@
         window.location.replace("/tbl_inventory?column=operatingsystem&value="+label);
      }
 
-     function hbarClicked(e, hbar) {
-        var idx = hbar['index'];
-        var label = deviceTypeLabels[idx];
-        if (label == 'Unknown') label = '';
-        window.location.replace("/tbl_inventory?column=devicetype&value="+label);
-     }
-
 
      //resize the canvas appropriately
      document.body.onresize = function () {
-       var pieCanvas = document.getElementById('dev_type_pie');
+       var pieCanvas = document.getElementById('devinfo_os_hbar');
        pieCanvas.width = pieCanvas.parentNode.clientWidth;
        pieCanvas.height = pieCanvas.parentNode.clientHeight * 2;
 
-       var hbarCanvas = document.getElementById('devinfo_os_hbar');
+       var hbarCanvas = document.getElementById('bandwidth_stats');
        hbarCanvas.width = hbarCanvas.parentNode.clientWidth;
        hbarCanvas.height = hbarCanvas.parentNode.clientHeight * 2;
-       
      }
 
      document.body.onresize();
-
-     var hbar = new RGraph.HBar('dev_type_pie', <%= hashDeviceType.values %>);
-     hbar.Set('labels.above', true);
-     hbar.Set('vmargin', 15); 
-     hbar.Set('labels', <%=raw hashDeviceType.keys %>);
-     hbar.Set('background.grid', false);
-     hbar.Set('strokestyle', 'rgba(0,0,0,0)'); 
-     hbar.Set('colors', ['#8B0000', '#FF8C00', '#00008B', '#7FFF00', '#9400D3', '#A52A2A', '#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
-     hbar.Set('colors.sequential', true);
-     hbar.Set('labels.above.decimals', 0);
-     hbar.Set('xlabels', false);
-     hbar.Set('noxaxis', true);
-     hbar.Set('noxtickmarks', true);
-     hbar.Set('noytickmarks', true); 
-     hbar.Set('gutter.left', (document.getElementById('devinfo_os_hbar').width * 0.3));
-     hbar.Set('events.click', hbarClicked);
-
-     if (!RGraph.isOld()) {
-        hbar.Set('tooltips', <%=raw hashDeviceType.keys %>);
-        hbar.Set('tooltips.event', 'onmousemove');
-
-        RGraph.Effects.HBar.Grow(hbar);
-     } else {
-        hbar.Draw();
-     } 
-
 
      var pie = new RGraph.Pie('devinfo_os_hbar', data);
      //pie.Set('colors', ['#8B0000', '#FF8C00', '#00008B', '#7FFF00', '#9400D3', '#A52A2A', '#FF7300','#FFCD00','#00B869','#999','#A0D300','#EC0033']);
@@ -257,3 +271,4 @@
 
    };
 </script>
+

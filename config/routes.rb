@@ -16,13 +16,13 @@ Pglite::Application.routes.draw do
 
   resources :i7alerts
 
-  root to: 'reports#dashboard'
+  root to: 'reports#dash_inventory'
 
   match '/signin', to: 'sessions#new'
   match '/signout', to: 'sessions#destroy', via: :delete
   
-  match '/dashboard', to: 'reports#dashboard'
   match '/dash_inventory', to: 'reports#dash_inventory'
+  match '/dash_inventory_bandwidth_stats', to: 'reports#dash_inventory_bandwidth_stats'
   match '/tbl_inventory', to: 'deviceinfos#index'
 
   match '/dash_bw', to: 'reports#dash_bw'

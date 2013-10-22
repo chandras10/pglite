@@ -382,21 +382,20 @@ var fromDate, toDate;
        });
 
        function formatNumber(nStr) {
-                                           label = " M";
-                                           num = parseFloat(nStr);
-                                           if (num > 1024.0) {
-                                              nStr = ((num/1024).toFixed(1)).toString();
-                                              label = " G"
-                                           }
 
-                                           nStr += '';
-                                           x = nStr.split('.');
-                                           x1 = x[0];
-                                           x2 = x.length > 1 ? '.' + x[1] : '';
-                                           var rgx = /(\d+)(\d{3})/;
-                                           while (rgx.test(x1)) {
-                                              x1 = x1.replace(rgx, '$1' + ',' + '$2');
-                                           }
-                                           return x1 + x2 + label;         
+       	var labels = ["KB", "MB", "GB", "TB"];
+        var n = 0;
+       	num = parseFloat(nStr);
+
+        while ((n < labels.length) && (num > 1000)) {
+           if ((n+1) >= labels.length) {
+              break;
+           } else {
+              num = (num/1000).toFixed(1);
+              n++;
+           }
+        }
+
+       	return num + labels[n];
        }
 

@@ -1,29 +1,35 @@
 class ReportsController < ApplicationController
-  before_filter :signed_in_user, only: [:dashboard, :dash_inventory, 
+  before_filter :signed_in_user, only: [:dash_inventory, :dash_inventory_bandwidth_stats, 
                                         :dash_bw, :dash_bw_server,
                                         :dash_snort, :tbl_snort,
                                         :device_details, :tbl_vulnerability,
                                         :dash_bw_world, :dash_bw_country]
 
-  def dashboard
-    @deviceinfos = Deviceinfo.scoped
-
-    tbl_vulnerability
-
-    tbl_snort
-
-    @license_info = Licenseinfo.first
-  end
-
   def dash_inventory
+    @license_info = Licenseinfo.first
     @deviceinfos = Deviceinfo.scoped
-
-    tbl_vulnerability
-
-    tbl_snort
-    
   end
 
+  def dash_inventory_bandwidth_stats
+    internalIPStats = Internalipstat.joins(:deviceinfo).select('deviceclass, sum(inbytes) as inbytes, sum(outbytes) as outbytes').
+                                      group(:deviceclass).where("timestamp > (CURRENT_TIMESTAMP - '1 month'::interval)")
+    externalIPStats = Externalipstat.joins(:deviceinfo).select('deviceclass, sum(inbytes) as inbytes, sum(outbytes) as outbytes').
+                                      group(:deviceclass).where("timestamp > (CURRENT_TIMESTAMP - '1 month'::interval)")
+
+    hashIPstats = Hash.new
+    internalIPStats.each do |rec|
+       hashIPstats[rec.deviceclass] = [rec.inbytes.to_i, rec.outbytes.to_i]
+    end
+
+    externalIPStats.each do |rec|
+      hashIPstats[rec.deviceclass]  << rec.inbytes.to_i
+       hashIPstats[rec.deviceclass] << rec.outbytes.to_i
+    end
+
+    respond_to do |format|
+       format.json { render json: hashIPstats}
+    end
+  end
 
   # Total bandwidth dashboard showing b/w usage
   def dash_bw
@@ -260,28 +266,18 @@ class ReportsController < ApplicationController
   
   def tbl_snort
 
-      set_timeLine_constants
-      macid = params[:device]
-  
+    set_timeLine_constants
+    
+    dbQuery = Externalipstat
+    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
 
-        if (macid.nil?) then
-           @snortAlertRecs = Alertdb.select("to_char(timestamp, 'YYYY-MM-DD HH:MI:SS') as time, 
-                                             priority as priority, sigid as sigid, message as message, 
-                                             protocol as protocol, srcip as srcip, srcport as srcport, 
-                                             destip as dstip, destport as dstport,
-                                             srcmac as srcmac, dstmac as dstmac").
-                                     #where("timestamp >= ?", today).
-                                     order(:priority, :sigid)
-        else
-           @snortAlertRecs = Alertdb.select("to_char(timestamp, 'YYYY-MM-DD HH:MI:SS') as time, 
-                                             priority as priority, sigid as sigid, message as message, 
-                                             protocol as protocol, srcip as srcip, srcport as srcport, 
-                                             destip as dstip, destport as dstport,
-                                             srcmac as srcmac, dstmac as dstmac").
-                                     #where("timestamp >= ? AND (srcmac = ? OR dstmac = ?)", today, macid, macid).
-                                     where("(srcmac = ? OR dstmac = ?)", macid, macid).
-                                     order(:priority, :sigid)
-        end
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: SnortAlertsDatatable.new(view_context, timeQueryString)}
+    end
+
+
 
   end
 
