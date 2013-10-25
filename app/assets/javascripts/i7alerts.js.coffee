@@ -2,6 +2,11 @@
 # All this logic will automatically be available in application.js.
 # You can use CoffeeScript in this file: http://jashkenas.github.com/coffee-script/
 jQuery ->
+  #
+  # Grab the query string and append it to the Ajax source below
+  #
+  url = window.location.href
+  a = $('<a>', { href: url})[0]
   dataTableOpts = "RC<'row-fluid'<'span2'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>"
   
   oTable = $('#alerts').dataTable
@@ -10,7 +15,7 @@ jQuery ->
     bJQueryUI: true
     bProcessing: true
     bServerSide: true
-    sAjaxSource: $('#alerts').data('source') + '?reportTime=' + $('#reportTime').val()
+    sAjaxSource: $('#alerts').data('source') + a.search
     bDeferRender: true
     bStateSave: true
     sScrollX: "100%"

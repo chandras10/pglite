@@ -103,7 +103,7 @@ hashServers = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.r
                         <td colspan="2"><h4>Security</h4></td>
                      </tr>
                      <tr>
-                        <td><h6>Device Vulnerability Index (DVI): </h6><h6>Device Threat Index (DTI): </h6></td>
+                        <td><h6>Device Vulnerability Index (DVI): </h6><br><h6>Device Threat Index (DTI): </h6></td>
                         <td><% dvi = if (!@devicedetails.nil? && !@devicedetails.dvi.nil?) then  (@devicedetails.dvi.to_f * 10) else -1 end
                                btnClass = "btn btn-medium"
                                if    dvi.between?(0, 3)   then  btnClass += "" 
@@ -159,7 +159,7 @@ hashServers = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.r
               %>
               <div class="box-content">
                  <%= link_to raw("<div><canvas id='snort_barchart'>[No canvas support]</canvas></div>"), 
-                                 :action => "tbl_snort", :device => params[:device]  %>
+                                 :action => "dash_snort", :device => params[:device], :reportTime => 'past_month'  %>
               </div>
          </div>    
 

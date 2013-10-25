@@ -56,7 +56,9 @@
 	       <tbody>
                   <% @hashSnortAlerts.each do |sid, array| %>
                      <tr>
-                        <td><%= link_to sid, "http://www.snort.org/search/sid/#{sid}", :target => "_blank" %></td>
+                        <% linkStr = (!array[1].nil? && array[1].start_with?("ET")) ? "http://http://doc.emergingthreats.net/#{sid}" : 
+                                                                                      "http://www.snort.org/search/sid/#{sid}" %>
+                        <td><%= link_to sid, "#{linkStr}", :target => "_blank" %></td>
 
                         <% case array[2]
                            when 1 %>
@@ -72,7 +74,7 @@
                         <% end %>
 
                         <td><%= array[1] %></td>
-                        <td><%= array[0] %></td>
+                        <td><%= link_to array[0], params.merge({:action=> "tbl_snort", :sigid => sid}) %></td
                      </tr>
                   <% end %>
                </tbody>

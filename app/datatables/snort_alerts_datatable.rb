@@ -32,16 +32,22 @@ private
       else
         priority = "<span class='label'> #{alert.priority} </span>"
       end
+
+      srcmac = Deviceinfo.exists?(:macid => alert.srcmac) ? link_to(alert.srcmac, :action=> "device_details", :device => alert.srcmac) : alert.srcmac
+      dstmac = Deviceinfo.exists?(:macid => alert.dstmac) ? link_to(alert.dstmac, :action=> "device_details", :device => alert.dstmac) : alert.dstmac
+      
+      snortIDLink = (!alert.message.nil? && alert.message.start_with?("ET")) ? "http://doc.emergingthreats.net/#{alert.sigid}" : "http://www.snort.org/search/sid/1-#{alert.sigid}"
+
       {
-        snortID: link_to(alert.sigid, "http://www.snort.org/search/sid/1-#{alert.sigid}", :target => "_blank"),
+        snortID: link_to(alert.sigid, snortIDLink, :target => "_blank"),
         timestamp: h(alert.timestamp.strftime("%B %e, %Y %T")),
         message: h(alert.message),
         priority: priority,
         protocol: h(alert.protocol),
         source: "#{alert.srcip}:#{alert.srcport}",
         destination: "#{alert.destip}:#{alert.destport}",
-        srcmac: h(alert.srcmac),
-        dstmac: h(alert.dstmac)
+        srcmac: srcmac,
+        dstmac: dstmac
       }
     end
   end
@@ -51,15 +57,18 @@ private
   end
 
   def fetch_alerts
+    alerts = Alertdb.select("timestamp, priority, sigid, message, protocol, 
+                                             srcip, srcport, destip, destport, srcmac, dstmac").
+                     where("#{@queryConditions[0][1]}")
+
     if (params[:device].present?) then          
-        alerts = Alertdb.select("timestamp, priority, sigid, message, protocol, 
-                                             srcip, srcport, destip, destport, srcmac, dstmac").
-                                     where("#{@queryConditions[0][1]} and (srcmac = ? OR dstmac = ?)", params[:device],  params[:device])
-    else
-        alerts = Alertdb.select("timestamp, priority, sigid, message, protocol, 
-                                             srcip, srcport, destip, destport, srcmac, dstmac").
-                                     where("#{@queryConditions[0][1]}")
-    end    
+        alerts = alerts.where("(srcmac = ? OR dstmac = ?)", params[:device],  params[:device])
+    end 
+
+    if (params[:sigid].present?) then          
+        alerts = alerts.where("sigid = ?", params[:sigid])
+    end 
+
     alerts = alerts.order("#{sort_column} #{sort_direction}")
     alerts = alerts.page(page).per_page(per_page)
     if params[:sSearch].present?

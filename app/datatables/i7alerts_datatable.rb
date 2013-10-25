@@ -26,7 +26,7 @@ private
         classtype: h(alert.classtype),
         id: "<a href='#' title='" + alert.description + "'>#{alert.id}</a>",
         proto: h(alert.proto),
-        srcmac: h(alert.srcmac),
+        srcmac: link_to(alert.srcmac, :action=> "device_details", :controller=> "reports", :device => alert.srcmac),
         srcip: h(alert.srcip),
         srcport: h(alert.srcport),
         dstmac: h(alert.dstmac),
