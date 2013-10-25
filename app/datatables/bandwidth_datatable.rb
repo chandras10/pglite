@@ -40,7 +40,7 @@ private
     servers = Externalipstat.select('destip as server, destport as port, sum(inbytes) as download, sum(outbytes) as upload, sum(inbytes)+sum(outbytes) as total').group('destip, destport')
     servers = servers.order("#{sort_column} #{sort_direction}")
     servers = servers.page(page).per_page(per_page)
-    servers = servers.where("destip NOT like '10.%' and #{@timeCondition} and cc = ?", params[:country])
+    servers = servers.where("#{@timeCondition} and cc = ?", params[:country])
 
     if params[:sSearch].present?
       servers = servers.where("destip ILIKE :search", search: "%#{params[:sSearch]}%")

@@ -44,7 +44,7 @@ Pglite::Application.configure do
   config.peregrine_adconfigfile = "/usr/local/etc/i7ADPlugin/config.xml"
   config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"
 
-  config.i7alerts_ignore_classes=%w[0, 4, 5, 6, 7]
+  config.i7alerts_ignore_classes=%w[0, 2, 3, 4, 5, 7, 8]
   
   config.use_ssl = true
   config.ssl_port = 3001

@@ -10,7 +10,7 @@ jQuery ->
     bJQueryUI: true
     bProcessing: true
     bServerSide: true
-    sAjaxSource: $('#alerts').data('source')
+    sAjaxSource: $('#alerts').data('source') + '?reportTime=' + $('#reportTime').val()
     bDeferRender: true
     bStateSave: true
     sScrollX: "100%"

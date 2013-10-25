@@ -63,10 +63,10 @@ private
     alerts = alerts.order("#{sort_column} #{sort_direction}")
     alerts = alerts.page(page).per_page(per_page)
     if params[:sSearch].present?
-      alerts = alerts.where("sigid ILIKE :search or message ILIKE :search or protocol ILIKE :search or 
-                               srcip ILIKE :search or srcport ILIKE :search or destip ILIKE :search or
-                               destport ILIKE :search or srcmac ILIKE :search or dstmac ILIKE :search", 
-                               search: "%#{params[:sSearch]}%")
+      alerts = alerts.where("sigid >= :isearch or message ILIKE :search or protocol >= :isearch or 
+                               srcip ILIKE :search or srcport >= :isearch or destip ILIKE :search or
+                               destport >= :isearch or srcmac ILIKE :search or dstmac ILIKE :search", 
+                               search: "%#{params[:sSearch]}%", isearch: params[:sSearch].to_i)
     end
     alerts
   end
