@@ -40,6 +40,7 @@ jQuery ->
                    { mData: "deviceclass"},
                    { mData: "jailbroken"},
                    { mData: "dvi"},
+                   { mData: "dti"},
                    { mData: "ipaddr"},
                    { mData: "created_at"},
                    { mData: "updated_at"},

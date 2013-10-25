@@ -31,6 +31,7 @@ private
         deviceclass: h(device.deviceclass),
         jailbroken: h(((device.weight & 0x00FF0000) > 0) ? "Yes" : "No"),
         dvi: h(device.dvi),
+        dti: h(device.dti),
         ipaddr: h(device.ipaddr),
         created_at: h(device.created_at.strftime("%B %e, %Y")),
         updated_at: h(device.updated_at.strftime("%B %e, %Y")),
@@ -66,7 +67,7 @@ private
 
 
   def sort_column
-    columns = %w[macid username groupname location devicetype operatingsystem osversion deviceclass weight dvi ipaddr created_at updated_at auth_source devicename vendorname parentmacid]
+    columns = %w[macid username groupname location devicetype operatingsystem osversion deviceclass weight dvi dti ipaddr created_at updated_at auth_source devicename vendorname parentmacid]
     columns[params[:iSortCol_0].to_i]
   end
 

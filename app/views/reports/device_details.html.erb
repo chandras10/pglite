@@ -103,9 +103,8 @@ hashServers = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.r
                         <td colspan="2"><h4>Security</h4></td>
                      </tr>
                      <tr>
-                        <td><h6>Device Vulnerability Index (DVI): </h6></td>
-                        <td><% dvi_text = ""
-                               dvi = if (!@devicedetails.nil? && !@devicedetails.dvi.nil?) then  (@devicedetails.dvi.to_f * 10) else -1 end
+                        <td><h6>Device Vulnerability Index (DVI): </h6><h6>Device Threat Index (DTI): </h6></td>
+                        <td><% dvi = if (!@devicedetails.nil? && !@devicedetails.dvi.nil?) then  (@devicedetails.dvi.to_f * 10) else -1 end
                                btnClass = "btn btn-medium"
                                if    dvi.between?(0, 3)   then  btnClass += "" 
                                elsif dvi.between?(4, 5)   then  btnClass += " btn-success "
@@ -114,6 +113,16 @@ hashServers = Hash[@hashResourceTotals.sort_by {|key, value| value.reduce(:+)}.r
                                end
                             %>
                             <a href="#" class="<%= btnClass %>" data-rel="popover" data-content="0: Not vulnerable ---- 1: Highly Vulnerable" title="DVI"><%= @devicedetails.dvi if !@devicedetails.nil? %></a>
+                            <% dti = if (!@devicedetails.nil? && !@devicedetails.dti.nil?) then  (@devicedetails.dti.to_f * 10) else -1 end
+                               btnClass = "btn btn-medium"
+                               if    dti.between?(0, 3)   then  btnClass += "" 
+                               elsif dti.between?(4, 5)   then  btnClass += " btn-success "
+                               elsif dti.between?(6, 9)   then  btnClass += " btn-warning "
+                               elsif dti == 10            then  btnClass += " btn-danger "
+                               end
+                            %>
+                            <br><a href="#" class="<%= btnClass %>" data-rel="popover" data-content="0: No Threat---- 1: Highly Malicious" title="DTI"><%= @devicedetails.dti if !@devicedetails.nil? %></a>
+
                         </td>
                      </tr>
                      <tr>
