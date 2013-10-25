@@ -207,7 +207,7 @@ end
             var type = $('#reportType').val();
             var time = $('#reportTime').val();
 
-            var urlString = "/dash_bw?reportType="+ type + "&reportTime=" + time;
+            var urlString = "/dash_bw_server?resource=" + "<%= params['resource'] %>" + "&reportTime=" + time;
             if (time == "date_range") {
                numDays = dateDiffInDays(new Date(fromDate), new Date(toDate));
 
