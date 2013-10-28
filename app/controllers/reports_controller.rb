@@ -331,20 +331,12 @@ class ReportsController < ApplicationController
   end #device_details 
 
   def tbl_vulnerability
-    #
-    # Get all the CVE notices
 
-    # Do we need filter the records based on selected device?
-    macid = params[:device]
-    if (macid.nil?) then
-       @cveAlertRecs = DviVuln.joins(:vulnerability).
-                               select("mac, vuln_id, vulnerability.cvss_score as score, vulnerability.last_modify_date as date, summary").
-                               order(:score)
-    else
-       @cveAlertRecs = DviVuln.joins(:vulnerability).
-                               where("mac = ?", macid).
-                               select("mac, vuln_id, vulnerability.cvss_score as score, vulnerability.last_modify_date as date, summary").
-                               order(:score)
+    dbQuery = DviVuln
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.json { render json: DeviceVulnerabilitiesDatatable.new(view_context)}
     end
   end
 
