@@ -68,6 +68,10 @@ class ReportsController < ApplicationController
              dbQuery = Internalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
           when "externalAPP"
              dbQuery = Externalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+          when "external_urlcat"
+             dbQuery = Urlcatstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+          when "external_hlurlcat"
+             dbQuery = Hlurlcatstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
        end
        dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
        statRecordSets = [dbQuery]
@@ -126,7 +130,6 @@ class ReportsController < ApplicationController
   # Bandwidth usage per server, for all ports and devices connected to this server
   def dash_bw_server
 
-    set_IPstatTypes_constants
     set_timeLine_constants
 
 
@@ -164,6 +167,13 @@ class ReportsController < ApplicationController
           when "externalAPP"
              dbQuery = Externalresourcestat.select("deviceid as client, appidexternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
              dbQuery = dbQuery.where("appidexternal.appname = ?", params['resource'])
+          when "external_urlcat"
+             dbQuery = Urlcatstat.joins(:urlcatid).select("deviceid as client, urlcatid.name as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = dbQuery.where("urlcatid.name = ?", params['resource'])
+          when "external_hlurlcat"
+             dbQuery = Hlurlcatstat.joins(:hlurlcatid).select("deviceid as client, hlurlcatid.name as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+             dbQuery = dbQuery.where("hlurlcatid.name = ?", params['resource'])
+
        end
        dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
        dbQuery = dbQuery.group(:service)
@@ -474,6 +484,14 @@ class ReportsController < ApplicationController
                                                      where("appidexternal.appid > 0").
                                                      group("appidexternal.appid", 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
                                                      order("appidexternal.appid").scoped
+    when "external_urlcat"
+         dbQuery = dbQuery.joins(:deviceinfo).joins(:urlcatid).select("urlcatid.name as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
+                                                     group("urlcatid.id", 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
+                                                     order("urlcatid.name").scoped      
+    when "external_hlurlcat"
+         dbQuery = dbQuery.joins(:deviceinfo).joins(:hlurlcatid).select("hlurlcatid.name as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
+                                                     group("hlurlcatid.id", 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
+                                                     order("hlurlcatid.name").scoped      
     end
 
     dbQuery = addTimeLinesToDatabaseQuery(dbQuery)

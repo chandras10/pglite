@@ -19,11 +19,6 @@ end
 <!-- content starts -->
 <div id="content" class="span10">
         <div class="control-group">
-            <select id="reportType" class="chosen">
-                <% @availableBandwidthReportTypes.keys.sort.reverse.each do |key| %>
-                <option value="<%= key %>"><%= @availableBandwidthReportTypes[key] %></option>
-                <% end %>
-            </select>
             <select id="reportTime" class="chosen">
                <% @availableTimeLines.each do |key, value| %>
                <option value="<%= key %>"><%= value %></option>
@@ -182,7 +177,6 @@ end
    $(document).ready(function(){
 
        // Set approriate values (derived from query string) in the dropdown selections
-       $("#reportType").val("<%= params['reportType'] || 'total' %>");
        $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
 
        $("#reportTime").chosen().change(function() {
@@ -204,10 +198,9 @@ end
        <% end %>
 
        $('#refreshBtn').click(function() {
-            var type = $('#reportType').val();
             var time = $('#reportTime').val();
 
-            var urlString = "/dash_bw_server?resource=" + "<%= params['resource'] %>" + "&reportTime=" + time;
+            var urlString = "/dash_bw_server?reportType=" + "<%= params['reportType'] %>" + "&resource=" + "<%= params['resource'] %>" + "&reportTime=" + time;
             if (time == "date_range") {
                numDays = dateDiffInDays(new Date(fromDate), new Date(toDate));
 

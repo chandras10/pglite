@@ -5,7 +5,9 @@ module ConstantsHelper
                                           "internalAPP" => "Internal Applications",
                                           "externalIP"  => "External Servers",
                                           "externalAPP" => "External Applications",
-                                          "byodIP"      => "BYOD Servers"
+                                          "byodIP"      => "BYODs",
+                                          "external_urlcat"      => "Website Categories",
+                                          "external_hlurlcat"    => "Website Category Groups"
                                         }
   end
 
