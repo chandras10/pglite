@@ -276,7 +276,6 @@ $('#alertsConfig_form .btn-primary').click(function(){
 	var activateAlerts = [];
 	var disabledAlerts = [];
     var dict = $("#alertsConfigTree").dynatree("getTree").toDict();
-    alert(dict);
     for (i in dict) {
       var classDef = dict[i];
       if (typeof classDef.children != 'undefined') {
