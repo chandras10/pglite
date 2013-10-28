@@ -43,6 +43,8 @@ Pglite::Application.routes.draw do
 
   match '/settings', to: 'settings#settings_menu', :via => :get
   match '/settings', to: 'settings#save_settings', :via => :post
+  match '/settings/alerts', to: 'settings#alerts', :via => :get
+  match '/settings/alerts', to: 'settings#save_alerts', :via => :post
 
   # Batch Reports
   match '/dvi_report', to:  'batch_reports#dvi_report'

@@ -43,6 +43,7 @@
 		<li><a href="#ad" data-toggle="tab">Active directory</a></li>
 		<li><a href="#homenet" data-toggle="tab">Homenet</a></li>
 		<li><a href="#pluginad" data-toggle="tab">Plugin settings</a></li>
+		<li><a href="#alertConfig" data-toggle="tab">Alerts</a></li>
 	</ul>
 	<div id="my-tab-content" class="tab-content">
 		<div class="tab-pane active" id="pgconfig">
@@ -144,11 +145,11 @@
 				<input type="hidden" name="configtype" value="HOMENET" />	
 				<div>
 					<label class="control-label"> HomeNets </label>
-<textarea id="homenettext" class="cleditor" cols="200" rows="10" name="homenetip">
-<% @homenetips.each do |ip| %>
-<%= ip.net %>
-<%end%>
-</textarea>
+					<textarea id="homenettext" class="cleditor" cols="200" rows="10" name="homenetip">
+					<% @homenetips.each do |ip| %>
+					<%= ip.net %>
+					<%end%>
+					</textarea>
 				</div>
 				<div class="form-actions">
 					<button class="btn btn-primary" onclick="sendHomenetIps()">Save changes</button>
@@ -157,6 +158,21 @@
 	
 			</form>
 		</div>
+	</div>
+
+	<div class="tab-pane" id="alertConfig">
+	    <div class="box-content">
+			<form id="alertsConfig_form"  method="POST" action="/settings/alerts">
+			 <input type="hidden" name="disableids" id="disableids" value="" >
+			 <input type="hidden" name="activeids" id="activeids" value="" >
+	         
+	         <div id="alertsConfigTree"> </div>
+			 <div class="form-actions">
+				 <button class="btn btn-primary">Save Changes</button>
+				 <button type="reset" class="btn">Cancel</button>
+			 </div>
+			</form>
+	    </div>
 	</div>
 </div>
 
@@ -171,6 +187,9 @@
    </div>
 </div>
 	<% end %>
+
+
+<%= javascript_include_tag "pg_settings.js.coffee" %>
 
 <script type="text/javascript">
 
@@ -231,7 +250,7 @@ function sendHomenetIps() {
 
   $('#restartsubmit').click(function() {
      $('#restartbox').modal('hide');
-
+});
 
 
 $("#pluginad_form :input").change(function() {
@@ -251,9 +270,32 @@ function sendPGConfigData() {
 
 }
 
+$(document).ready(function() {
 
+$('#alertsConfig_form .btn-primary').click(function(){
+	var activateAlerts = [];
+	var disabledAlerts = [];
+    var dict = $("#alertsConfigTree").dynatree("getTree").toDict();
+    alert(dict);
+    for (i in dict) {
+      var classDef = dict[i];
+      if (typeof classDef.children != 'undefined') {
+         for (j in classDef.children) {
+         	var c = classDef.children[j];
+      	    if (!c.select) {
+      	  	   disabledAlerts.push(c.id);
+      	    } else {
+      	  	   activateAlerts.push(c.id);
+      	    }
+         }
+      }
+    }
 
+    $("#disableids").val(disabledAlerts.toString());
+    $("#activeids").val(activateAlerts.toString());
 
-
+    $("#alertsConfig_form").submit();
 });
+});
+
  </script>

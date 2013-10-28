@@ -200,4 +200,72 @@ skip_before_filter  :verify_authenticity_token
 
   end
 
+
+  def alerts
+    alertClasses = I7alertclassdef.select("id, description").
+                   where("id NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})")
+
+    alertDefArray = Array.new
+
+    alertClasses.each do | alertClass |
+    
+      alertDefs = I7alertdef.select("id, active, description").where("classid = ?", alertClass.id)
+      children = Array.new
+      alertDefs.each do |alert|
+         children << { title: "#{alert.id}: #{alert.description}", id: alert.id, select: alert.active}
+      end
+      alertDefArray << {
+            title: "<h6>#{alertClass.id}: #{alertClass.description}</h6>",
+            id: alertClass.id,
+            hideCheckbox: true,
+            unselectable: true,
+            children: children
+      }
+    end
+
+    respond_to do |format|
+       format.json { render json: alertDefArray}
+    end
+  end
+
+  def save_alerts
+     Rails.logger.debug "Alerts to Save: #{params['ids']}"
+
+     if (!params['activeids'].empty?) 
+        I7alertdef.update_all({:active => true}, "id IN (#{params['activeids']})")
+     end
+
+     if (!params['disableids'].empty?)
+        disableI7Alerts(params['disableids'])
+     end
+     
+     settings_menu
+     render :settings_menu
+  end
+
+  private
+  def disableI7Alerts(ids)
+
+    if ids.nil? || ids.empty?
+       return
+    end
+    
+    I7alertdef.update_all({:active => false}, "id IN (#{ids})")
+
+    macIDs = I7alert.where("id IN (#{ids})").pluck('srcmac').uniq
+
+    if (macIDs.empty?)
+       return
+    end
+
+    #I7alert.update_all({:srcport => 999 }, "id IN (#{ids})")
+    #Deviceinfo.update_all({:updated_at => Time.now}, "macid IN ('" + macIDs.join("','") + "')")
+    I7alert.delete_all("id IN (#{ids})")
+    macIDs.each do |device|
+       ActiveRecord::Base.connection.execute("SELECT * FROM computeDVI('#{device}')")
+       ActiveRecord::Base.connection.execute("SELECT * FROM computeDTI('#{device}')")
+    end
+
+  end
+
 end
