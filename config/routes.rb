@@ -37,6 +37,11 @@ Pglite::Application.routes.draw do
   match '/tbl_vulnerability', to: 'reports#tbl_vulnerability'
 
   match '/device_details', to: 'reports#device_details'
+  match '/device_details/i7alerts', to: 'reports#device_i7alerts'
+  match '/device_details/snortalerts', to: 'reports#device_snortalerts'
+  match '/device_details/vulnerabilities', to: 'reports#device_vulnerabilities'
+  match '/device_details/apps', to: 'reports#device_apps'
+  match '/device_details/bandwidth', to: 'reports#device_bandwidth_usage'
 
   match '/policy', to: 'configuration#edit_policy', :via => :get
   match '/policy', to: 'configuration#save_policy', :via => :post

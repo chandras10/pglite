@@ -301,34 +301,37 @@ class ReportsController < ApplicationController
     if (!@devicedetails.nil?) then
       @devicedetails = @devicedetails.first
     end
-
-    params['reportTime'] = "past_month"
-
-    #find all the Snort alerts
-    dash_snort
-    @snortAlertCount = Alertdb.where("srcmac = ? OR dstmac = ?", macid, macid).count
-    
-    #
-    # Get all the CVE notices for the given device
-    cveAlertRecs = DviVuln.joins(:vulnerability).
-                            where("mac = ?", macid).select("mac, vuln_id, vulnerability.cvss_score, vulnerability.last_modify_date as date")
-
-
-    #
-    #TODO: Right now, we are grouping by MONTH only. We will have to consider YEAR as well.
-    @hashCveAlerts = cveAlertRecs.group_by { |a| a["date"][5..6]  }
-
-    #
-    # Get the consumed bandwidth details (for last month) for this device
-    dash_bw
-
-    #
-    # Get all the apps for this device
-    @appList = Browserversion.select("browsername as app, version")
-                             .where("macid = ?", macid)
-                             .order(:browsername)
-  
   end #device_details 
+
+  def device_i7alerts
+    respond_to do |format|
+      format.json { render json: DeviceRecordsDatatable.new(view_context, "i7alerts")}
+    end
+  end
+
+  def device_snortalerts
+    respond_to do |format|
+      format.json { render json: DeviceRecordsDatatable.new(view_context, "snort")}
+    end
+  end
+
+  def device_vulnerabilities
+    respond_to do |format|
+      format.json { render json: DeviceRecordsDatatable.new(view_context, "vuln")}
+    end
+  end
+
+  def device_apps
+    respond_to do |format|
+      format.json { render json: DeviceRecordsDatatable.new(view_context, "apps")}
+    end
+  end
+
+  def device_bandwidth_usage
+    respond_to do |format|
+      format.json { render json: DeviceRecordsDatatable.new(view_context, "bandwidth")}
+    end
+  end
 
   def tbl_vulnerability
 
