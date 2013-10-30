@@ -206,7 +206,7 @@
 <!-- policy editor page starts here -->
 <div class="box span10" style="height:90%;">
     <div class="box-header well">
-        <% if current_user.admin? %>
+        <% if current_user && current_user.admin? %>
         <h2><i class="icon-edit"></i> Policy Editor
         </h2>
         <form id="policyForm" class="pull-right" action="/policy" method="POST">
