@@ -19,6 +19,8 @@ class SnortAlertsDatatable
 private
 
   def data
+    timeZone = Time.zone.name
+
     alerts.map do |alert|
       case alert.priority
       when 1
@@ -40,7 +42,7 @@ private
 
       {
         snortID: link_to(alert.sigid, snortIDLink, :target => "_blank"),
-        timestamp: h(alert.timestamp.strftime("%B %e, %Y %T")),
+        timestamp: h(alert.timestamp.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M")),
         message: h(alert.message),
         priority: priority,
         protocol: h(alert.protocol),

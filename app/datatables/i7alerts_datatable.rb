@@ -19,9 +19,11 @@ class I7alertsDatatable
 private
 
   def data
+    timeZone = Time.zone.name
+    
     alerts.map do |alert|
       {
-        timestamp: h(alert.timestamp.strftime("%B %e, %Y %T")),
+        timestamp: h(alert.timestamp.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M")),
         priority: h(alert.priority),
         classtype: h(alert.classtype),
         id: "<a href='#' title='" + alert.description + "'>#{alert.id}</a>",

@@ -18,6 +18,8 @@ class DevicesDatatable
 private
 
   def data
+    timeZone = Time.zone.name
+
     devices.map do |device|
       {
         macid: link_to(device.macid, :action=> "device_details", :controller=> "reports", :device => device.macid),
@@ -32,8 +34,8 @@ private
         dvi: h(device.dvi),
         dti: h(device.dti),
         ipaddr: h(device.ipaddr),
-        created_at: h(device.created_at.strftime("%B %e, %Y")),
-        updated_at: h(device.updated_at.strftime("%B %e, %Y")),
+        created_at: h(device.created_at.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M")),
+        updated_at: h(device.updated_at.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M")),
         auth_source: h(device.description),
         devicename: h(device.devicename),
         vendorname: h(device.vendorname),
