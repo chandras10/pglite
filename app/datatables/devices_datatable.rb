@@ -4,7 +4,6 @@ class DevicesDatatable
 
   def initialize(view)
     @view = view
-    @authSources = Authsources.all    
   end
 
   def as_json(options = {})
@@ -35,7 +34,7 @@ private
         ipaddr: h(device.ipaddr),
         created_at: h(device.created_at.strftime("%B %e, %Y")),
         updated_at: h(device.updated_at.strftime("%B %e, %Y")),
-        auth_source: h(((@authSources.detect {|a| a.id == device.auth_source}).description if !@authSources.nil? ) || device.auth_source),
+        auth_source: h(device.description),
         devicename: h(device.devicename),
         vendorname: h(device.vendorname),
         parentmacid: h(device.parentmacid),
@@ -49,7 +48,9 @@ private
   end
 
   def fetch_devices
-    devices = Deviceinfo.order("#{sort_column} #{sort_direction}")
+    devices = Deviceinfo.select("#{columns.join(', ')}")
+    devices = devices.joins('LEFT OUTER JOIN auth_sources ON id = auth_source')
+    devices = devices.order("#{sort_column} #{sort_direction}")
 
     if params[:column].present? and params[:value].present?
        devices = devices.where("#{params[:column]} = '"+ params[:value] + "'")
@@ -60,14 +61,18 @@ private
       devices = devices.where("macid ILIKE :search or username ILIKE :search or groupname ILIKE :search or 
                                location ILIKE :search or devicetype ILIKE :search or operatingsystem ILIKE :search or
                                deviceclass ILIKE :search or ipaddr ILIKE :search or devicename ILIKE :search or 
-                               vendorname ILIKE :search", search: "%#{params[:sSearch]}%")
+                               auth_sources.description ILIKE :search or vendorname ILIKE :search or
+                               dvi = :isearch or dti = :isearch", 
+                               search: "%#{params[:sSearch]}%", isearch: params[:sSearch].to_f)
     end
     devices
   end
 
+  def columns
+      %w[macid username groupname location devicetype operatingsystem osversion deviceclass weight dvi dti ipaddr created_at updated_at auth_sources.description devicename vendorname parentmacid]
+  end
 
   def sort_column
-    columns = %w[macid username groupname location devicetype operatingsystem osversion deviceclass weight dvi dti ipaddr created_at updated_at auth_source devicename vendorname parentmacid]
     columns[params[:iSortCol_0].to_i]
   end
 
