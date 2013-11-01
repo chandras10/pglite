@@ -12,11 +12,6 @@ table tbody td {
     margin-left: .25em;
     margin-right: .25em;
 }
-
-td a:hover {
-  font-size:150%;
-  text-decoration:none;
-}
 </style>
 
 <div id="content" class="span10">
@@ -65,6 +60,8 @@ td a:hover {
       </div>
    </div>
 </div>
+
+<%= javascript_include_tag "i7alerts.js.coffee" %>
 
 <script type="text/javascript">
    var _MS_PER_DAY = 1000 * 60 * 60 * 24;
