@@ -20,7 +20,23 @@ private
 
   def data
     timeZone = Time.zone.name
-    
+
+    #
+    # Create tooltips for each "Source Mac" found in the alerts..
+    #
+    devices = alerts.map {|a| a.srcmac}
+    deviceHash = Hash.new
+    devices.each do |d|
+      deviceinfo = Deviceinfo.where("macid = ?", d).first
+      deviceHash[d] = "<div class='CSSTableGenerator'><table>" +
+                      "<tr><td colspan=2> #{deviceinfo.username}</td></tr>" +
+                      "<tr><td>Device</td><td> #{deviceinfo.devicetype}</td></tr>" +
+                      "<tr><td>Operating System</td><td> #{deviceinfo.operatingsystem} #{deviceinfo.osversion}</td></tr>" +
+                      "<tr><td>DVI </td><td> #{deviceinfo.dvi}</td></tr>" +
+                      "<tr><td>DTI </td><td> #{deviceinfo.dti}</td></tr>" +
+                      "</table></div"
+    end
+
     alerts.map do |alert|
       {
         timestamp: h(alert.timestamp.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M")),
@@ -28,7 +44,7 @@ private
         classtype: h(alert.classtype),
         id: "<a href='#' title='" + alert.description + "'>#{alert.id}</a>",
         proto: h(alert.proto),
-        srcmac: link_to(alert.srcmac, :action=> "device_details", :controller=> "reports", :device => alert.srcmac),
+        srcmac: link_to(alert.srcmac, {:action=> "device_details", :controller=> "reports", :device => alert.srcmac}, {:rel => "popover", :'data-content' => "#{deviceHash[alert.srcmac]}", :'data-original-title' => "#{alert.srcmac}" }),
         srcip: h(alert.srcip),
         srcport: h(alert.srcport),
         dstmac: h(alert.dstmac),

@@ -34,7 +34,13 @@ jQuery ->
                    { mData: "dstip"},
                    { mData: "dstport"},
                    { mData: "pcap", bSortable: false},
-                   { mData: "message"}
-                 ]      
+                   { mData: "message"}]
+    fnDrawCallback: ->
+      $('#alerts').dataTable().$('a[rel=popover]').popover
+        trigger: 'hover'
+      .hover (e) ->
+        e.preventDefault()
+  true
 
   $('.ColVis_MasterButton').removeClass('ColVis_Button').addClass('DTTT_button')
+
