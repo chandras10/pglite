@@ -383,7 +383,7 @@ var fromDate, toDate;
 
        function formatNumber(nStr) {
 
-       	var labels = ["KB", "MB", "GB", "TB"];
+       	var labels = [" B", " KB", " MB", " GB", " TB"];
         var n = 0;
        	num = parseFloat(nStr);
 
