@@ -75,7 +75,7 @@ private
   end
 
   def sort_column
-    columns = %w[timestamp id srcmac dstmac proto srcip srcport dstip dstport pcap message]
+    columns = %w[timestamp i7alertdef.priority i7alertclassdef.description id proto srcmac srcip srcport dstmac dstip dstport pcap message]
     columns[params[:iSortCol_0].to_i]
   end
 
