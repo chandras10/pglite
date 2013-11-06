@@ -22,6 +22,13 @@ class ReportsController < ApplicationController
     end
 
     externalIPStats.each do |rec|
+      #
+      # There could be a new deviceclass in External stat table but missing from InternalIP stat. 
+      # Create a empty entry to fix 500 Internal error because of nil.
+      #
+      if hashIPstats[rec.deviceclass].nil? then
+          hashIPstats[rec.deviceclass] = [0, 0]
+      end
       hashIPstats[rec.deviceclass]  << rec.inbytes.to_i
        hashIPstats[rec.deviceclass] << rec.outbytes.to_i
     end

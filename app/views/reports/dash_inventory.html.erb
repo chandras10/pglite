@@ -49,10 +49,10 @@
       </a>
 
       <a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." 
-         class="well span2 top-block" href="/dash_bw">
+         class="well span2 top-block" href="/dash_bw?reportType=internalIP&reportTime=today">
          <span class="icon32 icon-blue icon-briefcase-new"></span>
 	       <div>Assets</div>
-	       <div><%= Internalipstat.select(:destip).uniq.length %></div>
+	       <div><%= Internalipstat.select(:destip).uniq.group(:destip).having('sum(inbytes) > 0').length  %></div>
 	       <span class="notification">0</span>
       </a>
 				
