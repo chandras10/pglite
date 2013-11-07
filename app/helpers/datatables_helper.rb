@@ -28,4 +28,16 @@ module DatatablesHelper
     [criteria, terms]
 
   end
+
+  def device_tooltip(macid)
+    rec = Deviceinfo.where("macid = ?", macid)
+    if rec.empty?
+       return macid
+    end
+
+    macIDTooltip = @view.render :partial=> 'layouts/tooltip_device', :formats=>[:html], :locals => {:device => rec.first}
+    link_to(macid, {:action=> "device_details", :controller=> "reports", :device => macid}, 
+                   {:rel => "popover", :'data-content' => "#{macIDTooltip}", :'data-original-title' => "#{macid}" })
+  end
+
 end

@@ -28,9 +28,13 @@ jQuery ->
                    { mData: "device"},
                    { mData: "score", sClass: "right"},
                    { mData: "date"},
-                   { mData: "summary"}
-                 ]
-    .columnFilter
+                   { mData: "summary"}]
+    fnDrawCallback: ->
+      $('#deviceVulns').dataTable().$('a[rel=popover]').popover
+        trigger: 'hover'
+      .hover (e) ->
+        e.preventDefault()
+  .columnFilter
         aoColumns: [
                    { type: "text" },
                    { type: "text" },
@@ -38,6 +42,6 @@ jQuery ->
                    null,
                    { type: "text" }
                  ],
-        bUseColVis: true    
-    true
+        bUseColVis: true
+  true
 $('.ColVis_MasterButton').removeClass('ColVis_Button').addClass('DTTT_button')

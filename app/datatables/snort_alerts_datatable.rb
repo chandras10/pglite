@@ -35,9 +35,6 @@ private
         priority = "<span class='label'> #{alert.priority} </span>"
       end
 
-      srcmac = Deviceinfo.exists?(:macid => alert.srcmac) ? link_to(alert.srcmac, :action=> "device_details", :device => alert.srcmac) : alert.srcmac
-      dstmac = Deviceinfo.exists?(:macid => alert.dstmac) ? link_to(alert.dstmac, :action=> "device_details", :device => alert.dstmac) : alert.dstmac
-      
       snortIDLink = (!alert.message.nil? && alert.message.start_with?("ET")) ? "http://doc.emergingthreats.net/#{alert.sigid}" : "http://www.snort.org/search/sid/1-#{alert.sigid}"
 
       {
@@ -48,8 +45,8 @@ private
         protocol: h(alert.protocol),
         source: "#{alert.srcip}:#{alert.srcport}",
         destination: "#{alert.destip}:#{alert.destport}",
-        srcmac: srcmac,
-        dstmac: dstmac
+        srcmac: device_tooltip(alert.srcmac),
+        dstmac: device_tooltip(alert.dstmac)
       }
     end
   end

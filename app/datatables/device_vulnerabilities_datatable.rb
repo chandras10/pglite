@@ -27,12 +27,11 @@ private
       elsif score.between?(9,10) then labelClass += " label-important"
       end
       vulnScore = "<span class='label " + labelClass + "'>" + sprintf("%5.2f", vuln.score) + "</span>"
-      device = Deviceinfo.exists?(:macid => vuln.mac) ? link_to(vuln.mac, :action=> "device_details", :device => vuln.mac) : vuln.mac      
       vulnIDLink = "http://web.nvd.nist.gov/view/vuln/search-results?query=#{vuln.vuln_id}&search_type=all&cves=on"
 
       {
         id: link_to(vuln.vuln_id, vulnIDLink, :target => "_blank"),
-        device: device,
+        device: device_tooltip(vuln.mac),
         score: vulnScore,
         date: h(vuln.date),
         summary: h(vuln.summary)

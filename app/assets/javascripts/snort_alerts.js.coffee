@@ -32,7 +32,13 @@ jQuery ->
                    { mData: "source"},
                    { mData: "destination"},
                    { mData: "srcmac"},
-                   { mData: "dstmac"}
-                 ]      
-
+                   { mData: "dstmac"}]
+    fnDrawCallback: ->
+      $('#snortAlerts').dataTable().$('a[rel=popover]').popover
+        trigger: 'hover'
+        placement: 'left'
+      .hover (e) ->
+        e.preventDefault()
+  true
+      
   $('.ColVis_MasterButton').removeClass('ColVis_Button').addClass('DTTT_button')
