@@ -133,7 +133,7 @@ textarea {
 }
 body {
   margin: 0;
-  font-family: "Ubuntu", Helvetica, Arial, sans-serif;
+  font-family: 'Trebuchet MS', "Ubuntu", Helvetica, Arial, sans-serif;
   font-size: 13px;
   line-height: 18px;
   color: #555555;
@@ -362,7 +362,7 @@ h4,
 h5,
 h6 {
   margin: 0;
-  font-family: 'Karla', sans-serif;
+  font-family: 'Trebuchet MS', "Ubuntu", Helvetica, Arial, sans-serif;
   font-weight: bold;
   color: #317eac;
   text-rendering: optimizelegibility;
@@ -628,7 +628,7 @@ input,
 button,
 select,
 textarea {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Trebuchet MS', "Ubuntu", Helvetica, Arial, sans-serif;
 }
 label {
   display: block;
@@ -3016,7 +3016,7 @@ input[type="submit"].btn.btn-mini {
   float: left;
   display: block;
   padding: 8px 20px 12px;
-  margin-left: -20px;
+  margin-left: 50%;
   font-size: 20px;
   font-weight: 200;
   line-height: 1;
@@ -3084,7 +3084,7 @@ input[type="submit"].btn.btn-mini {
 }
 .navbar-search .search-query {
   padding: 4px 9px;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: 'Trebuchet MS', "Ubuntu", Helvetica, Arial, sans-serif;
   font-size: 13px;
   font-weight: normal;
   line-height: 1;
@@ -4202,7 +4202,7 @@ a.badge:hover {
   visibility: hidden;
 }
 .navbar,.top-block {
-  font-family: 'Karla', sans-serif;
+  font-family: 'Trebuchet MS', "Ubuntu", Helvetica, Arial, sans-serif;
 }
 .navbar .navbar-inner {
   background-color: #3f9fd9;
@@ -4239,7 +4239,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', e
   background-color: #cccccc;
 }
 div.subnav {
-  font-family: 'Karla', sans-serif;
+  font-family: 'Trebuchet MS', "Ubuntu", Helvetica, Arial, sans-serif;
 }
 .btn {
   background-color: #ffffff;
@@ -4451,6 +4451,6 @@ i[class^="icon-"] {
   visibility: hidden;
 }
 img.logo {
-    width: 10em;
+    width: 15em;
 }
 

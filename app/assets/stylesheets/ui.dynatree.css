@@ -3,7 +3,7 @@
  */
 ul.dynatree-container
 {
-	font-family: tahoma, arial, helvetica;
+	font-family: 'Trebuchet MS', "Ubuntu", Helvetica, Arial, sans-serif;
 	font-size: 10pt; /* font size should not be too big */
 	white-space: nowrap;
 	padding: 3px;

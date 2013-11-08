@@ -54,7 +54,7 @@
   text-align:left;
   padding:5px;
   font-size:11px;
-  font-family:Trebuchet MS;
+  font-family:'Trebuchet MS', "Ubuntu", Helvetica, Arial, sans-serif;
   font-weight:normal;
   color:#000000;
 }.CSSTableGenerator tr:last-child td{
@@ -74,7 +74,7 @@
   text-align:center;
   border-width:0px 0px 1px 1px;
   font-size:14px;
-  font-family:Trebuchet MS;
+  font-family:'Trebuchet MS', "Ubuntu", Helvetica, Arial, sans-serif;
   font-weight:bold;
   color:#ffffff;
 }
