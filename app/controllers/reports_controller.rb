@@ -10,6 +10,27 @@ class ReportsController < ApplicationController
     @deviceinfos = Deviceinfo.scoped
   end
 
+  def dash_inventory_asset_count
+    assetCount = Internalipstat.select(:destip).uniq.group(:destip).having('sum(inbytes) > 0').length
+    respond_to do |format|
+       format.json { render json: assetCount}
+    end    
+  end
+
+  def dash_inventory_alert_count
+    cnt = Alertdb.count
+    respond_to do |format|
+       format.json { render json: cnt}
+    end    
+  end
+
+  def dash_inventory_vuln_count
+    cnt = DviVuln.count
+    respond_to do |format|
+       format.json { render json: cnt}
+    end    
+  end
+
   def dash_inventory_bandwidth_stats
     internalIPStats = Internalipstat.joins(:deviceinfo).select('deviceclass, sum(inbytes) as inbytes, sum(outbytes) as outbytes').
                                       group(:deviceclass).where("timestamp > (CURRENT_TIMESTAMP - '1 month'::interval)")

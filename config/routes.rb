@@ -23,6 +23,10 @@ Pglite::Application.routes.draw do
   
   match '/dash_inventory', to: 'reports#dash_inventory'
   match '/dash_inventory_bandwidth_stats', to: 'reports#dash_inventory_bandwidth_stats'
+  match '/dash_inventory/assetCount', to: 'reports#dash_inventory_asset_count'
+  match '/dash_inventory/alertCount', to: 'reports#dash_inventory_alert_count'  
+  match '/dash_inventory/vulnCount', to: 'reports#dash_inventory_vuln_count'  
+
   match '/tbl_inventory', to: 'deviceinfos#index'
 
   match '/dash_bw', to: 'reports#dash_bw'
