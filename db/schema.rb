@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130701060100) do
+ActiveRecord::Schema.define(:version => 20131111105752) do
 
   create_table "alertdb", :id => false, :force => true do |t|
     t.datetime "timestamp"
@@ -30,12 +30,41 @@ ActiveRecord::Schema.define(:version => 20130701060100) do
     t.string   "message",   :limit => nil
   end
 
+  create_table "appidexternal", :id => false, :force => true do |t|
+    t.integer "appid",                  :null => false
+    t.string  "appname", :limit => nil
+  end
+
+  create_table "appidinternal", :id => false, :force => true do |t|
+    t.integer "appid",                  :null => false
+    t.string  "appname", :limit => nil
+  end
+
+  create_table "appipexternal", :id => false, :force => true do |t|
+    t.string  "iprange", :limit => nil,                :null => false
+    t.integer "mask",                                  :null => false
+    t.integer "appid"
+    t.integer "port",                   :default => 0
+  end
+
+  create_table "appipinternal", :id => false, :force => true do |t|
+    t.string  "iprange", :limit => nil,                :null => false
+    t.integer "mask",                                  :null => false
+    t.integer "appid"
+    t.integer "port",                   :default => 0
+  end
+
   create_table "application", :force => true do |t|
     t.string "vendor",   :limit => nil
     t.string "app_name", :limit => nil
     t.string "version",  :limit => nil
     t.string "revision", :limit => nil
     t.string "platform", :limit => nil
+  end
+
+  create_table "appregex", :id => false, :force => true do |t|
+    t.integer "appid",                :null => false
+    t.string  "regex", :limit => nil, :null => false
   end
 
   create_table "auth_devices", :id => false, :force => true do |t|
@@ -59,8 +88,24 @@ ActiveRecord::Schema.define(:version => 20130701060100) do
     t.string  "description", :limit => nil
   end
 
+  create_table "delayed_jobs", :force => true do |t|
+    t.integer  "priority",   :default => 0, :null => false
+    t.integer  "attempts",   :default => 0, :null => false
+    t.text     "handler",                   :null => false
+    t.text     "last_error"
+    t.datetime "run_at"
+    t.datetime "locked_at"
+    t.datetime "failed_at"
+    t.string   "locked_by"
+    t.string   "queue"
+    t.datetime "created_at",                :null => false
+    t.datetime "updated_at",                :null => false
+  end
+
+  add_index "delayed_jobs", ["priority", "run_at"], :name => "delayed_jobs_priority"
+
   create_table "deviceinfo", :id => false, :force => true do |t|
-    t.string   "macid",           :limit => nil,                                                  :null => false
+    t.string   "macid",           :limit => nil,                                                :null => false
     t.string   "username",        :limit => nil
     t.string   "groupname",       :limit => nil
     t.string   "location",        :limit => nil
@@ -73,9 +118,11 @@ ActiveRecord::Schema.define(:version => 20130701060100) do
     t.string   "ipaddr",          :limit => nil
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "authorized",                                                   :default => false
     t.integer  "auth_source"
     t.string   "devicename",      :limit => nil
+    t.string   "vendorname",      :limit => nil
+    t.string   "parentmacid",     :limit => nil
+    t.decimal  "dti",                            :precision => 4, :scale => 3, :default => 0.0
   end
 
   create_table "deviceinfos", :force => true do |t|
@@ -119,6 +166,114 @@ ActiveRecord::Schema.define(:version => 20130701060100) do
     t.string "version",     :limit => nil
   end
 
+  create_table "externalipstat", :id => false, :force => true do |t|
+    t.datetime "timestamp"
+    t.string   "deviceid",  :limit => 30
+    t.string   "destip",    :limit => nil
+    t.integer  "destport"
+    t.integer  "inbytes",   :limit => 8
+    t.integer  "outbytes",  :limit => 8
+    t.string   "cc",        :limit => 2,   :default => "--"
+  end
+
+  create_table "externalresourcestat", :id => false, :force => true do |t|
+    t.datetime "timestamp"
+    t.string   "deviceid",  :limit => 30
+    t.integer  "appid"
+    t.integer  "inbytes",   :limit => 8
+    t.integer  "outbytes",  :limit => 8
+  end
+
+  create_table "hlurlcatid", :id => false, :force => true do |t|
+    t.integer "id",                  :null => false
+    t.string  "name", :limit => nil
+  end
+
+  create_table "hlurlcatstat", :id => false, :force => true do |t|
+    t.datetime "timestamp"
+    t.string   "deviceid",  :limit => 30
+    t.integer  "id"
+    t.integer  "inbytes",   :limit => 8
+    t.integer  "outbytes",  :limit => 8
+  end
+
+  create_table "homenet", :id => false, :force => true do |t|
+    t.string "net", :limit => nil
+  end
+
+  create_table "hostnames", :id => false, :force => true do |t|
+    t.string  "ip_address", :limit => 100,                 :null => false
+    t.integer "host_type",  :limit => 2
+    t.string  "name",                      :default => "", :null => false
+  end
+
+  create_table "i7alert", :id => false, :force => true do |t|
+    t.datetime "timestamp"
+    t.integer  "id",                       :null => false
+    t.string   "srcmac",    :limit => nil, :null => false
+    t.string   "dstmac",    :limit => nil
+    t.integer  "proto"
+    t.string   "srcip",     :limit => nil
+    t.string   "dstip",     :limit => nil
+    t.integer  "srcport"
+    t.integer  "dstport"
+    t.string   "pcap",      :limit => nil
+    t.string   "message",   :limit => nil, :null => false
+  end
+
+  create_table "i7alertclassdef", :id => false, :force => true do |t|
+    t.integer "id",                         :null => false
+    t.string  "description", :limit => nil
+  end
+
+  create_table "i7alertdef", :id => false, :force => true do |t|
+    t.integer "id",                                           :null => false
+    t.integer "priority"
+    t.integer "classid"
+    t.string  "description", :limit => nil
+    t.boolean "active",                     :default => true
+  end
+
+  create_table "i7internalalert", :id => false, :force => true do |t|
+    t.datetime "timestamp"
+    t.integer  "id",                       :null => false
+    t.string   "srcmac",    :limit => nil, :null => false
+    t.string   "dstmac",    :limit => nil
+    t.integer  "proto"
+    t.string   "srcip",     :limit => nil
+    t.string   "dstip",     :limit => nil
+    t.integer  "srcport"
+    t.integer  "dstport"
+    t.string   "pcap",      :limit => nil
+    t.string   "message",   :limit => nil, :null => false
+  end
+
+  create_table "internalipstat", :id => false, :force => true do |t|
+    t.datetime "timestamp"
+    t.string   "deviceid",  :limit => 30
+    t.string   "destip",    :limit => nil
+    t.integer  "destport"
+    t.integer  "inbytes",   :limit => 8
+    t.integer  "outbytes",  :limit => 8
+  end
+
+  create_table "internalresourcestat", :id => false, :force => true do |t|
+    t.datetime "timestamp"
+    t.string   "deviceid",  :limit => 30
+    t.integer  "appid"
+    t.integer  "inbytes",   :limit => 8
+    t.integer  "outbytes",  :limit => 8
+  end
+
+  create_table "intincomingipstat", :id => false, :force => true do |t|
+    t.datetime "timestamp"
+    t.string   "deviceid",  :limit => 30
+    t.string   "destip",    :limit => nil
+    t.integer  "destport"
+    t.integer  "inbytes",   :limit => 8
+    t.integer  "outbytes",  :limit => 8
+  end
+
   create_table "ipstat", :id => false, :force => true do |t|
     t.datetime "timestamp"
     t.string   "deviceid",  :limit => 30
@@ -128,12 +283,36 @@ ActiveRecord::Schema.define(:version => 20130701060100) do
     t.integer  "outbytes"
   end
 
+  create_table "licenseinfo", :id => false, :force => true do |t|
+    t.datetime "lastupdatetime"
+    t.datetime "valid_until"
+  end
+
+  create_table "portmap", :id => false, :force => true do |t|
+    t.integer "port",                     :null => false
+    t.string  "shortname", :limit => nil
+    t.string  "longname",  :limit => nil
+  end
+
   create_table "product", :force => true do |t|
     t.string "vendor",     :limit => nil
     t.string "os_name",    :limit => nil
     t.string "os_version", :limit => nil
     t.string "revision",   :limit => nil
     t.string "arch",       :limit => nil
+  end
+
+  create_table "urlcatid", :id => false, :force => true do |t|
+    t.integer "id",                  :null => false
+    t.string  "name", :limit => nil
+  end
+
+  create_table "urlcatstat", :id => false, :force => true do |t|
+    t.datetime "timestamp"
+    t.string   "deviceid",  :limit => 30
+    t.integer  "id"
+    t.integer  "inbytes",   :limit => 8
+    t.integer  "outbytes",  :limit => 8
   end
 
   create_table "users", :force => true do |t|
@@ -148,9 +327,15 @@ ActiveRecord::Schema.define(:version => 20130701060100) do
   add_index "users", ["name"], :name => "index_users_on_name", :unique => true
   add_index "users", ["remember_token"], :name => "index_users_on_remember_token"
 
+  create_table "version", :id => false, :force => true do |t|
+    t.string   "version",     :limit => nil
+    t.datetime "create_time"
+  end
+
   create_table "vuln_app", :id => false, :force => true do |t|
-    t.string  "vuln_id", :limit => nil, :null => false
-    t.integer "app_id",                 :null => false
+    t.string  "vuln_id", :limit => nil
+    t.integer "app_id"
+    t.integer "prod_id"
   end
 
   create_table "vuln_product", :id => false, :force => true do |t|

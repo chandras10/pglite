@@ -31,7 +31,7 @@ ul.dynatree-container li
 	background-attachment: scroll;
 	background-color: transparent;
 	background-repeat: repeat-y;
-	background-image: url("vline.gif");
+	background-image: url("dynatree/vline.gif");
 	background-position: 0 0;
 	/*
 	background-image: url("icons_96x256.gif");

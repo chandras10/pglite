@@ -1,0 +1,94 @@
+#!/bin/sh
+USER=root
+if [ `id -u` -ne 0 ]; then
+        echo "Not starting/stopping $DESC, you are not root."
+        exit 0
+fi
+
+
+# Product install directory
+#PGLITE_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PGLITE_HOME=/usr/local/share/pgliteui
+ 
+# from rbenv
+if [ ! -d $PGLITE_HOME/.rbenv ]; then
+   echo -e "$PGLITE_HOME/.rbenv does not exist\n"
+   exit 1
+fi
+
+# Set up RBENV related variables
+export RBENV_ROOT=$PGLITE_HOME/.rbenv
+export PATH=$RBENV_ROOT/bin:$PATH
+eval "$(rbenv init -)" 2> /dev/null
+
+#
+# Ensure that the backend databases exist before bringing up the front-end app!
+#
+
+PGLITE_DB=/usr/local/var/pglite/deviceInfo.db
+
+#if [ ! -e $PGLITE_DB ]; then
+#   echo -e "Database - $PGLITE_DB is missing. Will create one..."
+#   sudo touch $PGLITE_DB; sudo sqlite3 $PGLITE_DB < createDB.txt ; sudo chmod 666  $PGLITE_DB
+#fi
+#
+
+NAME=pglite_ui
+DESC="Peregrine Guard - UI Application"
+PGLITE_PIDFILE=$PGLITE_HOME/tmp/pids/thin.pid
+
+case "$1" in
+
+  'start')
+    echo "Starting $DESC:"
+    thin start -c $PGLITE_HOME -d -p 3001 --ssl --ssl-verify --ssl-key-file $PGLITE_HOME/.ssl/server.key --ssl-cert-file $PGLITE_HOME/.ssl/server.crt
+    echo "$NAME started "
+    ruby $PGLITE_HOME/lib/background_job start
+    ;;
+
+  'stop')
+    ruby $PGLITE_HOME/lib/background_job stop
+    if [ -f $PGLITE_PIDFILE ]; then
+       PID=`cat $PGLITE_PIDFILE`
+    else
+       echo "No pid file found.  $NAME process may not be controllable from this script!"
+    fi
+    if [ -n "$PID" ] && ps -p ${PID} > /dev/null ; then
+     kill -9 ${PID}
+      bash $0 status
+      RETVAL=$?
+    else
+      echo "$NAME is not running"
+      RETVAL=1
+    fi
+    ;;
+
+  'status')
+    if [ -f $PGLITE_PIDFILE ]; then
+       PID=`cat $PGLITE_PIDFILE`
+    else
+       echo "No pid file found.  $NAME process may not be controllable from this script!"
+    fi
+
+    if [ -n "$PID" ] && ps -p ${PID} > /dev/null ; then
+      echo $NAME \(pids $PID\) is running
+      RETVAL=0
+    else
+      echo "$NAME is stopped"
+      RETVAL=1
+    fi
+    ;;
+
+  'restart')
+    ruby $PGLITE_HOME/lib/background_job restart
+    $0 stop && $0 start
+    RETVAL=$?
+    ;;
+
+  *)
+    echo "Usage: $0 { start | stop | status | restart }"
+    exit 1
+    ;;
+esac
+#echo ending $0 $$....
+exit 0;

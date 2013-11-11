@@ -236,36 +236,13 @@ skip_before_filter  :verify_authenticity_token
      end
 
      if (!params['disableids'].empty?)
-        disableI7Alerts(params['disableids'])
+        I7alertdef.update_all({:active => false}, "id IN (#{params['disableids']})")
+        Delayed::Job.enqueue I7alertJob.new(params['disableids'])
+        flash.now[:info] = "Some alerts have been disabled. DVI and/or DTI will be recalculated for devices which might have previously generated these disabled alerts..."
      end
      
      settings_menu
      render :settings_menu
-  end
-
-  private
-  def disableI7Alerts(ids)
-
-    if ids.nil? || ids.empty?
-       return
-    end
-    
-    I7alertdef.update_all({:active => false}, "id IN (#{ids})")
-
-    macIDs = I7alert.where("id IN (#{ids})").pluck('srcmac').uniq
-
-    if (macIDs.empty?)
-       return
-    end
-
-    #I7alert.update_all({:srcport => 999 }, "id IN (#{ids})")
-    #Deviceinfo.update_all({:updated_at => Time.now}, "macid IN ('" + macIDs.join("','") + "')")
-    I7alert.delete_all("id IN (#{ids})")
-    macIDs.each do |device|
-       ActiveRecord::Base.connection.execute("SELECT * FROM computeDVI('#{device}')")
-       ActiveRecord::Base.connection.execute("SELECT * FROM computeDTI('#{device}')")
-    end
-
   end
 
 end

@@ -49,3 +49,6 @@ gem 'jquery-ui-rails'
 #gem 'tokyocabinet', '~> 1.29.1'
 gem 'geoip', '1.3.0'
 gem 'iso_country_codes'
+
+gem 'delayed_job_active_record'
+gem 'daemon-spawn', '0.4.2'
