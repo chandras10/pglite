@@ -128,8 +128,8 @@ class ReportsController < ApplicationController
           if arrayData.nil? then
              arrayData = @hashResourceTotals[rec['resource']] = Array.new(2, 0)
           end
-          arrayData[0] += rec['inbytes']
-          arrayData[1] += rec['outbytes']
+          arrayData[1] += rec['inbytes'] # for Servers, inbytes === Upload from server to Device...
+          arrayData[0] += rec['outbytes'] # outbytes = Download from device to Server
 
           if (params[:device].nil?) then
              # Update the Hashmap holding total in/out bytes counters for each device (or client)
@@ -137,8 +137,8 @@ class ReportsController < ApplicationController
              if clientData.nil? then
                 clientData = @hashDeviceTotals[rec['client']] = {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
              end
-             clientData[:totals][0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
-             clientData[:totals][1] += rec['inbytes']
+             clientData[:totals][0] += rec['inbytes']
+             clientData[:totals][1] += rec['outbytes']
           end
 
        end # For each stat record...
@@ -235,16 +235,16 @@ class ReportsController < ApplicationController
        if arrayData.nil? then
           arrayData = @hashPortTotals[rec['service']] = Array.new(2, 0)
        end
-       arrayData[0] += rec['inbytes']
-       arrayData[1] += rec['outbytes']
+       arrayData[1] += rec['inbytes']
+       arrayData[0] += rec['outbytes']
 
        # Update the Hashmap holding total in/out bytes counters for each device (or client)
        clientData = @hashDeviceTotals[rec['client']]
        if clientData.nil? then
           clientData = @hashDeviceTotals[rec['client']] =  {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
        end
-       clientData[:totals][0] += rec['outbytes']  # for devices, OUT becomes IN and vice versa
-       clientData[:totals][1] += rec['inbytes']
+       clientData[:totals][0] += rec['inbytes']  
+       clientData[:totals][1] += rec['outbytes']
 
     end # For each Ipstat record...
   end
@@ -477,6 +477,30 @@ class ReportsController < ApplicationController
 
     respond_to do |format|
       format.json { render json: BandwidthDatatable.new(view_context, timeQueryString)}
+    end
+  end
+
+  def resolve_hosts
+    dnsResolver = Resolv::DNS.new
+    ipList = params['ipList'].split(',') if !params['ipList'].present? || [];
+
+    hostNames = []
+    ipList.each do |ip|
+      #
+      # Check if we have a IP address or a URL. Resolve only IPv4 addresses...
+      #
+      if (ip.match(/\d+{,3}\.\d+{,3}\.\d+{,3}\.\d+{,3}$/)) then
+         begin
+           hostNames << dnsResolver.getname(ip).to_s
+         rescue
+           hostNames << ip #In case of any exceptions, just return the IP itself ...
+         end
+      else
+         hostNames << ip
+      end
+    end
+    respond_to do |format|
+      format.json { render json: hostNames}
     end
   end
 

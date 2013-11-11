@@ -63,9 +63,8 @@ private
       devices = devices.where("macid ILIKE :search or username ILIKE :search or groupname ILIKE :search or 
                                location ILIKE :search or devicetype ILIKE :search or operatingsystem ILIKE :search or
                                deviceclass ILIKE :search or ipaddr ILIKE :search or devicename ILIKE :search or 
-                               auth_sources.description ILIKE :search or vendorname ILIKE :search or
-                               dvi = :isearch or dti = :isearch", 
-                               search: "%#{params[:sSearch]}%", isearch: params[:sSearch].to_f)
+                               auth_sources.description ILIKE :search or vendorname ILIKE :search", 
+                               search: "%#{params[:sSearch]}%")
     end
     devices
   end

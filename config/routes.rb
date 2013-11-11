@@ -55,6 +55,8 @@ Pglite::Application.routes.draw do
   match '/settings/alerts', to: 'settings#alerts', :via => :get
   match '/settings/alerts', to: 'settings#save_alerts', :via => :post
 
+  match '/resolve_hosts', to: 'reports#resolve_hosts'
+
   # Batch Reports
   match '/dvi_report', to:  'batch_reports#dvi_report'
 

@@ -1,47 +1,8 @@
 <%
-   hostNames = Hash.new
-   dnsResolver = Resolv::DNS.new
-   
-   case params['reportType']
-   when "internalIP"
-      Hostname.where("host_type = 2").each do |h|
-         hostNames[h.ip_address] = h.name
-      end
-   when "externalIP"
-      Hostname.where("host_type = 1").each do |h|
-         hostNames[h.ip_address] = h.name
-      end
-   when "total", nil    
-      Hostname.all.each do |h|
-         hostNames[h.ip_address] = h.name
-      end
-   end
-
    
    # Selecting the top 10 servers to display in the bandwidth line graph
    hashGraphTimeBasedTotals = Hash[@hashTimeIntervalData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
    hashGraphTimeBasedTotals.each do |i, arrayTotals|
-      if hostNames[i].nil? && ((params['reportType'] == "externalIP") || (params['reportType'] == "internalIP")) then 
-         hostname = `wbinfo --WINS-by-ip=#{i} | cut -f2`.strip if (params['reportType'] == "internalIP")
-         if hostname.nil? then
-            begin
-               hostname = dnsResolver.getname(i).to_s
-            rescue
-               #Ignore any exceptions for now...
-            end
-         end
-
-         if !hostname.nil? then
-            begin
-               Hostname.create(ip_address: i, host_type: ((params['reportType'] == "externalIP") ? 1 : 2), name: name)
-               hostNames[i] = hostname
-            rescue
-               #Ignore any exceptions for now...
-            end
-         end
-
-      end
-
       arrayTotals.map! {|e| e/$BW_MEASURE }
    end
 
@@ -97,21 +58,19 @@
                                  :header_link  => "#" }
          %>
          <div class="box-content">
-            <table class="table table-striped table-bordered bootstrap-datatable datatable">
+            <table id="serverListTable" class="table table-striped table-bordered bootstrap-datatable">
                <thead>
 	          <tr>
 	             <th>Server</th>
-		           <th><%= "Incoming #{bandwidth_label} " %></th>
-               <th><%= "Outgoing #{bandwidth_label} " %></th>
+		           <th><%= "Download #{bandwidth_label} " %></th>
+               <th><%= "Upload #{bandwidth_label} " %></th>
                <th><%= "Total    #{bandwidth_label} " %></th>
 	          </tr>
 	       </thead>   
 	       <tbody>
-               <% @hashResourceTotals.each do | resource, arrayTotals | 
-                     resourceName = hostNames[resource].nil? ? resource : hostNames[resource]
-                %>
+               <% @hashResourceTotals.each do | resource, arrayTotals |  %>
                      <tr>
-                        <td><%= link_to resourceName, params.merge({:action => "dash_bw_server", :resource => resource}) %></td>
+                        <td><%= link_to resource, params.merge({:action => "dash_bw_server", :resource => resource}) %></td>
                         <td><%= sprintf("%.2f", arrayTotals[0]/$BW_MEASURE) %></td>
                         <td><%= sprintf("%.2f", arrayTotals[1]/$BW_MEASURE) %></td>
                         <td><%= sprintf("%.2f", arrayTotals.reduce(:+)/$BW_MEASURE) %></td>
@@ -133,8 +92,8 @@
                <thead>
 	                <tr>
 	                   <th>Device</th>
-                     <th><%= "Incoming #{bandwidth_label} " %></th>
-                     <th><%= "Outgoing #{bandwidth_label} " %></th>
+                     <th><%= "Download #{bandwidth_label} " %></th>
+                     <th><%= "Upload #{bandwidth_label} " %></th>
                      <th><%= "Total    #{bandwidth_label} " %></th>
 	                </tr>
 	             </thead>   
@@ -227,6 +186,44 @@
 
        $("#reportType").val("<%= params['reportType'] || 'total' %>");
        $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
+
+       $('#serverListTable').dataTable({
+           "sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span12'i><'span12 center'p>>",
+           "bJQueryUI": true,
+          "sPaginationType": "bootstrap",
+          "oLanguage": {
+             "sSearch": "Search all columns: ",
+             "sLengthMenu": "_MENU_ records per page"
+          },
+          "fnDrawCallback": function(oSettings) {
+              //
+              //Resolve IP external hosts using DNS to show their hostnames.
+              //Make this call only for external IP addresses..
+
+              if (($('#reportType').val() != 'total') && ($('#reportType').val() != 'externalIP')) {
+                 return;
+              }
+
+              var nRows = oSettings._iDisplayLength;
+              var nNodes = $("#serverListTable tbody tr");
+              var ipArray = new Array();
+              if (nNodes.length <= 1) {
+                 return; //No Data...
+              }
+
+              for (var i=0; i<nRows;i++) {
+                  ipArray[i] = nNodes[i].cells[0].firstChild.textContent;
+              }
+              $.ajax({url: '/resolve_hosts?ipList='+ipArray}).done(
+                function(data) {
+                  for (var i=0; i < data.length; i++) {
+                    nNodes[i].cells[0].firstChild.textContent = data[i];
+                  }
+                }
+              );
+          }
+       });
+
 
        $("#reportTime").chosen().change(function() {
            if (this.value == "date_range") {

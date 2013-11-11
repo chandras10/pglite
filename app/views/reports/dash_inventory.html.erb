@@ -93,7 +93,11 @@
                     :locals => { :header_title => "Bandwidth Consumed (Past Month)",
                                  :header_link  => "/dash_bw" }
          %>
-         <div class="box-content">
+         <div class="box-content bandwidth_stats_box">
+            <div id="loading-indicator" style="display: none;">
+               <%= image_tag("ajax-loader-8.gif") %>
+            </div>
+
             <canvas id="bandwidth_stats" >[No canvas support]</canvas>
          </div> <!-- box-content -->
       </div> <!-- box span4 -->
@@ -154,6 +158,7 @@
 
    window.onload = function (){
 
+   $('.bandwidth_stats_box #loading-indicator').show();
    $.ajax({url: '/dash_inventory_bandwidth_stats.json'}).done(
       function(data) {
 
@@ -171,7 +176,7 @@
              tooltipArray = tooltipArray.concat(Labels);
          }
 
-
+         $('.bandwidth_stats_box #loading-indicator').hide();
          var hBar = new RGraph.Bar('bandwidth_stats', values);
          hBar.Set('grouping', 'grouped');
          hBar.Set('vmargin', 20);
