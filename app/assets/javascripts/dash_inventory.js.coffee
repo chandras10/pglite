@@ -7,7 +7,6 @@ GetAssetCount = ->
     data: {authenticity_token: AUTH_TOKEN}
     error: (jqXHR, textStatus, errorThrown) ->
       $('.assetCount #loading-indicator').hide()
-      alert("AJAX ERROR: Session might have expired. #{textStatus}")
     success: (data, textStatus, jqXHR) ->
       $('.assetCount #loading-indicator').hide()
       $('#inventoryAssetCount').show()
@@ -22,7 +21,6 @@ GetSnortAlertCount = ->
     data: {authenticity_token: AUTH_TOKEN}
     error: (jqXHR, textStatus, errorThrown) ->
       $('.alertCount #loading-indicator').hide()
-      alert("AJAX ERROR: Session might have expired. #{textStatus}")
     success: (data, textStatus, jqXHR) ->
       $('.alertCount #loading-indicator').hide()
       $('#inventoryAlertCount').show()
@@ -37,7 +35,6 @@ GetVulnCount = ->
     data: {authenticity_token: AUTH_TOKEN}
     error: (jqXHR, textStatus, errorThrown) ->
       $('.vulnCount #loading-indicator').hide()
-      alert("AJAX ERROR: Session might have expired. #{textStatus}")
     success: (data, textStatus, jqXHR) ->
       $('.vulnCount #loading-indicator').hide()
       $('#inventoryVulnCount').show()

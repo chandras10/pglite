@@ -9,10 +9,12 @@ class I7alertJob < Struct.new(:macids)
        return
     end
 
-    I7alert.delete_all("id IN (#{macids})")
-    macIDs.each do |device|
-       ActiveRecord::Base.connection.execute("SELECT * FROM computeDVI('#{device}')")
-       ActiveRecord::Base.connection.execute("SELECT * FROM computeDTI('#{device}')")
+    ActiveRecord::Base.transaction do
+      I7alert.delete_all("id IN (#{macids})")
+      macIDs.each do |device|
+        ActiveRecord::Base.connection.execute("SELECT * FROM computeDVI('#{device}')")
+        ActiveRecord::Base.connection.execute("SELECT * FROM computeDTI('#{device}')")
+      end
     end
 
   end
