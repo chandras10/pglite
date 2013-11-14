@@ -50,10 +50,13 @@ Pglite::Application.routes.draw do
   match '/policy', to: 'configuration#edit_policy', :via => :get
   match '/policy', to: 'configuration#save_policy', :via => :post
 
-  match '/settings', to: 'settings#settings_menu', :via => :get
-  match '/settings', to: 'settings#save_settings', :via => :post
-  match '/settings/alerts', to: 'settings#alerts', :via => :get
-  match '/settings/alerts', to: 'settings#save_alerts', :via => :post
+  #match '/settings', to: 'settings#settings_menu', :via => :get
+  #match '/settings', to: 'settings#save_settings', :via => :post
+  #match '/settings/alerts', to: 'settings#alerts', :via => :get
+  #match '/settings/alerts', to: 'settings#save_alerts', :via => :post
+  match '/settings', to: 'configuration#configuration', :via => :get
+  match '/settings/alerts', to: 'configuration#alerts', :via => :get
+  match '/settings/alerts', to: 'configuration#save_alerts', :via => :post
 
   match '/resolve_hosts', to: 'reports#resolve_hosts'
 

@@ -423,9 +423,45 @@ width:128px;
 background:url(../img/ajax-loaders/ajax-loader-6.gif);
 }
 
-.box-content .nav-tabs{
-margin-right:-10px;
-margin-left:-10px;
+.box-content .nav-tabs > li > a {
+background: #43A1DA;
+color: #FFFFFF;	
+border:1px solid;
+border-top-left-radius: 20px;
+border-top-right-radius: 20px;
+}
+
+.box-content .nav-tabs > .active > a {
+background: white !important;
+color: #555555 !important;
+}
+.box-content .nav-tabs > li > a {
+	width: 150px;
+	text-align: center;
+}
+
+.box-content  .tab-content  .tab-pane {
+	border: 1px solid;
+	border-radius: 3px;
+	padding: 10px;
+}
+
+.box-content > ul.nav-tabs {
+	margin-bottom: 2px;
+}
+
+.box-content > .form-actions {
+	margin-top: 2px;
+	margin-bottom: 2px;
+}
+
+.box-content > .tab-content > .tab-pane > .form-horizontal .control-label {
+	width: 250px;
+	padding-right: 10px;
+}
+
+.box-content >.tab-content > .tab-pane .checkbox {
+	padding-left: 0px;
 }
 #inputIcon{
 width:200px;

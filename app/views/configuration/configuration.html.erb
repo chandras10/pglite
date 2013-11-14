@@ -14,24 +14,34 @@
 		       <li><a href="#filesConfig-tab" data-toggle="tab">Files</a></li>
 	        </ul>
 	        
-	        <div id="tabs-container" class="tab-content">
+	        <div id="tabs-container" class="tab-content" style="overflow:visible">
 		       <div class="tab-pane active" id="peregrineConfig-tab">
 		       <form class="form-horizontal">
                   <div class="control-group">
-                     <label for="interfaceID" class="control-label">Network Interface to Monitor</label>
+                     <label for="interface" class="control-label">Network Interface to Monitor</label>
                      <div class="controls">
-                        <input type="text" value="" id="interfaceID" class="input-xlarge focused">
+                        <input type="text" value="" id="interface" class="input-xlarge focused">
                      </div>
                   </div>                   
                   <div class="control-group">
                      <label for="homeNets" class="control-label">Home Network</label>
+                     <% if !@homeNets.empty? then 
+                           firstHomeNet = @homeNets[0]
+                           @homeNets.shift
+                        end
+                      %>
                      <div class="controls" id="homeNets">
                         <table>
-                        <tr><td>
-                        <div class="input-append" id="firstHomeNet">
-                           <input type="text" value=""  class="input-xlarge focused">
-                           <button class="btn homeNetAddButton" type="button">Add</button>
-                        </div></td></tr>
+                        <tr><td><div class="input-append">
+                                  <input type="text" value="<%= (firstHomeNet.iprange + '/' + firstHomeNet.mask.to_s) if !firstHomeNet.nil? %>"  class="input-xlarge focused">
+                                  <button class="btn firstNetworkBtn" type="button">Add</button>
+                                </div></td></tr>
+                        <% @homeNets.each do |homeNet| %>
+                        <tr><td><div class="input-append">
+                                  <input type="text" value="<%= (homeNet.iprange + '/' + homeNet.mask.to_s) %>"  class="input-xlarge focused">
+                                  <button class="btn homeNetworkBtn" type="button">Remove</button>
+                                </div></td></tr>
+                        <% end %>
                         </table>
                      </div>
                   </div>                   
@@ -54,12 +64,12 @@
                            <div class="checker" id="httpProxyFlagDiv"><span><input type="checkbox" id="httpProxyFlag" style="opacity: 0;"></span></div> 
                            Enable
                         </label>
-						<span id="httpProxy" class="navbar-form navbar-left">
+						            <span id="httpProxy" class="navbar-form navbar-left">
                            <label for="httpProxyIP">IP: </label>
-						   <input type="text" value="IP..." id="httpProxyIP" class="input-xlarge focused inline" style="width: 150px" >
-						   <label for="httpProxyPort">Port: </label>
-						   <input type="text" value="Port..." id="httpProxyPort" class="input-xlarge focused" style="width: 40px">
-						</span>
+						               <input type="text" value="IP..." id="httpProxyIP" class="input-xlarge focused inline" style="width: 150px" >
+						               <label for="httpProxyPort">Port: </label>
+						               <input type="text" value="Port..." id="httpProxyPort" class="input-xlarge focused" style="width: 40px">
+						            </span>
                      </div>
                   </div>
                   <div class="control-group">
@@ -72,10 +82,10 @@
                      <label for="loggingLevel" class="control-label">Logging Level</label>
                      <div class="controls">
                         <select data-rel="chosen" id="loggingLevel">
-                           <option value="0">LOG_DEBUG</option>
-                           <option value="1">LOG_WARNING</option>
-                           <option value="2">LOG_ERROR</option>
-                           <option value="3">LOG_FATAL</option>
+                           <option value="LOG_DEBUG">LOG_DEBUG</option>
+                           <option value="LOG_WARNING">LOG_WARNING</option>
+                           <option value="LOG_ERROR">LOG_ERROR</option>
+                           <option value="LOG_FATAL">LOG_FATAL</option>
                         </select>
                      </div>
                   </div>                  
@@ -114,11 +124,11 @@
                                <td><input type="text" value="IP..." id="activeDirectoryServerIP" class="input-xlarge focused" style="width: 150px" ></td></tr>
                            <tr><td><label for="activeDirectoryUser">User Name: </label></td>
                                <td><input type="text" value="Login Name..." id="activeDirectoryUser" class="input-xlarge focused"></td></tr>
-						   <tr><td><label for="activeDirectoryPassword">Password: </label></td>
+                           <tr><td><label for="activeDirectoryPassword">Password: </label></td>
                                <td><input type="text" value="Login Password..." id="activeDirectoryPassword" class="input-xlarge focused"></td></tr>
-						   <tr><td><label for="activeDirectorySSID">SSID: </label></td>
+                           <tr><td><label for="activeDirectorySSID">SSID: </label></td>
                                <td><input type="text" value="SSID..." id="activeDirectorySSID" class="input-xlarge focused"></td></tr>
-						   <tr><td><label for="activeDirectoryPingInterval">Time Interval: </label></td>
+                           <tr><td><label for="activeDirectoryPingInterval">Time Interval: </label></td>
                                <td><input type="text" value="Ping Interval..." id="activeDirectoryPingInterval" class="input-xlarge focused"></td></tr>
                            </table>
                         </div>
@@ -133,11 +143,11 @@
                            <table id="enableLDAPAuth">
                            <tr><td><label for="ldapServerIP">LDAP Server: </label></td>
                                <td><input type="text" value="IP..." id="ldapServerIP" class="input-xlarge focused" style="width: 150px" ></td></tr>
-						   <tr><td><label for="ldapServerPort">LDAP Port: </label></td>
-						       <td><input type="text" value="Port..." id="ldapServerPort" class="input-xlarge focused" style="width: 40px"></td></tr>
+                           <tr><td><label for="ldapServerPort">LDAP Port: </label></td>
+                               <td><input type="text" value="Port..." id="ldapServerPort" class="input-xlarge focused" style="width: 40px"></td></tr>
                            <tr><td><label for="ldapBaseDN">Base DN: </label></td>
                                <td><input type="text" value="Base DN..." id="ldapBaseDN" class="input-xlarge focused"></td></tr>
-						   <tr><td><label for="ldapDomain">Domain: </label></td>
+                           <tr><td><label for="ldapDomain">Domain: </label></td>
                                <td><input type="text" value="Domain..." id="ldapDomain" class="input-xlarge focused"></td></tr>
                            </table>
                         </div>
@@ -239,7 +249,7 @@
          </div> <!-- End box-content -->
      </div> <!-- End box -->
 
-<%= javascript_include_tag "settings_menu.js.coffee" %>
+<%= javascript_include_tag "configuration.js.coffee" %>
 
 <script type="text/javascript">
 </script>

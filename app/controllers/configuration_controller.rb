@@ -11,8 +11,8 @@ class ConfigurationController < ApplicationController
   skip_before_filter  :verify_authenticity_token
 
   include SessionsHelper 
-  before_filter :signed_in_user, only: :edit_policy
-  before_filter :admin_user, only: :save_policy
+  before_filter :signed_in_user, only: [:edit_policy, :configuration, :alerts]
+  before_filter :admin_user, only: [:save_policy, :save_alerts]
 
   include REXML
 
@@ -274,6 +274,63 @@ class ConfigurationController < ApplicationController
     # redisplay the saved policy file
     #
     render :policy
+  end
+
+  def configuration
+    if File.exist?(Rails.configuration.peregrine_configfile) then
+       xmlfile = File.new(Rails.configuration.peregrine_configfile)
+       configHash = Hash.from_xml(xmlfile)
+    end
+
+    @homeNets = Appipinternal.where(appid: 1)
+
+    respond_to do |format|
+      format.html # configuration.html.erb
+      format.json { render json: (configHash.nil? ? {} : configHash)}
+    end    
+  end
+
+  def alerts
+    alertClasses = I7alertclassdef.select("id, description").
+                   where("id NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})")
+
+    alertDefArray = Array.new
+
+    alertClasses.each do | alertClass |
+    
+      alertDefs = I7alertdef.select("id, active, description").where("classid = ?", alertClass.id)
+      children = Array.new
+      alertDefs.each do |alert|
+         children << { title: "#{alert.id}: #{alert.description}", id: alert.id, select: alert.active}
+      end
+      alertDefArray << {
+            title: "<h6>#{alertClass.id}: #{alertClass.description}</h6>",
+            id: alertClass.id,
+            hideCheckbox: true,
+            unselectable: true,
+            children: children
+      }
+    end
+
+    respond_to do |format|
+       format.json { render json: alertDefArray}
+    end
+  end
+
+  def save_alerts
+
+     if (!params['activeids'].empty?) 
+        I7alertdef.update_all({:active => true}, "id IN (#{params['activeids']})")
+     end
+
+     if (!params['disableids'].empty?)
+        I7alertdef.update_all({:active => false}, "id IN (#{params['disableids']})")
+        Delayed::Job.enqueue I7alertJob.new(params['disableids'])
+        flash.now[:info] = "Some alerts have been disabled. DVI and/or DTI will be recalculated for devices which might have previously generated these disabled alerts..."
+     end
+     
+     settings_menu
+     render :settings_menu
   end
 
 end
