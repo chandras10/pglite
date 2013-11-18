@@ -55,6 +55,7 @@ Pglite::Application.routes.draw do
   #match '/settings/alerts', to: 'settings#alerts', :via => :get
   #match '/settings/alerts', to: 'settings#save_alerts', :via => :post
   match '/settings', to: 'configuration#configuration', :via => :get
+  match '/settings', to: 'configuration#save_configuration', :via => :post
   match '/settings/alerts', to: 'configuration#alerts', :via => :get
   match '/settings/alerts', to: 'configuration#save_alerts', :via => :post
 

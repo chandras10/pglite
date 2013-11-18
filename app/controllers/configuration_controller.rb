@@ -1,6 +1,7 @@
 require 'json'
 require 'builder'
 require 'rexml/document'
+require 'rexml/xpath'
 require 'nokogiri'
 
 class ConfigurationController < ApplicationController
@@ -12,7 +13,7 @@ class ConfigurationController < ApplicationController
 
   include SessionsHelper 
   before_filter :signed_in_user, only: [:edit_policy, :configuration, :alerts]
-  before_filter :admin_user, only: [:save_policy, :save_alerts]
+  before_filter :admin_user, only: [:save_policy, :save_configuration, :save_alerts]
 
   include REXML
 
@@ -288,6 +289,51 @@ class ConfigurationController < ApplicationController
       format.html # configuration.html.erb
       format.json { render json: (configHash.nil? ? {} : configHash)}
     end    
+  end
+
+  def save_configuration
+    ipv4_netmask_pattern = "(^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))\/((?:[0-9]|1[0-9]|2[0-9]|3[0-2]))$"
+    paramHash = JSON.parse(params['tabParms'])
+    pgConfig = paramHash['pgguard']
+    if (!pgConfig.nil?)
+       #xmlDoc = Document.new(paramHash['pgguard'].to_xml(:root => 'pgguard'))
+       #httpproxyElem = XPath.first(xmlDoc, '//httpproxy')
+       #httpproxyElem.add_attribute('enabled', XPath.first(httpproxyElem, '//enabled').text)
+       #httpproxyElem.delete_element('enabled')
+       #xmlDoc.elements.each('pgguard/httpproxy') do |e|
+       #   Rails.logger.debug e
+       #end
+
+       if !pgConfig['homeNets'].nil? 
+          homeNets = pgConfig['homeNets'].split(';')
+          ActiveRecord::Base.transaction do
+            Appipinternal.delete_all(:appid => 1)
+            homeNets.each do |homeNet|
+              matchData = /#{ipv4_netmask_pattern}/.match(homeNet)
+              Appipinternal.create(:iprange => matchData[1], :mask => matchData[2], :appid=>1, :port=>0)
+            end
+          end
+       end
+
+       if File.exist?(Rails.configuration.peregrine_configfile) then
+          xmlfile = File.new(Rails.configuration.peregrine_configfile)
+          configHash = Hash.from_xml(xmlfile) || Hash.new
+          if !configHash['pgguard'].nil?
+             configHash = configHash['pgguard']
+          end
+       else
+          configHash = Hash.new
+       end
+
+       #
+       # Combine the UI parameters (via HTTP request) with the configuration on the file.
+       #
+       configHash = configHash.merge(pgConfig)       
+       file = File.new(Rails.configuration.peregrine_configfile, "w")
+       file.write(configHash.to_xml(:root => 'pgguard'))
+       file.close
+
+    end
   end
 
   def alerts

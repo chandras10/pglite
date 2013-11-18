@@ -4,21 +4,21 @@
                     :locals => { :header_title =>  'Product Configuration',
                                  :header_link  => "#" }
          %>
-         <div class="box-content">    
+         <div class="box-content" id="tabs-container">    
             
-            <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-		       <li class="active"><a href="#peregrineConfig-tab" data-toggle="tab">Application</a></li>
-		       <li><a href="#pluginConfig-tab" data-toggle="tab">Integrations</a></li>
-		       <li><a href="#alertsConfig-tab" data-toggle="tab">Alerts</a></li>
-		       <li><a href="#emailConfig-tab" data-toggle="tab">Email</a></li>
-		       <li><a href="#filesConfig-tab" data-toggle="tab">Files</a></li>
+          <ul class="nav nav-tabs" data-tabs="tabs">
+		         <li class="active"><a href="#peregrineConfig-tab" data-toggle="tab">Application</a></li>
+		         <li><a href="#pluginConfig-tab" data-toggle="tab">Integrations</a></li>
+		         <li><a href="#alertsConfig-tab" data-toggle="tab">Alerts</a></li>
+		         <li><a href="#emailConfig-tab" data-toggle="tab">Email</a></li>
+		         <li><a href="#filesConfig-tab" data-toggle="tab">Files</a></li>
 	        </ul>
 	        
-	        <div id="tabs-container" class="tab-content" style="overflow:visible">
-		       <div class="tab-pane active" id="peregrineConfig-tab">
-		       <form class="form-horizontal">
+	        <div id="TabList" class="tab-content" style="overflow:visible">
+		         <div class="tab-pane active" id="peregrineConfig-tab">
+		            <form class="form-horizontal">
                   <div class="control-group">
-                     <label for="interface" class="control-label">Network Interface to Monitor</label>
+                     <label for="config[interface]" class="control-label">Network Interface to Monitor</label>
                      <div class="controls">
                         <input type="text" value="" id="interface" class="input-xlarge focused">
                      </div>
@@ -34,7 +34,7 @@
                         <table>
                         <tr><td><div class="input-append">
                                   <input type="text" value="<%= (firstHomeNet.iprange + '/' + firstHomeNet.mask.to_s) if !firstHomeNet.nil? %>"  class="input-xlarge focused">
-                                  <button class="btn firstNetworkBtn" type="button">Add</button>
+                                  <button class="btn firstHomeNetworkBtn" type="button">Add</button>
                                 </div></td></tr>
                         <% @homeNets.each do |homeNet| %>
                         <tr><td><div class="input-append">
@@ -66,9 +66,9 @@
                         </label>
 						            <span id="httpProxy" class="navbar-form navbar-left">
                            <label for="httpProxyIP">IP: </label>
-						               <input type="text" value="IP..." id="httpProxyIP" class="input-xlarge focused inline" style="width: 150px" >
+						               <input type="text" value="" id="httpProxyIP" class="input-xlarge focused inline" style="width: 150px" >
 						               <label for="httpProxyPort">Port: </label>
-						               <input type="text" value="Port..." id="httpProxyPort" class="input-xlarge focused" style="width: 40px">
+						               <input type="text" value="" id="httpProxyPort" class="input-xlarge focused" style="width: 40px">
 						            </span>
                      </div>
                   </div>
@@ -89,37 +89,37 @@
                         </select>
                      </div>
                   </div>                  
-               </form>                 
-               </div>
+                </form>                 
+             </div>
 
-               <div class="tab-pane" id="pluginConfig-tab">
-                  <form class="form-horizontal">
-                     <div class="control-group">
-                        <label for="enableEAS" class="control-label">Microsoft ActiveSync Authorization</label>
-                        <div class="controls form-inline" id="enableEAS">
-                           <label class="checkbox inline">
-                              <div class="checker" id="enableEASFlagDiv"><span><input type="checkbox" id="enableEASFlag" style="opacity: 0;"></span></div> 
-                              Enable
-                           </label>
-                        </div>
+             <div class="tab-pane" id="pluginConfig-tab">
+                <form class="form-horizontal">
+                  <div class="control-group">
+                     <label for="enableEAS" class="control-label">Microsoft ActiveSync</label>
+                     <div class="controls form-inline" id="enableEAS">
+                        <label class="checkbox inline">
+                           <div class="checker" id="enableEASFlagDiv"><span><input type="checkbox" id="enableEASFlag" style="opacity: 0;"></span></div> 
+                           Enable
+                        </label>
                      </div>
-                     <div class="control-group">
-                        <label for="enableMDM" class="control-label">Mobile Device Management (MDM)</label>
-                        <div class="controls form-inline" id="enableMDM">
-                           <label class="checkbox inline">
-                              <div class="checker" id="enableMDMFlagDiv"><span><input type="checkbox" id="enableMDMFlag" style="opacity: 0;"></span></div> 
-                              Enable
-                           </label>
-                        </div>
+                  </div>
+                  <div class="control-group">
+                     <label for="enableMDM" class="control-label">Mobile Device Management (MDM)</label>
+                     <div class="controls form-inline" id="enableMDM">
+                        <label class="checkbox inline">
+                           <div class="checker" id="enableMDMFlagDiv"><span><input type="checkbox" id="enableMDMFlag" style="opacity: 0;"></span></div> 
+                           Enable
+                        </label>
                      </div>
-                     <div class="control-group">
-                        <label for="enableActiveDirectory" class="control-label">Microsoft Active Directory</label>
-                        <div class="controls form-inline">
-                           <label class="checkbox inline">
-                              <div class="checker" id="enableADFlagDiv"><span><input type="checkbox" id="enableADFlag" style="opacity: 0;"></span></div> 
-                              Enable
-                           </label>
-                           <table id="enableAD">
+                  </div>
+                  <div class="control-group">
+                     <label for="enableActiveDirectory" class="control-label">Microsoft Active Directory</label>
+                     <div class="controls form-inline">
+                        <label class="checkbox inline">
+                           <div class="checker" id="enableADFlagDiv"><span><input type="checkbox" id="enableADFlag" style="opacity: 0;"></span></div> 
+                           Enable
+                        </label>
+                        <table id="enableAD">
                            <tr><td><label for="activeDirectoryServer">AD Server: </label></td>
                                <td><input type="text" value="IP..." id="activeDirectoryServerIP" class="input-xlarge focused" style="width: 150px" ></td></tr>
                            <tr><td><label for="activeDirectoryUser">User Name: </label></td>
@@ -130,17 +130,17 @@
                                <td><input type="text" value="SSID..." id="activeDirectorySSID" class="input-xlarge focused"></td></tr>
                            <tr><td><label for="activeDirectoryPingInterval">Time Interval: </label></td>
                                <td><input type="text" value="Ping Interval..." id="activeDirectoryPingInterval" class="input-xlarge focused"></td></tr>
-                           </table>
-                        </div>
+                        </table>
                      </div>
-                     <div class="control-group">
-                        <label for="enableLDAPAuthentication" class="control-label">LDAP Authentication</label>
-                        <div class="controls form-inline">
-                           <label class="checkbox inline">
-                              <div class="checker" id="enableLDAPAuthFlagDiv"><span><input type="checkbox" id="enableLDAPAuthFlag" style="opacity: 0;"></span></div> 
-                              Enable
-                           </label>
-                           <table id="enableLDAPAuth">
+                  </div>
+                  <div class="control-group">
+                     <label for="enableLDAPAuthentication" class="control-label">LDAP Authentication</label>
+                     <div class="controls form-inline">
+                        <label class="checkbox inline">
+                           <div class="checker" id="enableLDAPAuthFlagDiv"><span><input type="checkbox" id="enableLDAPAuthFlag" style="opacity: 0;"></span></div> 
+                           Enable
+                        </label>
+                        <table id="enableLDAPAuth">
                            <tr><td><label for="ldapServerIP">LDAP Server: </label></td>
                                <td><input type="text" value="IP..." id="ldapServerIP" class="input-xlarge focused" style="width: 150px" ></td></tr>
                            <tr><td><label for="ldapServerPort">LDAP Port: </label></td>
@@ -149,107 +149,110 @@
                                <td><input type="text" value="Base DN..." id="ldapBaseDN" class="input-xlarge focused"></td></tr>
                            <tr><td><label for="ldapDomain">Domain: </label></td>
                                <td><input type="text" value="Domain..." id="ldapDomain" class="input-xlarge focused"></td></tr>
-                           </table>
-                        </div>
+                        </table>
                      </div>
-                  </form>               
-               </div>
+                  </div>
+                </form>               
+             </div>
 
-               <div class="tab-pane" id="alertsConfig-tab">
-                  <form id="alertsConfig_form"  method="POST" action="/settings/alerts">
-                     <input type="hidden" name="disableids" id="disableids" value="" >
-                     <input type="hidden" name="activeids" id="activeids" value="" >
-                     <div id="alertsConfigTree"> </div>
-                  </form>
-               </div>
+             <div class="tab-pane" id="alertsConfig-tab">
+                <form id="alertsConfig_form"  method="POST" action="/settings/alerts">
+                   <input type="hidden" name="disableids" id="disableids" value="" >
+                   <input type="hidden" name="activeids" id="activeids" value="" >
+                   <div id="alertsConfigTree"> </div>
+                </form>
+             </div>
 
-               <div class="tab-pane" id="emailConfig-tab">
-                  <form class="form-horizontal">
-                     <div class="control-group">
-                        <span class="navbar-form navbar-left">
-                        <label for="smtpServer" class="control-label">SMTP Server</label>
-                        <div class="controls">
-                           <input type="text" value="" id="smtpServer" class="input-xlarge focused">
-                        </div>
-                        <label for="smtpPort" class="control-label">SMTP Port</label>
-                        <div class="controls">
-                           <input type="text" value="" id="smtpPort" class="input-xlarge focused" style="width: 40px">
-                        </div>
-                        </span>
-                     </div>
-                     <div class="control-group">
-                        <label for="smtpLogin" class="control-label">SMTP Login</label>
-                        <div class="controls">
-                           <input type="text" value="" id="smtpLogin" class="input-xlarge focused">
-                        </div>
-                     </div>  
-                     <div class="control-group">
-                        <label for="smtpPassword" class="control-label">SMTP Password</label>
-                        <div class="controls">
-                           <input type="text" value="" id="smtpPassword" class="input-xlarge focused">
-                        </div>
-                     </div>  
-                     <div class="control-group">
-                        <label for="emailTo" class="control-label">Send Mail TO:</label>
-                        <div class="controls">
-                           <input type="text" value="" id="emailTo" class="input-xlarge focused">
-                        </div>
-                     </div>  
-                     <div class="control-group">
-                        <label for="emailCc" class="control-label">Send Mail CC:</label>
-                        <div class="controls">
-                           <input type="text" value="" id="emailCc" class="input-xlarge focused">
-                        </div>
-                     </div>  
-                  </form>
-               </div>
-
-		       <div class="tab-pane" id="filesConfig-tab">
-                   <form class="form-horizontal">
-                      <div class="control-group">
-                         <label for="licenseFile" class="control-label">License</label>
+             <div class="tab-pane" id="emailConfig-tab">
+                <form class="form-horizontal" action="/settings" method="POST">
+                   <div class="control-group">
+                      <span class="navbar-form navbar-left">
+                         <label for="smtpServer" class="control-label">SMTP Server</label>
                          <div class="controls">
-                            <input type="text" disabled="" placeholder="License File Location here…" id="licenseFile" class="input-xlarge disabled">
+                            <input type="text" value="" id="smtpServer" class="input-xlarge focused">
                          </div>
-                      </div>       
-                      <div class="control-group">
-                         <label for="databasePath" class="control-label">Database Location</label>
+                         <label for="smtpPort" class="control-label">SMTP Port</label>
                          <div class="controls">
-                            <input type="text" disabled="" placeholder="Database Location here…" id="databasePath" class="input-xlarge disabled">
+                            <input type="text" value="" id="smtpPort" class="input-xlarge focused" style="width: 40px">
                          </div>
+                      </span>
+                   </div>
+                   <div class="control-group">
+                      <label for="smtpLogin" class="control-label">SMTP Login</label>
+                      <div class="controls">
+                         <input type="text" value="" id="smtpLogin" class="input-xlarge focused">
                       </div>
-                      <div class="control-group">
-                         <label for="deviceFingerprintFile" class="control-label">Device Fingerprints</label>
-                         <div class="controls">
-                            <input type="text" disabled="" placeholder="Device Fingerprint File Location here…" id="deviceFingerprintFile" class="input-xlarge disabled">
-                         </div>
-                      </div>       
-                      <div class="control-group">
-                         <label for="deviceVendorFile" class="control-label">Device Manufacturers</label>
-                         <div class="controls">
-                            <input type="text" disabled="" placeholder="Device Vendor File Location here…" id="deviceVendorFile" class="input-xlarge disabled">
-                         </div>
-                      </div>       
-                      <div class="control-group">
-                         <label for="policyFile" class="control-label">Access Control Policy</label>
-                         <div class="controls">
-                            <input type="text" disabled="" placeholder="Policy File Location here…" id="policyFile" class="input-xlarge disabled">
-                         </div>
-                      </div>       
-                   </form>
-               </div>
+                   </div>  
+                   <div class="control-group">
+                      <label for="smtpPassword" class="control-label">SMTP Password</label>
+                      <div class="controls">
+                         <input type="text" value="" id="smtpPassword" class="input-xlarge focused">
+                      </div>
+                   </div>  
+                   <div class="control-group">
+                      <label for="emailTo" class="control-label">Send Mail TO:</label>
+                      <div class="controls">
+                         <input type="text" value="" id="emailTo" class="input-xlarge focused">
+                      </div>
+                   </div>  
+                   <div class="control-group">
+                      <label for="emailCc" class="control-label">Send Mail CC:</label>
+                      <div class="controls">
+                         <input type="text" value="" id="emailCc" class="input-xlarge focused">
+                      </div>
+                    </div>  
+                </form>
+             </div>
 
-            </div> <!-- End tabs-container -->
+		         <div class="tab-pane" id="filesConfig-tab">
+                <form class="form-horizontal">
+                   <div class="control-group">
+                      <label for="licenseFile" class="control-label">License</label>
+                      <div class="controls">
+                         <input type="text" disabled="" placeholder="License File Location here…" id="licenseFile" class="input-xlarge disabled">
+                      </div>
+                   </div>       
+                   <div class="control-group">
+                      <label for="databasePath" class="control-label">Database Location</label>
+                      <div class="controls">
+                         <input type="text" disabled="" placeholder="Database Location here…" id="databasePath" class="input-xlarge disabled">
+                      </div>
+                   </div>
+                   <div class="control-group">
+                      <label for="deviceFingerprintFile" class="control-label">Device Fingerprints</label>
+                      <div class="controls">
+                         <input type="text" disabled="" placeholder="Device Fingerprint File Location here…" id="deviceFingerprintFile" class="input-xlarge disabled">
+                      </div>
+                   </div>       
+                   <div class="control-group">
+                      <label for="deviceVendorFile" class="control-label">Device Manufacturers</label>
+                      <div class="controls">
+                         <input type="text" disabled="" placeholder="Device Vendor File Location here…" id="deviceVendorFile" class="input-xlarge disabled">
+                      </div>
+                   </div>       
+                   <div class="control-group">
+                      <label for="policyFile" class="control-label">Access Control Policy</label>
+                      <div class="controls">
+                         <input type="text" disabled="" placeholder="Policy File Location here…" id="policyFile" class="input-xlarge disabled">
+                      </div>
+                   </div>       
+                </form>
+             </div>
+
+          </div> <!-- End tabs-container -->
 			
-			<div class="form-actions">
-               <button class="btn btn-primary" onclick="sendPGConfigData()">Save changes</button>
-               <button type="reset" class="btn">Cancel</button>
-            </div>
+			    <div class="form-actions">
+             <form action="/settings" method="POST">
+                <input type="hidden" id="tabParms" name="tabParms" value="" >
+                <button id="SaveChangesBtn" class="btn btn-primary">Save Changes</button>
+                <button id="CancelBtn" type="reset" class="btn">Cancel</button>
+             </form>
+          </div>
 
          </div> <!-- End box-content -->
-     </div> <!-- End box -->
-
-<%= javascript_include_tag "configuration.js.coffee" %>
+</div> <!-- id_content -->
 
 <script type="text/javascript">
 </script>
+
+<%= javascript_include_tag "configuration.js.coffee" %>
