@@ -40,6 +40,24 @@ loadConfiguration = ->
             $('#ldapBaseDN').val(pgConfig.authentication.ldap.baseDN)
             $('#ldapDomain').val(pgConfig.authentication.ldap.domain)
             $('#enableLDAPAuth').show()
+      adPlugin = data.ad_plugin
+      if (typeof adPlugin != 'undefined')
+         $('#enableADFlag').parent().toggleClass('checked')
+         $('#activeDirectoryServerIP').val(adPlugin.ip)
+         $('#activeDirectoryUser').val(adPlugin.username)
+         $('#activeDirectoryPassword').val(adPlugin.password)
+         $('#activeDirectorySSID').val(adPlugin.ssid)
+         $('#activeDirectoryPingInterval').val(adPlugin.polltime)
+         $('#enableAD').show()
+      if (typeof pgConfig.authentication != 'undefined')
+         ldapAuth = pgConfig.authentication.ldap
+         if (typeof ldapAuth != 'undefined')
+           $('#ldapServerIP').val(ldapAuth.ip)
+           $('#ldapServerPort').val(ldapAuth.port)
+           $('#ldapBaseDN').val(ldapAuth.base)
+           $('#ldapDomain').val(ldapAuth.domain)
+           $('#enableLDAPAuthFlag').parent().toggleClass('checked')
+           $('#enableLDAPAuth').show()
       #
       # Files Tab
       #
@@ -65,16 +83,54 @@ saveApplicationConfig = ->
   $('input[type=text]', '#homeNets').each( ->
      homeNet = $(this).val().replace(/\s/g, "") 
      if !isBlank(homeNet) && ipv4_pattern.test(homeNet)
-           pgConfig.homeNets += homeNet + ';'
+       pgConfig.homeNets += homeNet + ';'
   )
   $('#tabParms').val(JSON.stringify(data))
 
 savePluginConfig = ->
   data = {}
   pgConfig = data.pgguard = {}
-  pgConfig.easAuthorizationEnabled = ($('#enableEASFlag').parent().attr('class') == 'checked')
-  pgConfig.enableMDMInterface = ($('#enableMDMFlag').parent().attr('class') == 'checked')
+  pgConfig.easAuthorizationEnabled = $('#enableEASFlag').is(':checked')
+  pgConfig.enableMDMInterface = $('#enableMDMFlag').is(':checked')
+  #
+  # AD Plugin configuration
+  #
+  if $('#enableADFlag').is(':checked')
+     adPlugin = data.ad_plugin = {}
+     adPlugin.ip = $('#activeDirectoryServerIP').val()
+     adPlugin.username = $('#activeDirectoryUser').val()
+     adPlugin.password = $('#activeDirectoryPassword').val()
+     adPlugin.ssid = $('#activeDirectorySSID').val()
+     adPlugin.polltime = $('#activeDirectoryPingInterval').val()
+  #
+  # LDAP Authentication
+  #  
+  if $('#enableLDAPAuthFlag').is(':checked')
+     pgConfig.authentication = {}
+     ldapAuth = pgConfig.authentication.ldap = {}
+     ldapAuth.ip = $('#ldapServerIP').val()
+     ldapAuth.port = $('#ldapServerPort').val()
+     ldapAuth.base = $('#ldapBaseDN').val()
+     ldapAuth.domain = $('#ldapDomain').val()
   $('#tabParms').val(JSON.stringify(data))
+
+saveAlerts = ->
+  activateAlerts = []
+  disabledAlerts = []
+  dict = $("#alertsConfigTree").dynatree("getTree").toDict()
+  for i of dict
+    classDef = dict[i]
+    unless typeof classDef.children is "undefined"
+      for j of classDef.children
+        c = classDef.children[j]
+        unless c.select
+          disabledAlerts.push c.id
+        else
+          activateAlerts.push c.id
+  $("#disableids").val disabledAlerts.toString()
+  $("#activeids").val activateAlerts.toString()
+  $("#alertsConfig_form").submit()
+  false
 
 jQuery ->
   loadConfiguration()
@@ -120,6 +176,8 @@ jQuery ->
         saveApplicationConfig()
      else if activeTab is 'pluginConfig-tab'
         savePluginConfig()
+     else if activeTab is 'alertsConfig-tab'
+        saveAlerts()
   $('.form-horizontal').parsley
      listeners:
        onFieldError: (elem, constraints, parsleyField) ->

@@ -285,6 +285,13 @@ class ConfigurationController < ApplicationController
 
     @homeNets = Appipinternal.where(appid: 1)
 
+    if File.exist?(Rails.configuration.peregrine_adconfigfile) then
+       xmlfile = File.new(Rails.configuration.peregrine_adconfigfile)
+       configHash = Hash.new if configHash.nil?
+       adPluginHash = Hash.from_xml(xmlfile)
+       configHash["ad_plugin"] = adPluginHash["i7"]["server"]
+    end
+    
     respond_to do |format|
       format.html # configuration.html.erb
       format.json { render json: (configHash.nil? ? {} : configHash)}
@@ -333,7 +340,31 @@ class ConfigurationController < ApplicationController
        file.write(configHash.to_xml(:root => 'pgguard'))
        file.close
 
+    end # pg configuration?
+
+    adPluginConfig = paramHash['ad_plugin']
+    if (!adPluginConfig.nil?)
+       if File.exist?(Rails.configuration.peregrine_adconfigfile) then
+          xmlfile = File.new(Rails.configuration.peregrine_adconfigfile)
+          pluginHash = Hash.from_xml(xmlfile) || Hash.new
+          if !pluginHash['i7'].nil?
+             if !pluginHash['i7']['server'].nil?
+                serverHash = pluginHash['i7']['server']
+             else
+                serverHash = Hash.new
+             end
+          else
+             serverHash = Hash.new
+          end
+       else
+          serverHash = Hash.new
+       end
+       pluginHash['i7']['server'] = serverHash.merge(adPluginConfig)       
+       file = File.new(Rails.configuration.peregrine_adconfigfile, "w")
+       file.write(pluginHash['i7'].to_xml(:root => 'i7'))
+       file.close
     end
+
   end
 
   def alerts
@@ -372,11 +403,11 @@ class ConfigurationController < ApplicationController
      if (!params['disableids'].empty?)
         I7alertdef.update_all({:active => false}, "id IN (#{params['disableids']})")
         Delayed::Job.enqueue I7alertJob.new(params['disableids'])
-        flash.now[:info] = "Some alerts have been disabled. DVI and/or DTI will be recalculated for devices which might have previously generated these disabled alerts..."
+        redirect_to "/settings", notice: "Some alerts have been disabled. DVI and/or DTI will be recalculated for devices which might have previously generated these disabled alerts..."
+        return
      end
-     
-     settings_menu
-     render :settings_menu
+    
+     redirect_to "/settings"
   end
 
 end
