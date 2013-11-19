@@ -64,7 +64,7 @@ saveApplicationConfig = ->
   pgConfig.homeNets = ''
   $('input[type=text]', '#homeNets').each( ->
      homeNet = $(this).val().replace(/\s/g, "") 
-     if (!isBlank(homeNet) && ipv4_pattern.test(homeNet))
+     if !isBlank(homeNet) && ipv4_pattern.test(homeNet)
            pgConfig.homeNets += homeNet + ';'
   )
   $('#tabParms').val(JSON.stringify(data))
@@ -92,11 +92,15 @@ jQuery ->
      $('#enableLDAPAuth').toggle(this.checked)
   $('.firstHomeNetworkBtn').click ->
      rowElem = $(this).closest('tr')
-     newHomeNet = rowElem.clone(true)
+     newHomeNet = rowElem.clone(false)
+     $('input', newHomeNet).parsley('validate')
+     $('input', newHomeNet).val('')
+     $('button', newHomeNet).removeClass('firstHomeNetworkBtn').addClass('homeNetworkBtn').text('Remove')
      $(newHomeNet).appendTo(rowElem.parent())
   $('.homeNetworkBtn').text('Remove')
-  $('.homeNetworkBtn').click ->
+  $('.homeNetworkBtn').live('click', ->
      $(this).closest('tr').remove()
+  )
   $("#alertsConfigTree").dynatree
      debugLevel: 0,
      title: "Peregrine Alerts Configuration",
@@ -116,4 +120,12 @@ jQuery ->
         saveApplicationConfig()
      else if activeTab is 'pluginConfig-tab'
         savePluginConfig()
+  $('.form-horizontal').parsley
+     listeners:
+       onFieldError: (elem, constraints, parsleyField) ->
+         $(elem).closest('.control-group').addClass('error')
+         false
+       onFieldSuccess: (elem, constraints, parsleyField) ->
+         $(elem).closest('.control-group').removeClass('error')
+         false
   true 
