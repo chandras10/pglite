@@ -380,7 +380,16 @@ class ConfigurationController < ApplicationController
        end
     end
     
-    redirect_to "/settings", notice: "Saved the configuration changes"
+    if paramHash['restart'] == true
+       result, msg = restartPeregrineBackend
+       if (result == true) then
+          redirect_to "/settings", notice: "Saved the configuration changes. Restart succeeded."
+       else
+          redirect_to "/settings", :flash => {:error => "Saved the configuration changes. Restart failed - #{msg}"}
+       end
+    else
+       redirect_to "/settings", notice: "Saved the configuration changes."
+    end
 
   end
 
@@ -426,5 +435,75 @@ class ConfigurationController < ApplicationController
     
      redirect_to "/settings"
   end
+
+  private
+    BACKEND_EXE = "/usr/local/bin/pgguard -daemon 2>&1"
+    SERVICE_NAME = "pgguard"
+    NUM_RETRIES = 3 # number of retries to attempt while starting the backend process.
+    SLEEP_INTERVAL = 5 # Number of seconds to wait between retries
+
+    def startPeregrineBackend
+      #
+      # Start the backend application. This function will make a few attempts to start the process before giving up.
+      #
+      result = false
+      NUM_RETRIES.times do 
+        system("#{BACKEND_EXE}")
+        result=$?.success?
+        return false, "ERROR: Command: '#{BACKEND_EXE}' failed. Missing executable or malformed command?" if (result == false)
+
+        sleep(SLEEP_INTERVAL)
+      
+        output = %x(service #{SERVICE_NAME} status 2>&1)
+        result =$?.success?
+        return false, "ERROR: #{output}" if (result == false)
+      
+        return true, "" if (output =~ /started/)
+      end # do loop for retrying...
+
+      return result, (result == true) ? "" : "ERROR: Failed to start the backend process. Please check the system logs for more information"
+
+    end #startPeregrineBackend()
+
+    def stopPeregrineBackend
+      output = %x(service #{SERVICE_NAME} status 2>&1)
+      result =$?.success?
+      return false, "ERROR: #{output}" if (result == false)
+
+      matchDef = /\D*(\d+)\D*/.match(output)
+      if matchDef.nil? || matchDef[1].nil? then
+        return false, "ERROR: Unable to find the process id (pid) for service - #{SERVICE_NAME}"
+      end
+     
+      processID = matchDef[1].to_i
+      output=%x(kill -s TERM #{processID} 2>&1)
+      result =$?.success?
+      if (result == false)
+        return false, "ERROR: #{output}"
+      else
+        sleep(SLEEP_INTERVAL)
+        %x(kill -9 #{processID}) # Issue a SIGKILL just to ensure the process does indeed terminate.
+      end
+
+      return true, ""
+    end
+
+    def restartPeregrineBackend
+      output = %x(service #{SERVICE_NAME} status 2>&1)
+      result =$?.success?
+      return false, "ERROR: #{output}" if (result == false)
+
+      # if the backend isnt running, just start it and quit.
+      if (output =~ /stopped/) then
+        return startPeregrineBackend
+      end
+
+      result, output = stopPeregrineBackend
+      return result, output if (result == false)
+     
+      return startPeregrineBackend
+
+    end
+
 
 end

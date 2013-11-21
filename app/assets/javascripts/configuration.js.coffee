@@ -63,7 +63,7 @@ loadConfiguration = ->
       $('#deviceVendorFile').val(pgConfig.vendorfile)
       $('#policyFile').val(pgConfig.policy)
 
-saveApplicationConfig = ->
+saveApplicationConfig = (restartFlag) ->
   data = {}
   pgConfig = data.pgguard = {}
   pgConfig.interface = $('#interface').val()
@@ -81,9 +81,10 @@ saveApplicationConfig = ->
      if !isBlank(homeNet) && ipv4_pattern.test(homeNet)
        pgConfig.homeNets += homeNet + ';'
   )
+  data.restart = restartFlag
   $('#tabParms').val(JSON.stringify(data))
 
-savePluginConfig = ->
+savePluginConfig = (restartFlag) ->
   data = {}
   pgConfig = data.pgguard = {}
   pgConfig.easAuthorizationEnabled = $('#enableEASFlag').parent().attr('class') == 'checked'
@@ -112,9 +113,10 @@ savePluginConfig = ->
      ldapAuth.domain = $('#ldapDomain').val()
   else
      pgConfig.authentication = null
+  data.restart = restartFlag
   $('#tabParms').val(JSON.stringify(data))
 
-saveAlerts = ->
+saveAlerts = (restartFlag) ->
   activateAlerts = []
   disabledAlerts = []
   dict = $("#alertsConfigTree").dynatree("getTree").toDict()
@@ -131,14 +133,14 @@ saveAlerts = ->
   $("#activeids").val activateAlerts.toString()
   $("#alertsConfig_form").submit()
 
-saveConfiguration = (restart) ->
+saveConfiguration = (restartFlag) ->
   activeTab = $('#TabList').find('.tab-pane.active').attr('id')
   if activeTab is 'peregrineConfig-tab'
-    saveApplicationConfig()
+    saveApplicationConfig(restartFlag)
   else if activeTab is 'pluginConfig-tab'
-    savePluginConfig()
+    savePluginConfig(restartFlag)
   else if activeTab is 'alertsConfig-tab'
-    saveAlerts()
+    saveAlerts(restartFlag)
     return false # Abort form submission for this tab. The data is saved to the database instead of config files via AJAX call.
   $('#SaveChangesBtn').closest('form').submit() #Explicitly submitting the form here since we just call noty() in the main SubmitBtn's routine.
   
