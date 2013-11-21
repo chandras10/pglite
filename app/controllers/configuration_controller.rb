@@ -380,15 +380,22 @@ class ConfigurationController < ApplicationController
        end
     end
     
+    if (!pgConfig['authentication'].nil? && !pgConfig['authentication']['ldap'].nil? && (Pglite.config.authentication != "ActiveDirectory")) ||
+       (pgConfig['authentication'].nil? && (Pglite.config.authentication != "Local"))
+        uiRestartNotice = " UI has to be restarted..."
+    else
+        uiRestartNotice = ""
+    end
+
     if paramHash['restart'] == true
        result, msg = restartPeregrineBackend
        if (result == true) then
-          redirect_to "/settings", notice: "Saved the configuration changes. Restart succeeded."
+          redirect_to "/settings", notice: "Saved the configuration changes. Restart succeeded. #{uiRestartNotice}"
        else
-          redirect_to "/settings", :flash => {:error => "Saved the configuration changes. Restart failed - #{msg}"}
+          redirect_to "/settings", :flash => {:error => "Saved the configuration changes. Restart failed - #{msg} #{uiRestartNotice}"}
        end
     else
-       redirect_to "/settings", notice: "Saved the configuration changes."
+       redirect_to "/settings", notice: "Saved the configuration changes. #{uiRestartNotice}"
     end
 
   end
