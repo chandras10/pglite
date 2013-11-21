@@ -1,7 +1,7 @@
 class AutocompleteTagsController < ApplicationController
 
 	def usernames
-       if current_user && Rails.application.config.authentication == "ActiveDirectory"
+       if current_user && Pglite.config.authentication == "ActiveDirectory"
           users = current_user.listUsers
        end
 	   
@@ -18,7 +18,7 @@ class AutocompleteTagsController < ApplicationController
 	end
 
 	def groupnames
-       if current_user && Rails.application.config.authentication == "ActiveDirectory"
+       if current_user && Pglite.config.authentication == "ActiveDirectory"
           users = current_user.listUsers
        end
 	   

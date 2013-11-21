@@ -5,7 +5,7 @@ class SessionsController < ApplicationController
 
    def create
 
-      if Rails.application.config.authentication == "ActiveDirectory"
+      if Pglite.config.authentication == "ActiveDirectory"
          user = ActiveDirectoryUser.authenticate(params[:session][:name].downcase, params[:session][:password])
       else 
          user = User.find_by_name(params[:session][:name].downcase)

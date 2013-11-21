@@ -18,8 +18,9 @@ loadConfiguration = ->
       $('#interface').val(pgConfig.interface)
       $('#probeInterval').val(pgConfig.probeInterval)
       $('#updateInterval').val(pgConfig.statUpdateInterval)
-      if (typeof pgConfig.httpproxy != 'undefined') && (pgConfig.httpproxy.enabled == true)
+      if (typeof pgConfig.httpproxy isnt "undefined") and (pgConfig.httpproxy.enabled is "true")
          $('#httpProxyFlag').parent().toggleClass('checked')
+         $('#httpProxyFlag').prop('checked', true)
          $('#httpProxyIP').val(pgConfig.httpproxy.ip)
          $('#httpProxyPort').val(pgConfig.httpproxy.port)
          $('#httpProxy').show()
@@ -28,40 +29,35 @@ loadConfiguration = ->
       #
       # Integrations Tab
       #
-      if (typeof pgConfig.easAuthorizationEnabled != 'undefined') && (pgConfig.easAuthorizationEnabled != false)
+      if (typeof pgConfig.easAuthorizationEnabled isnt "undefined") and (pgConfig.easAuthorizationEnabled is "true")      
+         $('#enableEASFlag').prop('checked', true)
          $('#enableEASFlag').parent().toggleClass('checked')
-      if (typeof pgConfig.enableMDMInterface != 'undefined') && (pgConfig.enableMDMInterface != false)
-         $('#enableMDMFlag').parent().toggleClass('checked')
-      if (typeof pgConfig.authentication != 'undefined')
-         if (typeof pgConfig.authentication.ldap)
+      if (typeof pgConfig.enableMDMInterface isnt "undefined") and (pgConfig.enableMDMInterface is "true")      
+         $('#enableMDMFlag').prop('checked', true)
+         $('#enableMDMFlag').parent().toggleClass('checked')         
+      if (typeof pgConfig.authentication isnt "undefined" and pgConfig.authentication?)
+         if (typeof pgConfig.authentication.ldap isnt "undefined")
             $('#enableLDAPAuthFlag').parent().toggleClass('checked')
-            $('#ldapServerIP').val(pgConfig.authentication.ldap.server)
+            $('#enableLDAPAuthFlag').prop('checked', true)
+            $('#ldapServerIP').val(pgConfig.authentication.ldap.ip)
             $('#ldapServerPort').val(pgConfig.authentication.ldap.port)
-            $('#ldapBaseDN').val(pgConfig.authentication.ldap.baseDN)
+            $('#ldapBaseDN').val(pgConfig.authentication.ldap.base)
             $('#ldapDomain').val(pgConfig.authentication.ldap.domain)
             $('#enableLDAPAuth').show()
       adPlugin = data.ad_plugin
-      if (typeof adPlugin != 'undefined')
+      if (typeof adPlugin isnt "undefined")
          $('#enableADFlag').parent().toggleClass('checked')
+         $('#enableADFlag').prop('checked', true)
          $('#activeDirectoryServerIP').val(adPlugin.ip)
          $('#activeDirectoryUser').val(adPlugin.username)
          $('#activeDirectoryPassword').val(adPlugin.password)
          $('#activeDirectorySSID').val(adPlugin.ssid)
          $('#activeDirectoryPingInterval').val(adPlugin.polltime)
          $('#enableAD').show()
-      if (typeof pgConfig.authentication != 'undefined')
-         ldapAuth = pgConfig.authentication.ldap
-         if (typeof ldapAuth != 'undefined')
-           $('#ldapServerIP').val(ldapAuth.ip)
-           $('#ldapServerPort').val(ldapAuth.port)
-           $('#ldapBaseDN').val(ldapAuth.base)
-           $('#ldapDomain').val(ldapAuth.domain)
-           $('#enableLDAPAuthFlag').parent().toggleClass('checked')
-           $('#enableLDAPAuth').show()
       #
       # Files Tab
       #
-      $('#licenseFile').val(pgConfig['licensefile'])
+      $('#licenseFile').val(pgConfig.licensefile)
       $('#databasePath').val(pgConfig.dbpath)
       $('#deviceFingerprintFile').val(pgConfig.fingerprintdb)
       $('#deviceVendorFile').val(pgConfig.vendorfile)
@@ -90,8 +86,8 @@ saveApplicationConfig = ->
 savePluginConfig = ->
   data = {}
   pgConfig = data.pgguard = {}
-  pgConfig.easAuthorizationEnabled = $('#enableEASFlag').is(':checked')
-  pgConfig.enableMDMInterface = $('#enableMDMFlag').is(':checked')
+  pgConfig.easAuthorizationEnabled = $('#enableEASFlag').parent().attr('class') == 'checked'
+  pgConfig.enableMDMInterface = $('#enableMDMFlag').parent().attr('class') == 'checked'
   #
   # AD Plugin configuration
   #
@@ -102,6 +98,8 @@ savePluginConfig = ->
      adPlugin.password = $('#activeDirectoryPassword').val()
      adPlugin.ssid = $('#activeDirectorySSID').val()
      adPlugin.polltime = $('#activeDirectoryPingInterval').val()
+  else
+     data.ad_plugin = null
   #
   # LDAP Authentication
   #  
@@ -112,6 +110,8 @@ savePluginConfig = ->
      ldapAuth.port = $('#ldapServerPort').val()
      ldapAuth.base = $('#ldapBaseDN').val()
      ldapAuth.domain = $('#ldapDomain').val()
+  else
+     pgConfig.authentication = null
   $('#tabParms').val(JSON.stringify(data))
 
 saveAlerts = ->
@@ -130,22 +130,30 @@ saveAlerts = ->
   $("#disableids").val disabledAlerts.toString()
   $("#activeids").val activateAlerts.toString()
   $("#alertsConfig_form").submit()
-  false
+
+saveConfiguration = (restart) ->
+  activeTab = $('#TabList').find('.tab-pane.active').attr('id')
+  if activeTab is 'peregrineConfig-tab'
+    saveApplicationConfig()
+  else if activeTab is 'pluginConfig-tab'
+    savePluginConfig()
+  else if activeTab is 'alertsConfig-tab'
+    saveAlerts()
+    return false # Abort form submission for this tab. The data is saved to the database instead of config files via AJAX call.
+  $('#SaveChangesBtn').closest('form').submit() #Explicitly submitting the form here since we just call noty() in the main SubmitBtn's routine.
+  
 
 jQuery ->
-  loadConfiguration()
   $('#httpProxy').hide()
   $('#enableAD').hide()
   $('#enableLDAPAuth').hide()
+  loadConfiguration()
   $('input[type=checkbox]').change ->
+     $(this).toggle(this.checked)
      $(this).parent().toggleClass('checked')
-  $('#httpProxyFlag').change ->
-     $('#httpProxy').toggle(this.checked)
+     sibling = $(this).closest('label').next()
+     $(sibling).toggle($(this).is(':checked')) unless typeof sibling is "undefined"
   $('#loggingLevel').chosen({disable_search_threshold: 10})
-  $('#enableADFlag').change ->
-     $('#enableAD').toggle(this.checked)
-  $('#enableLDAPAuthFlag').change ->
-     $('#enableLDAPAuth').toggle(this.checked)
   $('.firstHomeNetworkBtn').click ->
      rowElem = $(this).closest('tr')
      newHomeNet = rowElem.clone(false)
@@ -171,13 +179,31 @@ jQuery ->
        url: '/settings/alerts.json'
      }
   $('#SaveChangesBtn').click ->
-     activeTab = $('#TabList').find('.tab-pane.active').attr('id')
-     if activeTab is 'peregrineConfig-tab'
-        saveApplicationConfig()
-     else if activeTab is 'pluginConfig-tab'
-        savePluginConfig()
-     else if activeTab is 'alertsConfig-tab'
-        saveAlerts()
+     noty
+       layout: 'center'
+       text: "<legend>Save the configuration changes?</legend>"
+       timeout: 0
+       type: 'confirm'
+       modal: true
+       buttons: [
+         type: 'btn btn-danger'
+         text: 'Save & Restart'
+         click: ($noty) ->
+           $noty.close()
+           saveConfiguration(true)
+        ,
+         type: 'btn btn-primary'
+         text: 'Save'
+         click: ($noty) ->
+           $noty.close()
+           saveConfiguration(false)
+        ,
+         type: 'btn'
+         text: 'Cancel'
+         click: ($noty) ->
+           $noty.close()
+       ]
+      false
   $('.form-horizontal').parsley
      listeners:
        onFieldError: (elem, constraints, parsleyField) ->

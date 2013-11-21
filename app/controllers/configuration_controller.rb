@@ -6,6 +6,9 @@ require 'nokogiri'
 
 class ConfigurationController < ApplicationController
 
+  KEY_TO_LOGIN = Digest::SHA256.hexdigest("peregrineGuard User")
+  KEY_TO_PASSWD = Digest::SHA256.hexdigest("peregrineGuard Password")
+
   # This skip filter(below) is needed. Else, a warning - 'Cant verify CSRF token authenticity'
   # gets generated while saving the PG policy. This will lead to deleting the user cookie
   # in applicationcontroller and then a crash while trying to save the policy.
@@ -337,13 +340,16 @@ class ConfigurationController < ApplicationController
        #
        configHash = configHash.merge(pgConfig)       
        file = File.new(Rails.configuration.peregrine_configfile, "w")
-       file.write(configHash.to_xml(:root => 'pgguard'))
+       file.write(configHash.to_xml({:root => 'pgguard', :skip_types => true}))
        file.close
 
     end # pg configuration?
 
     adPluginConfig = paramHash['ad_plugin']
     if (!adPluginConfig.nil?)
+       if (!adPluginConfig['password'].nil? && !adPluginConfig['password'].empty?)
+          adPluginConfig['password'] = Encryptor.encrypt(adPluginConfig['password'], :key => KEY_TO_PASSWD)
+       end
        if File.exist?(Rails.configuration.peregrine_adconfigfile) then
           xmlfile = File.new(Rails.configuration.peregrine_adconfigfile)
           pluginHash = Hash.from_xml(xmlfile) || Hash.new
@@ -357,13 +363,24 @@ class ConfigurationController < ApplicationController
              serverHash = Hash.new
           end
        else
+          pluginHash = Hash.new
+          pluginHash['i7'] = Hash.new
           serverHash = Hash.new
        end
        pluginHash['i7']['server'] = serverHash.merge(adPluginConfig)       
        file = File.new(Rails.configuration.peregrine_adconfigfile, "w")
-       file.write(pluginHash['i7'].to_xml(:root => 'i7'))
+       file.write(pluginHash['i7'].to_xml({:root => 'i7', :skip_types => true}))
        file.close
+    else
+       #
+       # If the user disables this plugin, then just remove the configuration file since it is not needed.
+       # It will be created again with the user provided parameters when this plugin is enabled in the UI.
+       if File.exist?(Rails.configuration.peregrine_adconfigfile) then
+          File.delete(Rails.configuration.peregrine_adconfigfile)
+       end
     end
+    
+    redirect_to "/settings", notice: "Saved the configuration changes"
 
   end
 

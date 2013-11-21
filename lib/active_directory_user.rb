@@ -71,12 +71,18 @@ class ActiveDirectoryUser
   # we find the LDAP entry for the user and initialize with it. Returns nil
   # on failure.
 
-  def self.ldapConnect(login, pass) 
-    @config = YAML.load_file("/usr/local/etc/pgguard/ldap.yml")
+  def self.ldapConnect(login, pass)
 
-    return nil if login.empty? or pass.empty? or (@config.nil? or @config["server"].nil?)
+    return nil if !File.exist?(Rails.configuration.peregrine_configfile)
+    xmlFile = File.new(Rails.configuration.peregrine_configfile)
 
-    conn = Net::LDAP.new :host => @config['server'],
+    configHash = Hash.from_xml(xmlFile) || Hash.new
+    return nil if configHash['pgguard'].nil? || configHash['pgguard']['authentication'].nil? || configHash['pgguard']['authentication']['ldap'].nil?
+
+    @config = configHash['pgguard']['authentication']['ldap']
+    return nil if login.empty? or pass.empty? or  @config["ip"].nil?
+
+    conn = Net::LDAP.new :host => @config['ip'],
                          :port => @config['port'],
                          #:encryption => :simple_tls,
                          :base => @config['base'],
@@ -152,7 +158,9 @@ class ActiveDirectoryUser
                          Encryptor.decrypt(@passwd, :key => KEY_TO_PASSWD))
       if conn and conn.bind 
 
-         config = YAML.load_file("/usr/local/etc/pgguard/ldap.yml")
+         xmlFile = File.new(Rails.configuration.peregrine_configfile)
+         configHash = Hash.from_xml(xmlFile)
+         config = configHash['pgguard']['authentication']['ldap']
 
          filter = Net::LDAP::Filter.eq("objectCategory", "organizationalPerson")
          conn.search(:base => config['base'], :filter => filter) do |entry|

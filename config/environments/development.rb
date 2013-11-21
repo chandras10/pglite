@@ -37,7 +37,6 @@ Pglite::Application.configure do
 
   # Peregrine Guard Policy file residence
   config.peregrine_policyfile = "/usr/local/etc/pgguard/policy.xml"
-  config.peregrine_ldapfile = "/usr/local/etc/pgguard/ldap.yml"
   config.peregrine_configfile = "/usr/local/etc/pgguard/pgguardconfig.xml"
   config.peregrine_policyfile_dtd = "/usr/local/etc/pgguard/pg_policy.dtd"
   config.peregrine_pgguard_pidfile = "/usr/local/var/pgguard/pgguard.pid"
@@ -50,5 +49,13 @@ Pglite::Application.configure do
   config.ssl_port = 3001
   config.force_ssl = true
 
-
+  if File.exist?(config.peregrine_configfile)
+     xmlfile = File.new(config.peregrine_configfile)
+     configHash = Hash.from_xml(xmlfile)
+     if (configHash['pgguard'].nil? || configHash['pgguard']['authentication'].nil? || configHash['pgguard']['authentication']['ldap'].nil?)
+        config.authentication = "Local"
+     else
+        config.authentication = "ActiveDirectory"
+     end
+  end
 end

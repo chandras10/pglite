@@ -4,7 +4,7 @@ module SessionsHelper
    def sign_in(user)
          # Save cookie, only if user says "Remember me" on the login screen. 
          # else, save it only for this session.
-         if Rails.application.config.authentication == "ActiveDirectory"
+         if Pglite.config.authentication == "ActiveDirectory"
                session[:remember_user] = user
          else # local database
             if (params[:session] && params[:session][:remember_me])
@@ -38,7 +38,7 @@ module SessionsHelper
    end
 
    def current_user
-         if Rails.application.config.authentication == "ActiveDirectory"
+         if Pglite.config.authentication == "ActiveDirectory"
             #
             # Check if the user is already logged in.
             # We save only a few parameters for a logged in user rather than the entire LDAP record.
