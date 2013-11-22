@@ -323,6 +323,7 @@ class ConfigurationController < ApplicationController
               Appipinternal.create(:iprange => matchData[1], :mask => matchData[2], :appid=>1, :port=>0)
             end
           end
+          pgConfig.delete('homeNets') # No need to add this to config file after saving it to the database table.
        end
 
        if File.exist?(Rails.configuration.peregrine_configfile) then
@@ -379,23 +380,27 @@ class ConfigurationController < ApplicationController
           File.delete(Rails.configuration.peregrine_adconfigfile)
        end
     end
-    
-    if (!pgConfig['authentication'].nil? && !pgConfig['authentication']['ldap'].nil? && (Pglite.config.authentication != "ActiveDirectory")) ||
-       (pgConfig['authentication'].nil? && (Pglite.config.authentication != "Local"))
-        uiRestartNotice = " UI has to be restarted..."
-    else
-        uiRestartNotice = ""
-    end
 
+    #
+    # If the Login Authentication method changes, then log out the current user so that on the relogin, the changed auth method is employed.
+    #
+    if !pgConfig['authentication'].nil? then
+       if !pgConfig['authentication']['ldap'].nil? && (Pglite.config.authentication != "ActiveDirectory") ||
+          (pgConfig['authentication'].empty? && (Pglite.config.authentication != "Local"))
+          Pglite.config.authentication = pgConfig['authentication'].empty? ? "Local" : "ActiveDirectory"
+          sign_out
+       end
+    end
+    
     if paramHash['restart'] == true
        result, msg = restartPeregrineBackend
        if (result == true) then
-          redirect_to "/settings", notice: "Saved the configuration changes. Restart succeeded. #{uiRestartNotice}"
+          redirect_to "/settings", notice: "Saved the configuration changes. Restart succeeded."
        else
-          redirect_to "/settings", :flash => {:error => "Saved the configuration changes. Restart failed - #{msg} #{uiRestartNotice}"}
+          redirect_to "/settings", :flash => {:error => "Saved the configuration changes. Restart failed - #{msg}"}
        end
     else
-       redirect_to "/settings", notice: "Saved the configuration changes. #{uiRestartNotice}"
+       redirect_to "/settings", notice: "Saved the configuration changes."
     end
 
   end

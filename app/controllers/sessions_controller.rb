@@ -18,7 +18,11 @@ class SessionsController < ApplicationController
    	  	sign_in user
    	  	redirect_back_or root_path
    	else
-   	  	flash.now[:error] = 'Invalid name/password combination'
+         if Pglite.config.authentication == "ActiveDirectory"
+            flash.now[:error] = 'AD Server rejected the login. Please re-enter the user/password.'
+         else
+   	  	   flash.now[:error] = 'Invalid name/password combination'
+         end
    	  	render 'new'
    	end
    end

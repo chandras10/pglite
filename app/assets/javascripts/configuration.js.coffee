@@ -112,7 +112,7 @@ savePluginConfig = (restartFlag) ->
      ldapAuth.base = $('#ldapBaseDN').val()
      ldapAuth.domain = $('#ldapDomain').val()
   else
-     pgConfig.authentication = null
+     pgConfig.authentication = ''
   data.restart = restartFlag
   $('#tabParms').val(JSON.stringify(data))
 
@@ -134,7 +134,7 @@ saveAlerts = (restartFlag) ->
   $("#alertsConfig_form").submit()
 
 saveConfiguration = (restartFlag) ->
-  activeTab = $('#TabList').find('.tab-pane.active').attr('id')
+  activeTab = $('#TabList').find('.tab-pane:visible').attr('id')
   if activeTab is 'peregrineConfig-tab'
     saveApplicationConfig(restartFlag)
   else if activeTab is 'pluginConfig-tab'
@@ -142,15 +142,20 @@ saveConfiguration = (restartFlag) ->
   else if activeTab is 'alertsConfig-tab'
     saveAlerts(restartFlag)
     return false # Abort form submission for this tab. The data is saved to the database instead of config files via AJAX call.
+  else if activeTab is 'emailConfig-tab'
+    return false
+  else if activeTab is 'filesConfig-tab'
+    return false
   $('#SaveChangesBtn').closest('form').submit() #Explicitly submitting the form here since we just call noty() in the main SubmitBtn's routine.
   $('#dialog-modal').dialog
+     resizable: false
      dialogClass: 'no-close'
      title: (if restartFlag then 'Restarting...' else 'Saving...')
      height:100
      modal: true
-  
 
 jQuery ->
+  $('#tabs-container').tabs()
   $('#dialog-modal').hide()
   $('#httpProxy').hide()
   $('#enableAD').hide()
@@ -187,9 +192,11 @@ jQuery ->
        url: '/settings/alerts.json'
      }
   $('#SaveChangesBtn').click ->
+     activeTab = $('#TabList').find('.tab-pane:visible').attr('id')
+     activeTabName = $('a[href="#' + activeTab + '"]').text()
      noty
        layout: 'center'
-       text: "<legend>Save the configuration changes?</legend>"
+       text: "<legend>Save <b style='color: #43A1DA'> " + activeTabName + "</b> settings?</legend> Please note that only the active tab is saved. <br><br><br>"
        timeout: 0
        type: 'confirm'
        modal: true
