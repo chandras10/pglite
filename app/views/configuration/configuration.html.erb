@@ -1,3 +1,8 @@
+<style>
+.no-close .ui-dialog-titlebar-close {
+   display: none;
+}
+</style>
 <div id="content" class="span10">
      <div class="box span10">
          <%= render :partial => 'layouts/title_bar_icons',
@@ -5,6 +10,9 @@
                                  :header_link  => "#" }
          %>
          <div class="box-content" id="tabs-container">    
+          <div id="dialog-modal" title="Restarting..." style="display:none">
+             <%= image_tag("saving_config.gif", {:width => '90%'}) %>
+          </div>
             
           <ul class="nav nav-tabs" data-tabs="tabs">
 		         <li class="active"><a href="#peregrineConfig-tab" data-toggle="tab">Application</a></li>

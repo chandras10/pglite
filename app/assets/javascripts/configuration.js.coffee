@@ -143,9 +143,15 @@ saveConfiguration = (restartFlag) ->
     saveAlerts(restartFlag)
     return false # Abort form submission for this tab. The data is saved to the database instead of config files via AJAX call.
   $('#SaveChangesBtn').closest('form').submit() #Explicitly submitting the form here since we just call noty() in the main SubmitBtn's routine.
+  $('#dialog-modal').dialog
+     dialogClass: 'no-close'
+     title: (if restartFlag then 'Restarting...' else 'Saving...')
+     height:100
+     modal: true
   
 
 jQuery ->
+  $('#dialog-modal').hide()
   $('#httpProxy').hide()
   $('#enableAD').hide()
   $('#enableLDAPAuth').hide()
