@@ -55,6 +55,17 @@ loadConfiguration = ->
          $('#activeDirectoryPingInterval').val(adPlugin.polltime)
          $('#enableAD').show()
       #
+      # Email Tab
+      #
+      if (typeof pgConfig.email isnt "undefined") and (typeof pgConfig.email.smtp isnt "undefined")
+         smtpSettings = pgConfig.email.smtp
+         $('#smtpServer').val(smtpSettings.ip)
+         $('#smtpPort').val(smtpSettings.port)
+         $('#smtpLogin').val(smtpSettings.login)
+         $('#smtpPassword').val(smtpSettings.password)
+         $('#emailTo').val(pgConfig.email.to)
+         $('#emailCc').val(pgConfig.email.cc)
+      #
       # Files Tab
       #
       $('#licenseFile').val(pgConfig.licensefile)
@@ -133,6 +144,20 @@ saveAlerts = (restartFlag) ->
   $("#activeids").val activateAlerts.toString()
   $("#alertsConfig_form").submit()
 
+saveEmailConfig = (restartFlag) ->
+  data = {}
+  pgConfig = data.pgguard = {}
+  pgConfig.email = {}
+  smtpConfig = pgConfig.email.smtp = {}
+  smtpConfig.ip = $('#smtpServer').val()
+  smtpConfig.port = $('#smtpPort').val()
+  smtpConfig.login = $('#smtpLogin').val()
+  smtpConfig.password = $('#smtpPassword').val()
+  pgConfig.email.to = $('#emailTo').val()
+  pgConfig.email.cc = $('#emailCc').val()
+  data.restart = restartFlag
+  $('#tabParms').val(JSON.stringify(data))
+
 saveConfiguration = (restartFlag) ->
   activeTab = $('#TabList').find('.tab-pane:visible').attr('id')
   if activeTab is 'peregrineConfig-tab'
@@ -143,7 +168,7 @@ saveConfiguration = (restartFlag) ->
     saveAlerts(restartFlag)
     return false # Abort form submission for this tab. The data is saved to the database instead of config files via AJAX call.
   else if activeTab is 'emailConfig-tab'
-    return false
+    saveEmailConfig(restartFlag)
   else if activeTab is 'filesConfig-tab'
     return false
   $('#SaveChangesBtn').closest('form').submit() #Explicitly submitting the form here since we just call noty() in the main SubmitBtn's routine.
