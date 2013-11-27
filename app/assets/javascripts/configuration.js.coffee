@@ -3,6 +3,18 @@ ipv4_pattern = new RegExp("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:
 isBlank = (str) ->
   (!str || /^\s*$/.test(str))
 
+helpText = {}
+loadContextHelp = ->
+  helpText['homeNet'] =
+    title: 'Home Network'
+    text: "This is the network(s) that is accessed from the BYODs. IP addresses belonging to this network(s) are labelled as 'internal' for 
+           purpose of statistical/security analysis. IPs not in this range are considered 
+           'external' or part of the WAN."
+  helpText['byodNet'] =
+    title: 'BYOD Network'
+    text: "BYODs connecting to the wireless network will be assigned IP from this address pool. 
+           Peregrine will mainly monitor the traffic from/to this network. "
+
 loadConfiguration = ->
   $.ajax '/settings.json',
     dataType: 'json'
@@ -15,9 +27,11 @@ loadConfiguration = ->
       #
       # Application Tab
       #
+      $('#homeNetHelp').attr('data-original-title', helpText['homeNet'].title)
+      $('#homeNetHelp').attr('data-content', helpText['homeNet'].text)      
+      $('#byodNetHelp').attr('data-original-title', helpText['byodNet'].title)
+      $('#byodNetHelp').attr('data-content', helpText['byodNet'].text)      
       $('#interface').val(pgConfig.interface)
-      $('#probeInterval').val(pgConfig.probeInterval)
-      $('#updateInterval').val(pgConfig.statUpdateInterval)
       if (typeof pgConfig.httpproxy isnt "undefined") and (pgConfig.httpproxy.enabled is "true")
          $('#httpProxyFlag').parent().toggleClass('checked')
          $('#httpProxyFlag').prop('checked', true)
@@ -65,21 +79,11 @@ loadConfiguration = ->
          $('#smtpPassword').val(smtpSettings.password)
          $('#emailTo').val(pgConfig.email.to)
          $('#emailCc').val(pgConfig.email.cc)
-      #
-      # Files Tab
-      #
-      $('#licenseFile').val(pgConfig.licensefile)
-      $('#databasePath').val(pgConfig.dbpath)
-      $('#deviceFingerprintFile').val(pgConfig.fingerprintdb)
-      $('#deviceVendorFile').val(pgConfig.vendorfile)
-      $('#policyFile').val(pgConfig.policy)
 
 saveApplicationConfig = (restartFlag) ->
   data = {}
   pgConfig = data.pgguard = {}
   pgConfig.interface = $('#interface').val()
-  pgConfig.probeInterval = $('#probeInterval').val()
-  pgConfig.statUpdateInterval = $('#updateInterval').val()
   pgConfig.httpproxy = {}
   pgConfig.httpproxy.enabled = ($('#httpProxyFlag').parent().attr('class') == 'checked')
   pgConfig.httpproxy.ip = $('#httpProxyIP').val()
@@ -91,6 +95,12 @@ saveApplicationConfig = (restartFlag) ->
      homeNet = $(this).val().replace(/\s/g, "") 
      if !isBlank(homeNet) && ipv4_pattern.test(homeNet)
        pgConfig.homeNets += homeNet + ';'
+  )
+  pgConfig.byodNets = ''
+  $('input[type=text]', '#byodNets').each( ->
+     byodNet = $(this).val().replace(/\s/g, "") 
+     if !isBlank(byodNet) && ipv4_pattern.test(byodNet)
+       pgConfig.byodNets += byodNet + ';'
   )
   data.restart = restartFlag
   $('#tabParms').val(JSON.stringify(data))
@@ -169,8 +179,6 @@ saveConfiguration = (restartFlag) ->
     return false # Abort form submission for this tab. The data is saved to the database instead of config files via AJAX call.
   else if activeTab is 'emailConfig-tab'
     saveEmailConfig(restartFlag)
-  else if activeTab is 'filesConfig-tab'
-    return false
   $('#SaveChangesBtn').closest('form').submit() #Explicitly submitting the form here since we just call noty() in the main SubmitBtn's routine.
   $('#dialog-modal').dialog
      resizable: false
@@ -185,6 +193,7 @@ jQuery ->
   $('#httpProxy').hide()
   $('#enableAD').hide()
   $('#enableLDAPAuth').hide()
+  loadContextHelp()
   loadConfiguration()
   $('input[type=checkbox]').change ->
      $(this).toggle(this.checked)
@@ -201,6 +210,17 @@ jQuery ->
      $(newHomeNet).appendTo(rowElem.parent())
   $('.homeNetworkBtn').text('Remove')
   $('.homeNetworkBtn').live('click', ->
+     $(this).closest('tr').remove()
+  )
+  $('.firstByodNetworkBtn').click ->
+     rowElem = $(this).closest('tr')
+     newByodNet = rowElem.clone(false)
+     $('input', newByodNet).parsley('validate')
+     $('input', newByodNet).val('')
+     $('button', newByodNet).removeClass('firstByodNetworkBtn').addClass('byodNetworkBtn').text('Remove')
+     $(newByodNet).appendTo(rowElem.parent())
+  $('.byodNetworkBtn').text('Remove')
+  $('.byodNetworkBtn').live('click', ->
      $(this).closest('tr').remove()
   )
   $("#alertsConfigTree").dynatree

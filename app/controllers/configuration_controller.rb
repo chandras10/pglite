@@ -287,6 +287,7 @@ class ConfigurationController < ApplicationController
     end
 
     @homeNets = Appipinternal.where(appid: 1)
+    @byodNets = Appipinternal.where(appid: 2)
 
     if File.exist?(Rails.configuration.peregrine_adconfigfile) then
        xmlfile = File.new(Rails.configuration.peregrine_adconfigfile)
@@ -306,14 +307,6 @@ class ConfigurationController < ApplicationController
     paramHash = JSON.parse(params['tabParms'])
     pgConfig = paramHash['pgguard']
     if (!pgConfig.nil?)
-       #xmlDoc = Document.new(paramHash['pgguard'].to_xml(:root => 'pgguard'))
-       #httpproxyElem = XPath.first(xmlDoc, '//httpproxy')
-       #httpproxyElem.add_attribute('enabled', XPath.first(httpproxyElem, '//enabled').text)
-       #httpproxyElem.delete_element('enabled')
-       #xmlDoc.elements.each('pgguard/httpproxy') do |e|
-       #   Rails.logger.debug e
-       #end
-
        if !pgConfig['homeNets'].nil? 
           homeNets = pgConfig['homeNets'].split(';')
           ActiveRecord::Base.transaction do
@@ -324,6 +317,18 @@ class ConfigurationController < ApplicationController
             end
           end
           pgConfig.delete('homeNets') # No need to add this to config file after saving it to the database table.
+       end
+
+       if !pgConfig['byodNets'].nil? 
+          byodNets = pgConfig['byodNets'].split(';')
+          ActiveRecord::Base.transaction do
+            Appipinternal.delete_all(:appid => 2)
+            byodNets.each do |byodNet|
+              matchData = /#{ipv4_netmask_pattern}/.match(byodNet)
+              Appipinternal.create(:iprange => matchData[1], :mask => matchData[2], :appid=>2, :port=>0)
+            end
+          end
+          pgConfig.delete('byodNets') # No need to add this to config file after saving it to the database table.
        end
 
        if File.exist?(Rails.configuration.peregrine_configfile) then
