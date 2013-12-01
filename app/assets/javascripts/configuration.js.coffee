@@ -48,7 +48,22 @@ loadConfiguration = ->
          $('#enableEASFlag').parent().toggleClass('checked')
       if (typeof pgConfig.enableMDMInterface isnt "undefined") and (pgConfig.enableMDMInterface is "true")      
          $('#enableMDMFlag').prop('checked', true)
-         $('#enableMDMFlag').parent().toggleClass('checked')         
+         $('#enableMDMFlag').parent().toggleClass('checked')
+         #
+         # TODO: If we are supporting a bunch of MDM vendors, then we should save the particular MDM vendor selected in the PG config file. 
+         # For now, we have only Maas360, so MDM is enabled, then just read the Maas360 plugin parameters and display...
+         #
+         maas360Config = data.maas360
+         if (typeof maas360Config isnt "undefined")
+            $('#mdmVendor').val('maas360').trigger('liszt:updated').change()
+            $('#maas360 #rootURL').val(maas360Config.ROOT_WS_URL)
+            $('#maas360 #billingID').val(maas360Config.BILLING_ID)
+            $('#maas360 #platformID').val(maas360Config.PLATFORM_ID)   
+            $('#maas360 #appID').val(maas360Config.APP_ID)    
+            $('#maas360 #appVer').val(maas360Config.APP_VERSION)                  
+            $('#maas360 #appAccessKey').val(maas360Config.APP_ACCESS_KEY)
+            $('#maas360 #adminUsername').val(maas360Config.MAAS_ADMIN_USERNAME)
+            $('#maas360 #adminPassword').val(maas360Config.MAAS_ADMIN_PASSWORD)         
       if (typeof pgConfig.authentication isnt "undefined" and pgConfig.authentication?)
          if (typeof pgConfig.authentication.ldap isnt "undefined")
             $('#enableLDAPAuthFlag').parent().toggleClass('checked')
@@ -110,6 +125,21 @@ savePluginConfig = (restartFlag) ->
   pgConfig = data.pgguard = {}
   pgConfig.easAuthorizationEnabled = $('#enableEASFlag').parent().attr('class') == 'checked'
   pgConfig.enableMDMInterface = $('#enableMDMFlag').parent().attr('class') == 'checked'
+  #
+  # Maas360 Plugin changes
+  #  
+  if $('#mdmConfig').is(':visible') 
+     maas360Config = data.maas360 = {}
+     maas360Config.ROOT_WS_URL = $('#maas360 #rootURL').val()
+     maas360Config.BILLING_ID = $('#maas360 #billingID').val()
+     maas360Config.PLATFORM_ID = $('#maas360 #platformID').val()   
+     maas360Config.APP_ID = $('#maas360 #appID').val()    
+     maas360Config.APP_VERSION = $('#maas360 #appVer').val()                  
+     maas360Config.APP_ACCESS_KEY = $('#maas360 #appAccessKey').val()
+     maas360Config.MAAS_ADMIN_USERNAME = $('#maas360 #adminUsername').val()
+     maas360Config.MAAS_ADMIN_PASSWORD = $('#maas360 #adminPassword').val()
+  else
+     maas360Config = null
   #
   # AD Plugin configuration
   #
@@ -193,6 +223,13 @@ jQuery ->
   $('#httpProxy').hide()
   $('#enableAD').hide()
   $('#enableLDAPAuth').hide()
+  $('input[type="password"]').change( ->
+     #
+     # This marks the password changes correctly. That way, this plaintext value will be encrypted in the backend.
+     # Password is always filled out with the encrypted password from the disk file when shown initially.
+     #
+     $(this).val($(this).val() + '_CHG_')
+  )
   loadContextHelp()
   loadConfiguration()
   $('input[type=checkbox]').change ->
@@ -200,7 +237,7 @@ jQuery ->
      $(this).parent().toggleClass('checked')
      sibling = $(this).closest('label').next()
      $(sibling).toggle($(this).is(':checked')) unless typeof sibling is "undefined"
-  $('#loggingLevel').chosen({disable_search_threshold: 10})
+  $('select').chosen({disable_search_threshold: 10})
   $('.firstHomeNetworkBtn').click ->
      rowElem = $(this).closest('tr')
      newHomeNet = rowElem.clone(false)
@@ -222,6 +259,14 @@ jQuery ->
   $('.byodNetworkBtn').text('Remove')
   $('.byodNetworkBtn').live('click', ->
      $(this).closest('tr').remove()
+  )
+  $('#enableMDMFlag').change( ->
+     $('#mdmConfig').toggle($(this).is(':checked'))
+  )
+  $('#mdmVendor').change( ->
+     $('#mdmConfig table').hide()
+     selectedMDM = $(this).val()
+     $('#' + selectedMDM).show()
   )
   $("#alertsConfigTree").dynatree
      debugLevel: 0,

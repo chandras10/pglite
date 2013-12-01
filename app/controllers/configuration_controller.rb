@@ -295,7 +295,17 @@ class ConfigurationController < ApplicationController
        adPluginHash = Hash.from_xml(xmlfile)
        configHash["ad_plugin"] = adPluginHash["i7"]["server"]
     end
-    
+
+    if File.exist?(Rails.configuration.peregrine_plugin_maas360_config) then
+       xmlfile = File.new(Rails.configuration.peregrine_plugin_maas360_config)
+       configHash = Hash.new if configHash.nil?
+       maas360Hash = Hash.from_xml(xmlfile)
+       configHash["maas360"] = maas360Hash["maas360"]
+
+       str = maas360Hash["maas360"]["MAAS_ADMIN_PASSWORD"]
+       Rails.logger.debug "CHANDRA. Password = #{str}"
+    end
+
     respond_to do |format|
       format.html # configuration.html.erb
       format.json { render json: (configHash.nil? ? {} : configHash)}
@@ -354,7 +364,17 @@ class ConfigurationController < ApplicationController
     adPluginConfig = paramHash['ad_plugin']
     if (!adPluginConfig.nil?)
        if (!adPluginConfig['password'].nil? && !adPluginConfig['password'].empty?)
-          adPluginConfig['password'] = Encryptor.encrypt(adPluginConfig['password'], :key => KEY_TO_PASSWD)
+          #
+          # Encrypt the password only if it has changed. I have added a kludge in the coffeescript to suffix
+          # the value with _CHG_ to indicate that it has changed
+          #
+          if matchDef = /(.*)_CHG_$/.match(adPluginConfig['password']) then
+             if !matchDef.nil? && !matchDef[1].nil? #Maybe, the user just blanked out the password field
+                adPluginConfig['password'] = Base64.encode64(Encryptor.encrypt(matchDef[1], :key => KEY_TO_PASSWD))
+            else
+                adPluginConfig['password'] = ''
+            end
+          end
        end
        if File.exist?(Rails.configuration.peregrine_adconfigfile) then
           xmlfile = File.new(Rails.configuration.peregrine_adconfigfile)
@@ -389,12 +409,49 @@ class ConfigurationController < ApplicationController
     #
     # If the Login Authentication method changes, then log out the current user so that on the relogin, the changed auth method is employed.
     #
-    if !pgConfig['authentication'].nil? then
+    if !pgConfig.nil? && !pgConfig['authentication'].nil? 
        if !pgConfig['authentication']['ldap'].nil? && (Pglite.config.authentication != "ActiveDirectory") ||
           (pgConfig['authentication'].empty? && (Pglite.config.authentication != "Local"))
           Pglite.config.authentication = pgConfig['authentication'].empty? ? "Local" : "ActiveDirectory"
           sign_out
        end
+    end
+
+    #
+    # MDM plugin changes to be hardened
+    #
+    if !pgConfig.nil? && !pgConfig['enableMDMInterface'].nil? && (pgConfig['enableMDMInterface'] == true)
+       if !paramHash['maas360'].nil? then
+          if !paramHash['maas360']['MAAS_ADMIN_PASSWORD'].nil?
+             #
+             # Encrypt the password only if it has changed. I have added a kludge in the coffeescript to suffix
+             # the value with _CHG_ to indicate that it has changed
+             #
+             if matchDef = /(.*)_CHG_$/.match(paramHash['maas360']['MAAS_ADMIN_PASSWORD']) then
+                if !matchDef[1].nil? then #Maybe, the user just blanked out the password field
+                   paramHash['maas360']['MAAS_ADMIN_PASSWORD'] = Base64.encode64(Encryptor.encrypt(matchDef[1], :key => KEY_TO_PASSWD).force_encoding('UTF-8'))
+                else 
+                   paramHash['maas360']['MAAS_ADMIN_PASSWORD'] = ''
+                end
+             end
+          end
+       end
+       if File.exist?(Rails.configuration.peregrine_plugin_maas360_config) then
+          xmlfile = File.new(Rails.configuration.peregrine_plugin_maas360_config)
+          mdmHash = Hash.from_xml(xmlfile) || Hash.new
+          if !mdmHash['maas360'].nil?
+             maas360Hash = mdmHash['maas360']
+          else
+             maas360Hash = Hash.new
+          end
+       else
+          mdmHash = Hash.new
+          mdmHash['maas360'] = maas360Hash = Hash.new
+       end
+       mdmHash['maas360'] = maas360Hash.merge(paramHash['maas360'])       
+       file = File.new(Rails.configuration.peregrine_plugin_maas360_config, "w")
+       file.write(mdmHash['maas360'].to_xml({:root => 'maas360', :skip_types => true}))
+       file.close
     end
     
     if paramHash['restart'] == true

@@ -137,7 +137,39 @@
                            <div class="checker" id="enableMDMFlagDiv"><span><input type="checkbox" id="enableMDMFlag" style="opacity: 0;"></span></div> 
                            Enable
                         </label>
-                     </div>
+                      </div>
+                      <div class="controls" id="mdmConfig">
+                        <select data-rel="chosen" id="mdmVendor">
+                           <option value="none"></option>
+                           <option value="maas360">MaaS360</option>
+                        </select>
+                        <table id="maas360" class="controls" style="display:none">
+                           <tr><td><label for="rootURL">URL: </label></td>
+                               <td><input type="text" value="" id="rootURL" class="input-xlarge focused"
+                                          data-trigger="change" data-required="true"></td></tr>
+                           <tr><td><label for="billingID">Billing ID: </label></td>
+                               <td><input type="text" value="" id="billingID" class="input-xlarge focused"
+                                          data-trigger="change" data-required="true"></td></tr>
+                           <tr><td><label for="platformID">Platform ID: </label></td>
+                               <td><input type="text" value="" id="platformID" class="input-xlarge focused"
+                                          data-trigger="change" data-required="true"></td></tr>
+                           <tr><td><label for="appID">Application ID: </label></td>
+                               <td><input type="text" value="" id="appID" class="input-xlarge focused"
+                                          data-trigger="change" data-required="true"></td></tr>
+                           <tr><td><label for="appVer">Application Version: </label></td>
+                               <td><input type="text" value="" id="appVer" class="input-xlarge focused"
+                                          data-trigger="change" data-type="number"></td></tr>
+                           <tr><td><label for="appAccessKey">Application Access Key: </label></td>
+                               <td><input type="text" value="" id="appAccessKey" class="input-xlarge focused"
+                                          data-trigger="change" data-type="number"></td></tr>
+                           <tr><td><label for="adminUsername">User Name: </label></td>
+                               <td><input type="text" value="" id="adminUsername" class="input-xlarge focused"
+                                          data-trigger="change" data-type="number"></td></tr>
+                           <tr><td><label for="adminPassword">Password: </label></td>
+                               <td><input type="password" value="" id="adminPassword" class="input-xlarge focused"
+                                          data-trigger="change" data-type="number"></td></tr>
+                        </table>
+                      </div>
                   </div>
                   <div class="control-group">
                      <label for="enableActiveDirectory" class="control-label">Microsoft Active Directory</label>
