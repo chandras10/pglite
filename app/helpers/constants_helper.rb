@@ -1,6 +1,6 @@
 module ConstantsHelper
   def set_IPstatTypes_constants
-       @availableBandwidthReportTypes = { "total"       => "Total Bandwidth",
+       @availableBandwidthReportTypes = { 
                                           "internalIP"  => "Internal Servers",
                                           "internalAPP" => "Internal Applications",
                                           "externalIP"  => "External Servers",

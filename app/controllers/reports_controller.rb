@@ -79,70 +79,56 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    #if there is no query string, then show the total bandwidth consumption.
+    #if there is no query string, then show the external bandwidth consumption.
     #else show specific data as pointed to by "type"
     #
-    reportType = params['reportType'] || "total"
+    reportType = params['reportType'] || "internalIP"
 
-    if (reportType != "total")
-       case reportType
-          when "internalIP"
-             dbQuery = Internalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-          when "externalIP"
-             dbQuery = Externalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-          when "byodIP"
-             dbQuery = Intincomingipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-          when "internalAPP"
-             dbQuery = Internalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-          when "externalAPP"
-             dbQuery = Externalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-          when "external_urlcat"
-             dbQuery = Urlcatstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-          when "external_hlurlcat"
-             dbQuery = Hlurlcatstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-       end
-       dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
-       statRecordSets = [dbQuery]
-    else # No query string means total bandwidth (internal IP + external IP)
-
-       internalStatsQuery = Internalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-       internalStatsQuery = createBandwidthStatsQuery(internalStatsQuery, "internalIP")
-       externalStatsQuery = Externalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-       externalStatsQuery = createBandwidthStatsQuery(externalStatsQuery, "externalIP")
- 
-       statRecordSets = [internalStatsQuery, externalStatsQuery]
+    case reportType
+      when "internalIP"
+        dbQuery = Internalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+      when "externalIP"
+        dbQuery = Externalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+      when "byodIP"
+        dbQuery = Intincomingipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+      when "internalAPP"
+        dbQuery = Internalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+      when "externalAPP"
+        dbQuery = Externalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+      when "external_urlcat"
+        dbQuery = Urlcatstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+      when "external_hlurlcat"
+        dbQuery = Hlurlcatstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
     end
+    dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
 
-    statRecordSets.each do |recArray|
-       recArray.each do |rec|
-          # Update the Hashmap holding per hour/day/month stats for each server
-          arrayData = @hashTimeIntervalData[rec['resource']]
-          if arrayData.nil? then
-             arrayData = @hashTimeIntervalData[rec['resource']] = Array.new(@numTimeSlots, 0)
+    dbQuery.each do |rec|
+      # Update the Hashmap holding per hour/day/month stats for each server
+      arrayData = @hashTimeIntervalData[rec['resource']]
+      if arrayData.nil? then
+          arrayData = @hashTimeIntervalData[rec['resource']] = Array.new(@numTimeSlots, 0)
+      end
+
+      arrayData[rec['time'].to_i] += (rec['inbytes'] + rec['outbytes'])
+
+      # Update the Hashmap holding total in/out bytes counters for each server
+      arrayData = @hashResourceTotals[rec['resource']]
+      if arrayData.nil? then
+          arrayData = @hashResourceTotals[rec['resource']] = Array.new(2, 0)
+      end
+      arrayData[1] += rec['inbytes'] # for Servers, inbytes === Upload from server to Device...
+      arrayData[0] += rec['outbytes'] # outbytes = Download from device to Server
+
+      if (params[:device].nil?) then
+          # Update the Hashmap holding total in/out bytes counters for each device (or client)
+          clientData = @hashDeviceTotals[rec['client']]
+          if clientData.nil? then
+            clientData = @hashDeviceTotals[rec['client']] = {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
           end
-
-          arrayData[rec['time'].to_i] += (rec['inbytes'] + rec['outbytes'])
-
-          # Update the Hashmap holding total in/out bytes counters for each server
-          arrayData = @hashResourceTotals[rec['resource']]
-          if arrayData.nil? then
-             arrayData = @hashResourceTotals[rec['resource']] = Array.new(2, 0)
-          end
-          arrayData[1] += rec['inbytes'] # for Servers, inbytes === Upload from server to Device...
-          arrayData[0] += rec['outbytes'] # outbytes = Download from device to Server
-
-          if (params[:device].nil?) then
-             # Update the Hashmap holding total in/out bytes counters for each device (or client)
-             clientData = @hashDeviceTotals[rec['client']]
-             if clientData.nil? then
-                clientData = @hashDeviceTotals[rec['client']] = {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
-             end
-             clientData[:totals][0] += rec['inbytes']
-             clientData[:totals][1] += rec['outbytes']
-          end
-
-       end # For each stat record...
-    end #statRecordSets
+          clientData[:totals][0] += rec['inbytes']
+          clientData[:totals][1] += rec['outbytes']
+      end
+    end #Foreach db record...
 
     case params['reportTime']
     when "past_day"
@@ -175,52 +161,36 @@ class ReportsController < ApplicationController
     # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
     @hashDeviceTotals = Hash.new
 
-    reportType = params['reportType'] || "total"
-    reportType = "total" if (!reportType.nil? && reportType == "deviceAPP" )
+    reportType = params['reportType'] || "internalIP"
+    reportType = "internalIP" if (!reportType.nil? && reportType == "deviceAPP" )
 
-    if (reportType != "total")
-       case reportType
-          when "internalIP"
-             dbQuery = Internalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-             dbQuery = dbQuery.where("destip = ?", params['resource'])
-          when "externalIP"
-             dbQuery = Externalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-             dbQuery = dbQuery.where("destip = ?", params['resource'])
-          when "byodIP"
-             dbQuery = Intincomingipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-             dbQuery = dbQuery.where("destip = ?", params['resource'])
-          when "internalAPP"
-             dbQuery = Internalresourcestat.select("deviceid as client, appidinternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-             dbQuery = dbQuery.where("appidinternal.appname = ?", params['resource'])
-          when "externalAPP"
-             dbQuery = Externalresourcestat.select("deviceid as client, appidexternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-             dbQuery = dbQuery.where("appidexternal.appname = ?", params['resource'])
-          when "external_urlcat"
-             dbQuery = Urlcatstat.joins(:urlcatid).select("deviceid as client, urlcatid.name as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-             dbQuery = dbQuery.where("urlcatid.name = ?", params['resource'])
-          when "external_hlurlcat"
-             dbQuery = Hlurlcatstat.joins(:hlurlcatid).select("deviceid as client, hlurlcatid.name as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-             dbQuery = dbQuery.where("hlurlcatid.name = ?", params['resource'])
-
-       end
-       dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
-       dbQuery = dbQuery.group(:service)
-       statRecordSets = [dbQuery]
-    else # No query string means total bandwidth (internal IP + external IP)
-
-       internalStatsQuery = Internalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                                           where("destip = ?", params['resource']).group(:service)
-       internalStatsQuery = createBandwidthStatsQuery(internalStatsQuery, "internalIP")
-       externalStatsQuery = Externalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes").
-                                           where("destip = ?", params['resource']).group(:service)
-       externalStatsQuery = createBandwidthStatsQuery(externalStatsQuery, "externalIP")
- 
-       statRecordSets = [internalStatsQuery, externalStatsQuery]
+    case reportType
+      when "internalIP"
+        dbQuery = Internalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+        dbQuery = dbQuery.where("destip = ?", params['resource'])
+      when "externalIP"
+        dbQuery = Externalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+        dbQuery = dbQuery.where("destip = ?", params['resource'])
+      when "byodIP"
+        dbQuery = Intincomingipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+        dbQuery = dbQuery.where("destip = ?", params['resource'])
+      when "internalAPP"
+        dbQuery = Internalresourcestat.select("deviceid as client, appidinternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+        dbQuery = dbQuery.where("appidinternal.appname = ?", params['resource'])
+      when "externalAPP"
+        dbQuery = Externalresourcestat.select("deviceid as client, appidexternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+        dbQuery = dbQuery.where("appidexternal.appname = ?", params['resource'])
+      when "external_urlcat"
+        dbQuery = Urlcatstat.joins(:urlcatid).select("deviceid as client, urlcatid.name as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+        dbQuery = dbQuery.where("urlcatid.name = ?", params['resource'])
+      when "external_hlurlcat"
+        dbQuery = Hlurlcatstat.joins(:hlurlcatid).select("deviceid as client, hlurlcatid.name as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
+        dbQuery = dbQuery.where("hlurlcatid.name = ?", params['resource'])
     end
+    dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
+    dbQuery = dbQuery.group(:service)
 
-    statRecordSets.each do |recArray|
-
-    recArray.each do |rec |
+    dbQuery.each do |rec |
 
       # Update the Hashmap holding per hour/day/month stats for each port of the SELECTED server
        arrayData = @hashTimeIntervalData[rec['service']]
@@ -246,8 +216,7 @@ class ReportsController < ApplicationController
        clientData[:totals][0] += rec['inbytes']  
        clientData[:totals][1] += rec['outbytes']
 
-    end # For each Ipstat record...
-  end
+    end # For each stat record...
 
     case params['reportTime']
     when "past_day"
