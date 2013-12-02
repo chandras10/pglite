@@ -36,8 +36,8 @@ private
       {
         timestamp: h(alert.timestamp.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M")),
         priority: h(alert.priority),
-        classtype: h(alert.classtype),
-        id: "<a href='#' title='" + alert.description + "'>#{alert.id}</a>",
+        alerttype: h(alert.description),
+        id: "<a href='#' title='" + alert.classtype + "'>#{alert.id}</a>",
         proto: h(alert.proto),
         srcmac: link_to(alert.srcmac, {:action=> "device_details", :controller=> "reports", :device => alert.srcmac}, {:rel => "popover", :'data-content' => "#{macIDTooltip}", :'data-original-title' => "#{alert.srcmac}" }),
         srcip: h(alert.srcip),

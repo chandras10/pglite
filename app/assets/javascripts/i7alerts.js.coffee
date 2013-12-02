@@ -24,7 +24,7 @@ jQuery ->
     aoColumns: [
                    { mData: "timestamp"},
                    { mData: "priority", bSortable: false},
-                   { mData: "classtype", bSortable: false},
+                   { mData: "alerttype", bSortable: false},
                    { mData: "id"},
                    { mData: "proto"},
                    { mData: "srcmac"},

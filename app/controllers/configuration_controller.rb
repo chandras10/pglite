@@ -301,9 +301,6 @@ class ConfigurationController < ApplicationController
        configHash = Hash.new if configHash.nil?
        maas360Hash = Hash.from_xml(xmlfile)
        configHash["maas360"] = maas360Hash["maas360"]
-
-       str = maas360Hash["maas360"]["MAAS_ADMIN_PASSWORD"]
-       Rails.logger.debug "CHANDRA. Password = #{str}"
     end
 
     respond_to do |format|
