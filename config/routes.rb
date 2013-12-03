@@ -55,6 +55,12 @@ Pglite::Application.routes.draw do
   match '/settings/alerts', to: 'configuration#alerts', :via => :get
   match '/settings/alerts', to: 'configuration#save_alerts', :via => :post
 
+  match '/maintenance', to: 'maintenance#maintenance', :via => :get
+  match '/maintenance/updatelicense', to: 'maintenance#update_license', :via => :post
+  match '/maintenance/healthcheck', to: 'maintenance#health_check', :via => :get
+  match 'maintenance/updateprocstate', to: 'maintenance#change_process_state', :via => :post
+
+
   match '/resolve_hosts', to: 'reports#resolve_hosts'
 
   # Batch Reports

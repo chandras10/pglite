@@ -367,7 +367,7 @@ class ConfigurationController < ApplicationController
           #
           if matchDef = /(.*)_CHG_$/.match(adPluginConfig['password']) then
              if !matchDef.nil? && !matchDef[1].nil? #Maybe, the user just blanked out the password field
-                adPluginConfig['password'] = Base64.encode64(Encryptor.encrypt(matchDef[1], :key => KEY_TO_PASSWD))
+                adPluginConfig['password'] = encrypt(matchDef[1])
             else
                 adPluginConfig['password'] = ''
             end
@@ -426,7 +426,7 @@ class ConfigurationController < ApplicationController
              #
              if matchDef = /(.*)_CHG_$/.match(paramHash['maas360']['MAAS_ADMIN_PASSWORD']) then
                 if !matchDef[1].nil? then #Maybe, the user just blanked out the password field
-                   paramHash['maas360']['MAAS_ADMIN_PASSWORD'] = Base64.encode64(Encryptor.encrypt(matchDef[1], :key => KEY_TO_PASSWD).force_encoding('UTF-8'))
+                   paramHash['maas360']['MAAS_ADMIN_PASSWORD'] = encrypt(matchDef[1])
                 else 
                    paramHash['maas360']['MAAS_ADMIN_PASSWORD'] = ''
                 end
@@ -452,7 +452,7 @@ class ConfigurationController < ApplicationController
     end
     
     if paramHash['restart'] == true
-       result, msg = restartPeregrineBackend
+       result, msg = PeregrineProcess.new.restart
        if (result == true) then
           redirect_to "/settings", notice: "Saved the configuration changes. Restart succeeded."
        else
@@ -508,73 +508,16 @@ class ConfigurationController < ApplicationController
   end
 
   private
-    BACKEND_EXE = "/usr/local/bin/pgguard -daemon 2>&1"
-    SERVICE_NAME = "pgguard"
-    NUM_RETRIES = 3 # number of retries to attempt while starting the backend process.
-    SLEEP_INTERVAL = 5 # Number of seconds to wait between retries
+    def encrypt(str)
+      #Base64.encode64(Encryptor.encrypt(str, :key => KEY_TO_PASSWD).force_encoding('UTF-8'))
+      algorithm = "AES-256-CBC"
+      cipher = OpenSSL::Cipher::Cipher.new(algorithm)
+      cipher.encrypt
+      cipher.key = KEY_TO_PASSWD
 
-    def startPeregrineBackend
-      #
-      # Start the backend application. This function will make a few attempts to start the process before giving up.
-      #
-      result = false
-      NUM_RETRIES.times do 
-        system("#{BACKEND_EXE}")
-        result=$?.success?
-        return false, "ERROR: Command: '#{BACKEND_EXE}' failed. Missing executable or malformed command?" if (result == false)
+      encryptedStr = cipher.update(str)
+      encryptedStr << cipher.final
 
-        sleep(SLEEP_INTERVAL)
-      
-        output = %x(service #{SERVICE_NAME} status 2>&1)
-        result =$?.success?
-        return false, "ERROR: #{output}" if (result == false)
-      
-        return true, "" if (output =~ /started/)
-      end # do loop for retrying...
-
-      return result, (result == true) ? "" : "ERROR: Failed to start the backend process. Please check the system logs for more information"
-
-    end #startPeregrineBackend()
-
-    def stopPeregrineBackend
-      output = %x(service #{SERVICE_NAME} status 2>&1)
-      result =$?.success?
-      return false, "ERROR: #{output}" if (result == false)
-
-      matchDef = /\D*(\d+)\D*/.match(output)
-      if matchDef.nil? || matchDef[1].nil? then
-        return false, "ERROR: Unable to find the process id (pid) for service - #{SERVICE_NAME}"
-      end
-     
-      processID = matchDef[1].to_i
-      output=%x(kill -s TERM #{processID} 2>&1)
-      result =$?.success?
-      if (result == false)
-        return false, "ERROR: #{output}"
-      else
-        sleep(SLEEP_INTERVAL)
-        %x(kill -9 #{processID}) # Issue a SIGKILL just to ensure the process does indeed terminate.
-      end
-
-      return true, ""
+      Base64.encode64(encryptedStr)
     end
-
-    def restartPeregrineBackend
-      output = %x(service #{SERVICE_NAME} status 2>&1)
-      result =$?.success?
-      return false, "ERROR: #{output}" if (result == false)
-
-      # if the backend isnt running, just start it and quit.
-      if (output =~ /stopped/) then
-        return startPeregrineBackend
-      end
-
-      result, output = stopPeregrineBackend
-      return result, output if (result == false)
-     
-      return startPeregrineBackend
-
-    end
-
-
 end

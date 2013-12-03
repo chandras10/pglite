@@ -54,7 +54,6 @@ module ReportsHelper
        when "week"
            labelArray = weekLabels(toDate)
        when "day"
-           Rails.logger.debug "numTimeSlots = #{@numTimeSlots}"
            skipLabel = (@numTimeSlots/10.0).round
            skipLabel = 1 if (skipLabel == 0) #if the timeslots are less than 10, then print every label...
            @numTimeSlots.times do |i|
