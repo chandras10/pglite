@@ -132,14 +132,14 @@ private
   end
 
   def i7Alerts
-    alerts = I7alert.select('i7alertdef.id as id, i7alertdef.priority as priority, i7alertclassdef.description as type, 
+    alerts = I7alert.select('i7alertdef.id as id, i7alertdef.priority as priority, i7alertdef.description as type, 
                              message, count(*) as count').
                       joins('LEFT OUTER JOIN i7alertdef ON i7alertdef.id = i7alert.id 
                              LEFT OUTER JOIN i7alertclassdef ON i7alertclassdef.id = i7alertdef.classid').
                       where("i7alertdef.classid NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})").
                       where("srcmac = ?", params[:device]).
-                      group('i7alertdef.id, priority, i7alertclassdef.description, message')
-    columns = %w[id i7alertdef.priority i7alertclassdef.description message count]
+                      group('i7alertdef.id, priority, i7alertdef.description, message')
+    columns = %w[id i7alertdef.priority i7alertdef.description message count]
     alerts = alerts.order("#{columns[params[:iSortCol_0].to_i]} #{sort_direction}")
     alerts = alerts.page(page).per_page(per_page)
     alerts
