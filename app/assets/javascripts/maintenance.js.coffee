@@ -7,7 +7,7 @@ updateProcStates = ->
     type: 'GET'
     dataType: 'json'
     success: (data, textStatus, jqXHR) ->
-      tblContent = '<tr><td> Process </td><td> Status </td><td></td>';
+      tblContent = '';
       for processName, details of data
         if details[1] is true
            btnLabel = "Stop"

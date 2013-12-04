@@ -2,6 +2,10 @@
 .no-close .ui-dialog-titlebar-close {
    display: none;
 }
+.activeAlert {
+  color: green;
+  font-style: italic;
+}
 </style>
 <div id="content" class="span10">
      <div class="box span10">
@@ -222,9 +226,25 @@
 
              <div class="tab-pane" id="alertsConfig-tab">
                 <form id="alertsConfig_form"  method="POST" action="/settings/alerts">
-                   <input type="hidden" name="disableids" id="disableids" value="" >
-                   <input type="hidden" name="activeids" id="activeids" value="" >
-                   <div id="alertsConfigTree"> </div>
+                   <input type="hidden" name="inactiveids" id="inactiveids" value="" >
+                   <input type="hidden" name="emailids" id="emailids" value="" >
+                   <div id="alertsConfigTreeDiv"> 
+                      <table id="alertsConfigTree" class="Maintenance_Table">
+                         <colgroup>
+                            <col width="30px"></col>
+                            <col width="*"></col>
+                            <col width="30px"></col>
+                            <col width="30px"></col>
+                         </colgroup>
+                         <thead>
+                         <tr><th>ID</th><th>Description</th><th>Active</th><th>Email</th></tr>
+                         </thead>
+                         <tbody>
+                            <tr><td></td><td></td><td></td><td></td></tr>
+                         </tbody>
+                      </table>
+                   </div>
+
                 </form>
              </div>
 

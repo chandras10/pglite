@@ -168,20 +168,22 @@ savePluginConfig = (restartFlag) ->
   $('#tabParms').val(JSON.stringify(data))
 
 saveAlerts = (restartFlag) ->
-  activateAlerts = []
-  disabledAlerts = []
-  dict = $("#alertsConfigTree").dynatree("getTree").toDict()
+  deActivateAlerts = []
+  emailAlerts = []
+  dict = $("#alertsConfigTree").fancytree("getTree").toDict()
   for i of dict
-    classDef = dict[i]
-    unless typeof classDef.children is "undefined"
-      for j of classDef.children
-        c = classDef.children[j]
-        unless c.select
-          disabledAlerts.push c.id
-        else
-          activateAlerts.push c.id
-  $("#disableids").val disabledAlerts.toString()
-  $("#activeids").val activateAlerts.toString()
+    alertClassDef = dict[i]
+    unless typeof alertClassDef.children is "undefined"
+      for j of alertClassDef.children
+        c = alertClassDef.children[j]
+        unless c.data.OTHER is "undefined"
+          if c.data.OTHER[0] is false
+             deActivateAlerts.push c.key
+          #
+          if c.data.OTHER[1] is true
+             emailAlerts.push c.key
+  $("#inactiveids").val deActivateAlerts.toString()
+  $("#emailids").val emailAlerts.toString()
   $("#alertsConfig_form").submit()
 
 saveEmailConfig = (restartFlag) ->
@@ -216,6 +218,37 @@ saveConfiguration = (restartFlag) ->
      title: (if restartFlag then 'Restarting...' else 'Saving...')
      height:100
      modal: true
+
+#
+# For the 'I7 Alerts' tab, set the checkboxes for each alert to the correct state based on the database values.
+#
+setTreeNodeCheckBoxes = (e, data) ->
+  node = data.node
+  #
+  # Display checkboxes only on the leaf nodes. There are two - One for Active/Inactive and another for Email...
+  #
+  unless typeof node.data.OTHER is "undefined"
+    customData = node.data.OTHER
+    $(node.tr).find('input[name="active"]').prop('checked', customData[0])
+    $(node.tr).find('input[name="email"]').prop('checked', customData[1])
+    if customData[0] is true # Is this alert active?
+       $(node.tr).find('span.fancytree-title').removeClass('fancytree-title').addClass('activeAlert')
+
+$('#alertsConfigTree').delegate("input[name=active]", "click", (e) ->
+  node = $.ui.fancytree.getNode(e)
+  $input = $(e.target)
+  unless node.data.OTHER is "undefined"
+    node.data.OTHER[0] = $input.is(":checked")
+  e.stopPropagation() # prevent fancytree activate for this row
+)
+
+$('#alertsConfigTree').delegate("input[name=email]", "click", (e) ->
+  node = $.ui.fancytree.getNode(e)
+  $input = $(e.target)
+  unless node.data.OTHER is "undefined"
+    node.data.OTHER[1] = $input.is(":checked")
+  e.stopPropagation() # prevent fancytree activate for this row
+)
 
 jQuery ->
   $('#tabs-container').tabs()
@@ -268,19 +301,32 @@ jQuery ->
      selectedMDM = $(this).val()
      $('#' + selectedMDM).show()
   )
-  $("#alertsConfigTree").dynatree
+  $("#alertsConfigTree").fancytree
+     extensions: ["table"]
      debugLevel: 0,
      title: "Peregrine Alerts Configuration",
      autoFocus: true,
      keyboard: true,
      persist: false,
      clickFolderMode: 3,
-     imagePath: '/assets/dynatree/',
-     checkbox: true,
+     imagePath: '/assets/',
+     checkbox: false,
      selectMode: 2,
-     initAjax: {
+     table:
+       indentation: 20 # indent 20px per node level
+       nodeColumnIdx: 1 # render the node title into the 2nd column
+     source: {
        url: '/settings/alerts.json'
      }
+     renderNode: setTreeNodeCheckBoxes
+     renderColumns: (e, data) ->
+       node = data.node
+       $tdList = $(node.tr).find(">td")
+       unless typeof node.data.OTHER is "undefined" #Display checkboxes for the actual alerts and ignore the high level class rows.
+         $tdList.eq(0).text(node.key).addClass("alignRight")
+         # (index #1 is rendered by fancytree)
+         $tdList.eq(2).html("<input type='checkbox' name='active' value='" + node.key + "'>")
+         $tdList.eq(3).html("<input type='checkbox' name='email' value='" + node.key + "'>")
   $('#SaveChangesBtn').click ->
      activeTab = $('#TabList').find('.tab-pane:visible').attr('id')
      activeTabName = $('a[href="#' + activeTab + '"]').text()

@@ -1,3 +1,105 @@
-// Place all the styles related to the maintenance controller here.
-// They will automatically be included in application.css.
-// You can use Sass (SCSS) here: http://sass-lang.com/
+.Maintenance_Table {
+	margin:0px;padding:0px;
+	width:70%;
+	border:1px solid #000000;
+	
+	-moz-border-radius-bottomleft:0px;
+	-webkit-border-bottom-left-radius:0px;
+	border-bottom-left-radius:0px;
+	
+	-moz-border-radius-bottomright:0px;
+	-webkit-border-bottom-right-radius:0px;
+	border-bottom-right-radius:0px;
+	
+	-moz-border-radius-topright:0px;
+	-webkit-border-top-right-radius:0px;
+	border-top-right-radius:0px;
+	
+	-moz-border-radius-topleft:0px;
+	-webkit-border-top-left-radius:0px;
+	border-top-left-radius:0px;
+}.Maintenance_Table table{
+    border-collapse: collapse;
+        border-spacing: 0;
+	width:70%;
+	height:100%;
+	margin:0px;padding:0px;
+}.Maintenance_Table tr:last-child td:last-child {
+	-moz-border-radius-bottomright:0px;
+	-webkit-border-bottom-right-radius:0px;
+	border-bottom-right-radius:0px;
+}
+.Maintenance_Table table thead tr:first-child th:first-child {
+	-moz-border-radius-topleft:0px;
+	-webkit-border-top-left-radius:0px;
+	border-top-left-radius:0px;
+}
+.Maintenance_Table table thead tr:first-child th:last-child {
+	-moz-border-radius-topright:0px;
+	-webkit-border-top-right-radius:0px;
+	border-top-right-radius:0px;
+}.Maintenance_Table tr:last-child td:first-child{
+	-moz-border-radius-bottomleft:0px;
+	-webkit-border-bottom-left-radius:0px;
+	border-bottom-left-radius:0px;
+}.Maintenance_Table tr:hover td{
+	background-color:#ffffff;
+		
+
+}
+.Maintenance_Table td{
+	vertical-align:middle;
+	
+	background-color:#ffffff;
+
+	border:1px solid #000000;
+	border-width:0px 1px 1px 0px;
+	text-align:center;
+	padding:7px;
+	font-size:12px;
+	font-family:Trebuchet MS;
+	font-weight:normal;
+	color:#000000;
+}.Maintenance_Table tr:last-child td{
+	border-width:0px 1px 0px 0px;
+}.Maintenance_Table tr td:last-child{
+	border-width:0px 0px 1px 0px;
+}.Maintenance_Table tr:last-child td:last-child{
+	border-width:0px 0px 0px 0px;
+}
+.Maintenance_Table thead tr th{
+		background:-o-linear-gradient(bottom, #aad4ff 5%, #aad4ff 100%);	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #aad4ff), color-stop(1, #aad4ff) );
+	background:-moz-linear-gradient( center top, #aad4ff 5%, #aad4ff 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#aad4ff", endColorstr="#aad4ff");	background: -o-linear-gradient(top,#aad4ff,aad4ff);
+
+	background-color:#aad4ff;
+	border:0px solid #000000;
+	text-align:center;
+	border-width:0px 0px 1px 1px;
+	font-size:14px;
+	font-family:Trebuchet MS;
+	font-weight:bold;
+	color:#000000;
+}
+.Maintenance_Table thead tr th{
+	background:-o-linear-gradient(bottom, #aad4ff 5%, #aad4ff 100%);	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #aad4ff), color-stop(1, #aad4ff) );
+	background:-moz-linear-gradient( center top, #aad4ff 5%, #aad4ff 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#aad4ff", endColorstr="#aad4ff");	background: -o-linear-gradient(top,#aad4ff,aad4ff);
+
+	background-color:#aad4ff;
+}
+.Maintenance_Table thead tr:first-child th:first-child{
+	border-width:0px 0px 1px 0px;
+}
+.Maintenance_Table thead tr:first-child th:last-child{
+	border-width:0px 0px 1px 1px;
+}
+
+table#processTable.Maintenance_Table td,
+span.fancytree-node {
+	text-align: left;
+}
+
+table#processTable.Maintenance_Table td:last-child{
+    text-align: center;
+}

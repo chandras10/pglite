@@ -466,22 +466,23 @@ class ConfigurationController < ApplicationController
 
   def alerts
     alertClasses = I7alertclassdef.select("id, description").
-                   where("id NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})")
+                   where("id NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})").order("id")
 
     alertDefArray = Array.new
 
     alertClasses.each do | alertClass |
     
-      alertDefs = I7alertdef.select("id, active, description").where("classid = ?", alertClass.id)
+      alertDefs = I7alertdef.select("id, description, active, email").where("classid = ?", alertClass.id).order("active DESC, id")
       children = Array.new
       alertDefs.each do |alert|
-         children << { title: "#{alert.id}: #{alert.description}", id: alert.id, select: alert.active}
+         children << { title: alert.description, key: alert.id, OTHER: [alert.active, alert.email]}
       end
       alertDefArray << {
-            title: "<h6>#{alertClass.id}: #{alertClass.description}</h6>",
-            id: alertClass.id,
+            title: "<h6>#{alertClass.description}</h6>",
+            key: alertClass.id,
             hideCheckbox: true,
             unselectable: true,
+            folder: true,
             children: children
       }
     end
@@ -493,18 +494,23 @@ class ConfigurationController < ApplicationController
 
   def save_alerts
 
-     if (!params['activeids'].empty?) 
-        I7alertdef.update_all({:active => true}, "id IN (#{params['activeids']})")
-     end
+    noticeMsg = nil
+    ActiveRecord::Base.transaction do
+      # Just enable all alerts, to begin with
+      I7alertdef.update_all({:active => true, :email => false})
 
-     if (!params['disableids'].empty?)
-        I7alertdef.update_all({:active => false}, "id IN (#{params['disableids']})")
-        Delayed::Job.enqueue I7alertJob.new(params['disableids'])
-        redirect_to "/settings", notice: "Some alerts have been disabled. DVI and/or DTI will be recalculated for devices which might have previously generated these disabled alerts..."
-        return
-     end
+      if (!params['inactiveids'].empty?)
+        I7alertdef.update_all({:active => false}, "id IN (#{params['inactiveids']})")
+        Delayed::Job.enqueue I7alertJob.new(params['inactiveids'])
+        noticeMsg = "Some alerts have been disabled. DVI and/or DTI will be recalculated for devices which might have previously generated these disabled alerts..."
+      end
+
+      if (!params['emailids'].empty?)
+        I7alertdef.update_all({:email => true}, "id IN (#{params['emailids']})")
+      end
+    end # End of DB transaction
     
-     redirect_to "/settings"
+    redirect_to "/settings", notice: noticeMsg
   end
 
   private
