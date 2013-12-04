@@ -494,7 +494,7 @@ class ConfigurationController < ApplicationController
 
   def save_alerts
 
-    noticeMsg = nil
+    noticeMsg = "Saved the changes."
     ActiveRecord::Base.transaction do
       # Just enable all alerts, to begin with
       I7alertdef.update_all({:active => true, :email => false})
@@ -509,7 +509,12 @@ class ConfigurationController < ApplicationController
         I7alertdef.update_all({:email => true}, "id IN (#{params['emailids']})")
       end
     end # End of DB transaction
-    
+
+    if params['restart'] == "true"
+       result, msg = PeregrineProcess.new.restart
+       noticeMsg += " Restart failed - #{msg}" if (result == false)
+    end
+
     redirect_to "/settings", notice: noticeMsg
   end
 

@@ -168,6 +168,7 @@ savePluginConfig = (restartFlag) ->
   $('#tabParms').val(JSON.stringify(data))
 
 saveAlerts = (restartFlag) ->
+  data = {}
   deActivateAlerts = []
   emailAlerts = []
   dict = $("#alertsConfigTree").fancytree("getTree").toDict()
@@ -184,6 +185,7 @@ saveAlerts = (restartFlag) ->
              emailAlerts.push c.key
   $("#inactiveids").val deActivateAlerts.toString()
   $("#emailids").val emailAlerts.toString()
+  $("#restart").val restartFlag
   $("#alertsConfig_form").submit()
 
 saveEmailConfig = (restartFlag) ->
