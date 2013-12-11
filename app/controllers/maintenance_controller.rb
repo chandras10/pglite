@@ -73,8 +73,7 @@ class MaintenanceController < ApplicationController
   end # health_check
 
   def change_process_state
-  	processName = params["service_name"]
-    
+    processName = params["service_name"]
     bgProcess = BACKEND_PROCESS_ARRAY.find{ |p| p.id == processName }
     if !bgProcess.nil?
     	result, msg = bgProcess.toggle 
@@ -82,10 +81,8 @@ class MaintenanceController < ApplicationController
     	result, msg = [false, "Unable to find service: #{processName}"]
     end
 
-    if (result == true) then
-       redirect_to "/maintenance"
-    else
-       redirect_to "/maintenance", :flash => {:error => "#{msg}"}
+    respond_to do |format|
+      format.json { render json: [result, msg] }
     end
   end
 

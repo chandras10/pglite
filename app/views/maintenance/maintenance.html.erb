@@ -30,8 +30,6 @@
                 <% end %>                
             </div>
 		    <div class="tab-pane" id="health-tab">
-		       <%= form_tag({action: :change_process_state}, {:class => "form-horizontal"}) do |f| %>
-		          <input type="hidden" name="service_name" id="service_name" value = "" />
 		          <table id="processTable" border="1" cellpadding="10" class="Maintenance_Table">
                  <thead>
                     <tr><th>Process</th><th>Status</th><th></th></tr>
@@ -39,7 +37,6 @@
 		             <tbody>
 		             </tbody>
 		          </table>
-		       <% end %>
 		    </div>
 
           </div> <!-- tab-content -->                   
