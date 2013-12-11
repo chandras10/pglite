@@ -16,15 +16,9 @@
 		     <div class="tab-pane" id="license-tab">
                 <%= form_tag({action: :update_license}, {:class => 'form-horizontal', multipart: true}) do %>		        
                    <div class="control-group">
-                      <label for="lastUpdateTime" class="control-label">Last Updated:</label>
-                      <div class="controls">
-                         <input type="text" disabled="" placeholder="<%= @license_info.lastupdatetime.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M") %>" id="lastUpdateTime" class="input-xlarge disabled">
-                      </div>
-                   </div>
-                   <div class="control-group">
                       <label for="validUntil" class="control-label">Expires On:</label>
                       <div class="controls">
-                         <input type="text" disabled="" placeholder="<%= @license_info.valid_until.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M") %>" id="validUntil" class="input-xlarge disabled">
+                         <input type="text" disabled="" placeholder="<%= @license_info.valid_until.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M") if !@license_info.nil? %>" id="validUntil" class="input-xlarge disabled">
                          <button class="btn" id="showNewLicenseCtrlsBtn">Update</button>
                       </div>
                    </div>

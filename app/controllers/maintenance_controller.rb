@@ -75,7 +75,7 @@ class MaintenanceController < ApplicationController
   def change_process_state
   	processName = params["service_name"]
     
-    bgProcess = BACKEND_PROCESS_ARRAY.select{ |p| p.id == processName }
+    bgProcess = BACKEND_PROCESS_ARRAY.find{ |p| p.id == processName }
     if !bgProcess.nil?
     	result, msg = bgProcess.toggle 
     else

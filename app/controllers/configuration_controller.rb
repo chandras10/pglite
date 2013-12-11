@@ -338,6 +338,10 @@ class ConfigurationController < ApplicationController
           pgConfig.delete('byodNets') # No need to add this to config file after saving it to the database table.
        end
 
+       if !pgConfig['email'].nil? && !pgConfig['email']['smtp'].nil? && !pgConfig['email']['smtp']['password'].nil? && !pgConfig['email']['smtp']['password'].empty? then
+          pgConfig['email']['smtp']['password'] = encrypt(pgConfig['email']['smtp']['password'])
+       end
+
        if File.exist?(Rails.configuration.peregrine_configfile) then
           xmlfile = File.new(Rails.configuration.peregrine_configfile)
           configHash = Hash.from_xml(xmlfile) || Hash.new
@@ -361,18 +365,9 @@ class ConfigurationController < ApplicationController
     adPluginConfig = paramHash['ad_plugin']
     if (!adPluginConfig.nil?)
        if (!adPluginConfig['password'].nil? && !adPluginConfig['password'].empty?)
-          #
-          # Encrypt the password only if it has changed. I have added a kludge in the coffeescript to suffix
-          # the value with _CHG_ to indicate that it has changed
-          #
-          if matchDef = /(.*)_CHG_$/.match(adPluginConfig['password']) then
-             if !matchDef.nil? && !matchDef[1].nil? #Maybe, the user just blanked out the password field
-                adPluginConfig['password'] = encrypt(matchDef[1])
-            else
-                adPluginConfig['password'] = ''
-            end
-          end
+          adPluginConfig['password'] = encrypt(adPluginConfig['password'])
        end
+
        if File.exist?(Rails.configuration.peregrine_adconfigfile) then
           xmlfile = File.new(Rails.configuration.peregrine_adconfigfile)
           pluginHash = Hash.from_xml(xmlfile) || Hash.new
@@ -420,17 +415,7 @@ class ConfigurationController < ApplicationController
     if !pgConfig.nil? && !pgConfig['enableMDMInterface'].nil? && (pgConfig['enableMDMInterface'] == true)
        if !paramHash['maas360'].nil? then
           if !paramHash['maas360']['MAAS_ADMIN_PASSWORD'].nil?
-             #
-             # Encrypt the password only if it has changed. I have added a kludge in the coffeescript to suffix
-             # the value with _CHG_ to indicate that it has changed
-             #
-             if matchDef = /(.*)_CHG_$/.match(paramHash['maas360']['MAAS_ADMIN_PASSWORD']) then
-                if !matchDef[1].nil? then #Maybe, the user just blanked out the password field
-                   paramHash['maas360']['MAAS_ADMIN_PASSWORD'] = encrypt(matchDef[1])
-                else 
-                   paramHash['maas360']['MAAS_ADMIN_PASSWORD'] = ''
-                end
-             end
+             paramHash['maas360']['MAAS_ADMIN_PASSWORD'] = encrypt(paramHash['maas360']['MAAS_ADMIN_PASSWORD'])
           end
        end
        if File.exist?(Rails.configuration.peregrine_plugin_maas360_config) then
@@ -520,15 +505,28 @@ class ConfigurationController < ApplicationController
 
   private
     def encrypt(str)
+
+      return str if (str.nil? or str.empty?)
+      #
+      # Encrypt the password only if it has changed. I have added a kludge in the coffeescript to suffix
+      # the value with _CHG_ to indicate that it has changed
+      #
+      matchDef = /(.*)_CHG_$/.match(str)
+      if matchDef.nil?
+         return  str # passwd didnt change, so return the already encrypted passwd as is.
+      elsif matchDef[1].nil?
+         return '' # maybe the user just blanked out the password and left it empty.
+      end
+
       #Base64.encode64(Encryptor.encrypt(str, :key => KEY_TO_PASSWD).force_encoding('UTF-8'))
       algorithm = "AES-256-CBC"
       cipher = OpenSSL::Cipher::Cipher.new(algorithm)
       cipher.encrypt
       cipher.key = KEY_TO_PASSWD
 
-      encryptedStr = cipher.update(str)
+      encryptedStr = cipher.update(matchDef[1])
       encryptedStr << cipher.final
 
-      Base64.encode64(encryptedStr)
+      Base64.strict_encode64(encryptedStr)
     end
 end
