@@ -385,13 +385,24 @@ var fromDate, toDate;
 
        	var labels = [" B", " KB", " MB", " GB", " TB"];
         var n = 0;
+        var bwUnits;
+        if (typeof bwMeasure === 'undefined') {
+        	bwUnits = 1;
+        } else {
+        	bwUnits = bwMeasure;
+        	while ((bwUnits = Math.floor(bwUnits/1024)) > 0) {
+              labels.shift();
+            }
+            bwUnits = bwMeasure; //restore the original after setting the right label set.
+        }
+
        	num = parseFloat(nStr);
 
-        while ((n < labels.length) && (num > 1000)) {
+        while ((n < labels.length) && (num > 1024)) {
            if ((n+1) >= labels.length) {
               break;
            } else {
-              num = (num/1000).toFixed(1);
+              num = (num/1024).toFixed(1);
               n++;
            }
         }

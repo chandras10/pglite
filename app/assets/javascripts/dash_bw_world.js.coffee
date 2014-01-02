@@ -1,12 +1,17 @@
 jQuery ->
    $('#loading-indicator').hide()
+   #
+   # Grab the query string and append it to the Ajax source below
+   #
+   url = window.location.href
+   queryParams = $('<a>', { href: url})[0]
    oTable = $('#servers').dataTable
       sDom: "Rlfrtp"
       sPaginationType: "bootstrap"
       bJQueryUI: true
       bProcessing: true
       bServerSide: true
-      sAjaxSource: '/dash_bw_country_details?reportTime=' + $('#reportTime').val()
+      sAjaxSource: '/dash_bw_country_details' + queryParams.search
       fnServerParams: (aoData) ->
         aoData.push
           name: "country"
@@ -41,10 +46,10 @@ jQuery ->
            $('#loading-indicator').show()
            $('#countryFlag').attr('src', '/assets/flags_iso/128/'+code+'.png')
            $('#countryFlag').attr('alt', region)
-           $.ajax '/dash_bw_country.json' ,
+           $.ajax '/dash_bw_country.json' + queryParams.search ,
                 dataType: 'json'
                 type: 'GET'
-                data: {authenticity_token: AUTH_TOKEN, reportTime: $('#reportTime').val(), country: code.toUpperCase()}
+                data: {authenticity_token: AUTH_TOKEN, country: code.toUpperCase()}
                 error: (jqXHR, textStatus, errorThrown) ->
                   $('#loading-indicator').hide()
                   alert("AJAX ERROR: #{textStatus}")

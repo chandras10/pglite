@@ -1,0 +1,131 @@
+<div id="content" class="span10">
+   <div class="box span10">
+      <%= render :partial => 'layouts/title_bar_icons',
+                 :locals => { :header_title =>  'Schedule Jobs',
+                              :header_link  => "#" }
+       %>
+      <div class="box-content" id="">
+         <form class="form-horizontal">
+            <fieldset>
+               <div class="control-group">
+                  <label class="control-label" for="selectJob">Job</label>
+                  <div class="controls">
+                     <select id="selectJob" data-rel="chosen">
+                        <option>Summarize Bandwidth Stats</option>
+                        <option>Rollup Alerts</option>
+                     </select>
+                     <select id="selectStatTable" data-rel="chosen">
+                        <option>Internal Servers</option>
+                        <option>External Servers</option>
+                     </select>
+                  </div>
+               </div>
+               
+               <div class="control-group">
+                  <label class="control-label">Start Job:</label>
+                  <div class="controls">
+                     <label class="checkbox inline">
+                        <div id="uniform-inlineCheckbox1" class="checker">
+                           <span><input id="inlineCheckbox1" type="checkbox" value="option1" style="opacity: 0;"></span>
+                           O
+                     </label>
+                  </div>
+               </div>
+            </fieldset>
+         </form>
+      </div>
+   </div>
+</div>
+
+
+<div id="content" class="span10">
+
+   <div class="box span10">
+      <%= render :partial => 'layouts/title_bar_icons',
+                 :locals => { :header_title =>  'Background Jobs',
+                              :header_link  => "#" }
+       %>
+      <div class="box-content" id="">
+						<table class="table datatable">
+						  <thead>
+							  <tr>
+								  <th>Username</th>
+								  <th>Date registered</th>
+								  <th>Role</th>
+								  <th>Status</th>
+								  <th>Actions</th>
+							  </tr>
+						  </thead>   
+						  <tbody>
+							<tr>
+								<td>David R</td>
+								<td class="center">2012/01/01</td>
+								<td class="center">Member</td>
+								<td class="center">
+									<span class="label label-success">Active</span>
+								</td>
+								<td class="center">
+									<a class="btn btn-success" href="#">
+										<i class="icon-zoom-in icon-white"></i>  
+										View                                            
+									</a>
+									<a class="btn btn-info" href="#">
+										<i class="icon-edit icon-white"></i>  
+										Edit                                            
+									</a>
+									<a class="btn btn-danger" href="#">
+										<i class="icon-trash icon-white"></i> 
+										Delete
+									</a>
+								</td>
+							</tr>
+							<tr>
+								<td>Chris Jack</td>
+								<td class="center">2012/01/01</td>
+								<td class="center">Member</td>
+								<td class="center">
+									<span class="label label-success">Active</span>
+								</td>
+								<td class="center">
+									<a class="btn btn-success" href="#">
+										<i class="icon-zoom-in icon-white"></i>  
+										View                                            
+									</a>
+									<a class="btn btn-info" href="#">
+										<i class="icon-edit icon-white"></i>  
+										Edit                                            
+									</a>
+									<a class="btn btn-danger" href="#">
+										<i class="icon-trash icon-white"></i> 
+										Delete
+									</a>
+								</td>
+							</tr>
+							<tr>
+								<td>Worth Name</td>
+								<td class="center">2012/03/01</td>
+								<td class="center">Member</td>
+								<td class="center">
+									<span class="label label-warning">Pending</span>
+								</td>
+								<td class="center">
+									<a class="btn btn-success" href="#">
+										<i class="icon-zoom-in icon-white"></i>  
+										View                                            
+									</a>
+									<a class="btn btn-info" href="#">
+										<i class="icon-edit icon-white"></i>  
+										Edit                                            
+									</a>
+									<a class="btn btn-danger" href="#">
+										<i class="icon-trash icon-white"></i> 
+										Delete
+									</a>
+								</td>
+							</tr>
+						  </tbody>
+					  </table>            
+
+      </div>
+   </div>
+</div>    

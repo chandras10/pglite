@@ -1,0 +1,26 @@
+<div id="content" class="span10">
+   <div class="box span10">
+      <%= render :partial => 'layouts/title_bar_icons',
+                 :locals => { :header_title =>  'Corporate Owned/Authorized Devices',
+                              :header_link  => "#" }
+      %>
+      <div class="box-content">	        
+	      <div class="tab-content">
+           <%= form_tag({action: :auth_devices_from_file}, {:class => 'form-horizontal', multipart: true}) do %>		        
+              <div class="control-group">
+                 <div class="controls" id="authDeviceListDiv">
+                    <label for="authDeviceFile" class="control-label">Upload Device List: </label>
+                    <%= file_field_tag 'authDeviceFile' %>
+                 </div>
+              </div>
+              <div class="control-group">
+                 <div class="controls center"><%= submit_tag 'Save', class: 'btn btn-primary' %></div>
+              </div>
+           <% end %>                
+        </div> <!-- tab-content -->                   
+      </div>
+   </div>
+</div>
+
+<script type="text/javascript">
+</script>

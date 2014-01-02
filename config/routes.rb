@@ -59,6 +59,8 @@ Pglite::Application.routes.draw do
   match '/maintenance/updatelicense', to: 'maintenance#update_license', :via => :post
   match '/maintenance/healthcheck', to: 'maintenance#health_check', :via => :get
   match 'maintenance/updateprocstate', to: 'maintenance#change_process_state', :via => :post
+  match '/maintenance/auth_devices', to: 'maintenance#get_auth_device_list', :via => :get
+  match '/maintenance/auth_devices', to: 'maintenance#auth_devices_from_file', :via => :post
 
 
   match '/resolve_hosts', to: 'reports#resolve_hosts'
@@ -67,10 +69,13 @@ Pglite::Application.routes.draw do
   match '/dvi_report', to:  'batch_reports#dvi_report'
 
   match '/alerts', to: 'i7alerts#index'
-  
+  match '/download_pcap', to: 'i7alerts#download_pcap'
+
+  # Background tasks/Jobs
+  match '/jobs', to: 'jobs#index'
+    
   match '/500', to: 'errors#internal_error'
   match '/404', to: 'errors#internal_error'
-
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

@@ -32,7 +32,11 @@ private
 
     alerts.map do |alert|
       macIDTooltip = @view.render :partial=> 'layouts/tooltip_device', :formats=>[:html], :locals => {:device => deviceHash[alert.srcmac]}
-
+      if (!alert.pcap.nil? && !alert.pcap.empty?) then
+         pcap = link_to('Packet Capture', {:action => :download_pcap, :controller => "i7alerts", :filename => h(alert.pcap)})
+      else
+         pcap = ''
+      end
       {
         timestamp: h(alert.timestamp.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M")),
         priority: h(alert.priority),
@@ -45,7 +49,7 @@ private
         dstmac: h(alert.dstmac),
         dstip: h(alert.dstip),
         dstport: h(alert.dstport),
-        pcap: h(alert.pcap),
+        pcap: pcap,
         message: h(alert.message)
       }
     end
@@ -62,6 +66,7 @@ private
                       joins('LEFT OUTER JOIN i7alertdef ON i7alertdef.id = i7alert.id 
                              LEFT OUTER JOIN i7alertclassdef ON i7alertclassdef.id = i7alertdef.classid').
                       where("i7alertdef.classid NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})").
+                      where("i7alertdef.active = true").
                       where("#{@queryConditions[0][1]}").scoped
     alerts = alerts.order("#{sort_column} #{sort_direction}")
     alerts = alerts.page(page).per_page(per_page)

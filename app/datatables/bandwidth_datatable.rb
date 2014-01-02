@@ -1,5 +1,6 @@
 class BandwidthDatatable
   include DatatablesHelper
+  include ReportsHelper
   delegate :params, :h, :link_to,  to: :@view
 
   def initialize(view, timeCondition)
@@ -20,13 +21,25 @@ class BandwidthDatatable
 private
 
   def data
+    paramHash = {}
+    paramHash[:action] = "dash_bw_server"
+    paramHash[:controller] = "reports"
+    paramHash[:reportType] = "externalIP"
+    if params.has_key?(:reportTime) then
+       paramHash[:reportTime] = params[:reportTime]
+       if params[:reportTime] == "date_range" then
+          paramHash[:fromDate] = params[:fromDate]
+          paramHash[:toDate] = params[:toDate]
+       end
+    end
+
     servers.map do |rec|
       {
-        server: link_to(rec.server, params.merge({:action=> "dash_bw_server", :controller=> "reports", :resource=> rec.server})),
+        server: link_to(rec.server, paramHash.merge({:resource=> rec.server})),
         port: h(rec.port),
-        upload: h(rec.upload),
-        download: h(rec.download),
-        total: h(rec.total),
+        upload: h(rec.upload.to_i/$BW_MEASURE),
+        download: h(rec.download.to_i/$BW_MEASURE),
+        total: h(rec.total.to_i/$BW_MEASURE),
         "DT_RowId" =>  h(rec.server)
       }
     end

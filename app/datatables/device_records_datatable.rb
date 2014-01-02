@@ -120,15 +120,24 @@ private
   end
 
   def bandwidthData
-      servers.map do |server|
-        {
-          server: link_to(server.destip, params.merge({:action=> "dash_bw_server", :controller=> "reports", :resource=> server.destip})),
-          port: h(server.destport),
-          download: h(server.download),
-          upload: h(server.upload),
-          total: h(server.total)
-        }
-      end
+    paramHash = {}
+    paramHash[:action] = "dash_bw_server"
+    paramHash[:controller] = "reports"
+    paramHash[:device] = params[:device]
+    paramHash[:reportType] = "externalIP"
+    paramHash[:reportTime] = "date_range"
+    paramHash[:fromDate] = (Date.today - 3.months).to_s
+    paramHash[:toDate] = Date.today.to_s
+
+    servers.map do |server|
+      {
+        server: link_to(server.destip, paramHash.merge({:resource=> server.destip})),
+        port: h(server.destport),
+        download: h(server.download.to_i/$BW_MEASURE),
+        upload: h(server.upload.to_i/$BW_MEASURE),
+        total: h(server.total.to_i/$BW_MEASURE)
+      }
+    end
   end
 
   def i7Alerts

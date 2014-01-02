@@ -3,7 +3,7 @@
  * Need to set min-width for HTML table elements to get the horizontal scrolling to work within the viewport. 
  * See: http://www.datatables.net/forums/discussion/12392/horizontal-scrolling-issue-with-lots-of-columns-table-overflowing-scrolling-not-working-correctly/p1
  */
-table tbody td {
+#alerts tbody td {
     min-width: 100px;
     border: 1px solid #ccc;
 }
@@ -16,19 +16,19 @@ table tbody td {
 </style>
 
 <div id="content" class="span10">
-   <div class="control-group">
-      <select id="reportTime" class="chosen">
-      <% @availableTimeLines.each do |key, value| %>
-         <option value="<%= key %>"><%= value %></option>
-      <% end %>
-      </select>
+        <div class="control-group">
+            <select id="reportTime" class="chosen">
+               <% @availableTimeLines.each do |key, value| %>
+               <option value="<%= key %>"><%= value %></option>
+               <% end %>
+            </select>
           
-      <button class="btn btn-primary" id="refreshBtn">Refresh</button>
-   </div>
-   <div class="control-group" id="dateRange">
-      <input   class="datepicker" id="fromDate" value="From" type="text" >
-      <input   class="datepicker" id="toDate" value="To" type="text">
-   </div>
+            <button class="btn btn-primary" id="refreshBtn">Refresh</button>
+        </div>
+        <div class="control-group" id="dateRange">
+            <input   class="datepicker" id="fromDate" value="From" type="text" >
+            <input   class="datepicker" id="toDate" value="To" type="text">
+        </div>
    <div class="row-fluid sortable">     
       <div class="box span12">
          <%= render :partial => 'layouts/title_bar_icons',
@@ -65,39 +65,7 @@ table tbody td {
 <%= javascript_include_tag "i7alerts.js.coffee" %>
 
 <script type="text/javascript">
-   var _MS_PER_DAY = 1000 * 60 * 60 * 24;
-   function dateDiffInDays(a, b) {
-      // Discard the time and time-zone information.
-      var utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
-      var utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-
-      return Math.floor((utc2 - utc1) / _MS_PER_DAY) + 1; // Adding one extra to make the end date inclusive.
-   }
-        
-       function formatNumber(nStr) {
-                                           label = " MB";
-                                           num = parseFloat(nStr);
-                                           if (num > 1024.0) {
-                                              nStr = ((num/1024).toFixed(2)).toString();
-                                              label = " GB"
-                                           } else {
-                                              nStr = num.toFixed(2).toString();
-                                           }
-
-                                           nStr += '';
-                                           x = nStr.split('.');
-                                           x1 = x[0];
-                                           x2 = x.length > 1 ? '.' + x[1] : '';
-                                           var rgx = /(\d+)(\d{3})/;
-                                           while (rgx.test(x1)) {
-                                              x1 = x1.replace(rgx, '$1' + ',' + '$2');
-                                           }
-                                           return x1 + x2 + label;
-       }
-
    $(document).ready(function(){
-       var fromDate, toDate;
-
        // Set approriate values (derived from query string) in the dropdown selections
        $("#reportTime").val("<%= params['reportTime'] || 'today' %>");
 
@@ -117,31 +85,7 @@ table tbody td {
           $("#fromDate").val(fromDate);
           toDate = "<%= params['toDate'] || Date.today.to_s %>"
           $("#toDate").val(toDate);
-       <% end %>
-
-       $("#fromDate" ).datepicker({ 
-              showAnim: "slide",        
-              dateFormat: "yy-mm-dd",
-              onSelect: function(dateText){
-                 fromDate = dateText;
-              },
-              onClose: function( selectedDate ) {
-                 $( "#toDate" ).datepicker( "option", "minDate", selectedDate );
-              }              
-       });
-       $("#toDate" ).datepicker({ 
-              showAnim: "slide",
-              dateFormat: "yy-mm-dd",
-              onSelect: function(dateText){
-                 toDate = dateText;
-              },
-              onClose: function( selectedDate ) {
-                 $( "#fromDate" ).datepicker( "option", "maxDate", selectedDate );
-              } 
-       });
-
-
-  
+       <% end %>  
   
        $('#refreshBtn').click(function() {
             var time = $('#reportTime').val();

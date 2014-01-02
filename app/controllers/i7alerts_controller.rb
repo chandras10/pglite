@@ -13,4 +13,13 @@ class I7alertsController < ApplicationController
       format.json { render json: I7alertsDatatable.new(view_context, timeQueryString)}
     end
   end
+
+  def download_pcap
+    if !File.exists?(params[:filename]) then
+       redirect_to '/404.html'
+       return
+    end
+    data = File.read(params[:filename])
+    send_data data, filename: File.basename(params[:filename]), type:  'application/pcap'
+  end
 end

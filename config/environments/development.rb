@@ -44,7 +44,8 @@ Pglite::Application.configure do
   config.peregrine_plugin_maas360_config = "/usr/local/var/plugin/Maas360Plugin/config.xml"
   config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"
 
-  config.i7alerts_ignore_classes=%w[0, 2, 3, 4, 5, 7, 8, 12]
+#  config.i7alerts_ignore_classes=%w[0, 2, 3, 4, 5, 7, 8, 12]
+  config.i7alerts_ignore_classes=%w[0]
   
   config.use_ssl = true
   config.ssl_port = 3001

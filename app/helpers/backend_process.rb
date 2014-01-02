@@ -72,7 +72,7 @@ class SimpleProcess < BackendProcess
       sleep(SLEEP_INTERVAL)
       
       result, output  = status
-      return false, output + ' Failed to start the process.' if (result == false)      
+      return true, output if (result == true)
         
     end # do loop for retrying...
 

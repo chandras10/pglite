@@ -86,4 +86,35 @@ class MaintenanceController < ApplicationController
     end
   end
 
+  def get_auth_device_list
+    render :auth_devices
+  end
+
+  def auth_devices_from_file
+    authDeviceFile = params[:authDeviceFile]
+    if authDeviceFile.nil? then
+       fail "Please select the file having the devices and upload it."
+    end
+
+    File.open(Rails.root.join('tmp', authDeviceFile.original_filename), "wb+") do |f|
+      f.write(authDeviceFile.read)
+    end
+
+    authDevParser = AuthDevParser.new
+
+    begin
+      FileUtils.mv(Rails.root.join('tmp', authDeviceFile.original_filename), authDevParser.importDevicesFromFile)
+    rescue SystemCallError => e 
+      raise e
+    end
+
+    result, msg = authDevParser.start  
+    fail if result == false
+    
+    redirect_to "/maintenance/auth_devices", notice: "Device list has been imported."
+
+  rescue => e
+    redirect_to "/maintenance/auth_devices", :flash => {:error => "Couldnt update the devices list!! Error: #{e.message}"}
+  end
+
 end

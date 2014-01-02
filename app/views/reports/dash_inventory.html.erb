@@ -15,7 +15,11 @@
     hashOperatingSystem[devinfo.operatingsystem] += 1
   end
   
-  no_of_days = ((@license_info.valid_until - Time.zone.now) / 1.day).to_i
+  if !@license_info.nil?
+     no_of_days = ((@license_info.valid_until - Time.zone.now) / 1.day).to_i
+  else
+     no_of_days = -1
+  end
 %>
 
 <style>
@@ -70,7 +74,7 @@
          </div>
          <div id="inventoryVulnCount">0</div>
       </a>
-      <a data-rel="tooltip" title="License expires at <%= @license_info.valid_until %>" 
+      <a data-rel="tooltip" title="License expires at <%= @license_info.valid_until if !@license_info.nil? %>" 
          class="well span2 top-block">
          <span class="icon32 icon-color icon-info"></span>
          <div>License</div>

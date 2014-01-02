@@ -21,7 +21,10 @@
   <%= csrf_meta_tags %>
   <%= javascript_tag "var AUTH_TOKEN = '#{form_authenticity_token}';" if protect_against_forgery?%>
   <%= javascript_tag do %>
-     var bAdminUser = "<%= current_user && current_user.admin? %>"
+     var bAdminUser = "<%= current_user && current_user.admin? %>";
+     
+     /* This value defined in reportsHelper class will format bandwidth data into B/KB/MB/GB... */
+     var bwMeasure = <%= $BW_MEASURE || 1 %>;
   <% end %>
 
   <!--[if lt IE 9]>
@@ -216,6 +219,6 @@
 
 
 
-<%= debug(params) if Rails.env.development? %>
+<!-- %= debug(params) if Rails.env.development? % -->
 </body>
 </html>
