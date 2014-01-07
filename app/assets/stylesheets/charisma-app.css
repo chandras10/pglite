@@ -422,6 +422,13 @@ height:15px;
 width:128px;
 background:url(../img/ajax-loaders/ajax-loader-6.gif);
 }
+td.right {
+  text-align: right;
+}
+.dataTables_processing
+{
+  z-index: 105
+}
 
 #tabs-container { 
     padding: 0px; 

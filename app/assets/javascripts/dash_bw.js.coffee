@@ -6,7 +6,8 @@ jQuery ->
   # Hide the graph by default. It is drawn only on-demand!
   #
   $("#graphBox .btn-minimize").parent().parent().next('.box-content').slideToggle()
-  $("#graphBox .btn-minimize i").removeClass('icon-chevron-up').addClass('icon-chevron-down');
+  $("#graphBox .btn-minimize i").removeClass('icon-chevron-up').addClass('icon-chevron-down')
+  $("#graphLoadingIndicator").hide()
   url = window.location.href
   queryParams = $('<a>', { href: url})[0]
   serverTable = $('#serverListTable').dataTable
@@ -45,14 +46,16 @@ jQuery ->
                  ]
   $("#graphBox .btn-minimize").click (e) ->
     if !$("#bw_graph_canvas").is(":visible")
+      $("#graphLoadingIndicator").show()
       $.ajax '/dash_bw.json' + queryParams.search,
         dataType: 'json'
         type: 'GET'
         data: {authenticity_token: AUTH_TOKEN, dataType: 'top'}
         error: (jqXHR, textStatus, errorThrown) ->
-          $('#loading-indicator').hide()
+          $("#graphLoadingIndicator").hide()
           console.log "AJAX ERROR: #{textStatus}"
         success: (data, textStatus, jqXHR) ->
+          $("#graphLoadingIndicator").hide()
           #for key, value of data
           #  console.log "#{key}: #{value}"
           myLine = new RGraph.Line("bw_graph_canvas", data.values)

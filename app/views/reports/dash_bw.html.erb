@@ -9,8 +9,13 @@
 %>
 <!-- content starts -->
 <style>
-td.right {
-  text-align: right;
+#graphLoadingIndicator {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -32px; /* -1 * image width / 2 */
+    margin-top: -20px;  /* -1 * image height / 2 */
+    display: block;     
 }
 </style>
 <div id="content" class="span10">
@@ -42,6 +47,9 @@ td.right {
                                  :header_link  => "#" }
          %>
          <div class="box-content" style="overflow:visible">
+            <div id="graphLoadingIndicator" style="display: none;">
+               <%= image_tag("ajax-loader-8.gif") %>
+            </div>         
             <canvas id="bw_graph_canvas" style="float: left" height="350" width="1000">[No canvas support]</canvas>
          </div>
       </div> <!-- box span12 -->
