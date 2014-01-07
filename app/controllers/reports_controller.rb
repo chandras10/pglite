@@ -62,81 +62,27 @@ class ReportsController < ApplicationController
   # Total bandwidth dashboard showing b/w usage
   def dash_bw
 
+    statCounters = {
+                     "internalIP"       => BandwidthDatatable.new(view_context, "Internalipstat", "destip"),
+                     "externalIP"       => BandwidthDatatable.new(view_context, "Externalipstat", "destip"),
+                     "byodIP"           => BandwidthDatatable.new(view_context, "Intincomingipstat", "destip"),
+                     "internalAPP"      => BandwidthResourceDatatable.new(view_context, "Internalresourcestat", "appid", "appidinternal", "appname"),
+                     "externalAPP"      => BandwidthResourceDatatable.new(view_context, "Externalresourcestat", "appid", "appidexternal", "appname"),
+                     "external_urlcat"  => BandwidthResourceDatatable.new(view_context, "Urlcatstat", "id", "urlcatid", "name"),
+                     "external_hlurlcat"=> BandwidthResourceDatatable.new(view_context, "Hlurlcatstat", "id", "hlurlcatid", "name")
+                   }
+
     set_IPstatTypes_constants
     set_timeLine_constants
 
-    # Total (IN + OUTbytes) consumption per Server/App, per hour/day/month etc.
-    # Key: Server_IP_address/Application Name, Value: 'integer' array holding Mbytes consumed/hr/day/month etc.
-    @hashTimeIntervalData = Hash.new
+    #Set some defaults, in order to avoid crashes
+    params['reportType'] = "internalIP" if !params['reportType'].present?
+    params['reportTime'] = "today" if !params['reportTime'].present?
+    params['dataType'] = "dst" if !params['dataType'].present? # return the list of servers
 
-    #
-    #  Per Server/App, Total INbytes and OUTBytes.
-    # Key: Internal_Server_IP_address, Value: Array[INbytes, OUTbytes]
-    @hashResourceTotals = Hash.new
-
-    #
-    # Per Device, Total INbytes and OUTbytes
-    # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
-    @hashDeviceTotals = Hash.new
-
-    #if there is no query string, then show the external bandwidth consumption.
-    #else show specific data as pointed to by "type"
-    #
-    reportType = params['reportType'] || "internalIP"
-
-    case reportType
-      when "internalIP"
-        dbQuery = Internalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-      when "externalIP"
-        dbQuery = Externalipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-      when "byodIP"
-        dbQuery = Intincomingipstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-      when "internalAPP"
-        dbQuery = Internalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-      when "externalAPP"
-        dbQuery = Externalresourcestat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-      when "external_urlcat"
-        dbQuery = Urlcatstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-      when "external_hlurlcat"
-        dbQuery = Hlurlcatstat.select("deviceid as client, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-    end
-    dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
-
-    dbQuery.each do |rec|
-      # Update the Hashmap holding per hour/day/month stats for each server
-      arrayData = @hashTimeIntervalData[rec['resource']]
-      if arrayData.nil? then
-          arrayData = @hashTimeIntervalData[rec['resource']] = Array.new(@numTimeSlots, 0)
-      end
-
-      arrayData[rec['time'].to_i] += (rec['inbytes'] + rec['outbytes'])
-
-      # Update the Hashmap holding total in/out bytes counters for each server
-      arrayData = @hashResourceTotals[rec['resource']]
-      if arrayData.nil? then
-          arrayData = @hashResourceTotals[rec['resource']] = Array.new(2, 0)
-      end
-      arrayData[1] += rec['inbytes'] # for Servers, inbytes === Upload from server to Device...
-      arrayData[0] += rec['outbytes'] # outbytes = Download from device to Server
-
-      if (params[:device].nil?) then
-          # Update the Hashmap holding total in/out bytes counters for each device (or client)
-          clientData = @hashDeviceTotals[rec['client']]
-          if clientData.nil? then
-            clientData = @hashDeviceTotals[rec['client']] = {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
-          end
-          clientData[:totals][0] += rec['inbytes']
-          clientData[:totals][1] += rec['outbytes']
-      end
-    end #Foreach db record...
-
-    case params['reportTime']
-    when "past_day"
-          # in case of past 24 hours, 
-          currentHour = Time.now.strftime("%H.%M").to_f.ceil 
-          @hashTimeIntervalData.each do |k, v|
-             @hashTimeIntervalData[k] = v.rotate(currentHour+1)
-          end
+    respond_to do |format|
+       format.html
+       format.json { render json: statCounters[params['reportType']]}
     end
 
   end # end of method
@@ -445,7 +391,7 @@ class ReportsController < ApplicationController
     timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
 
     respond_to do |format|
-      format.json { render json: BandwidthDatatable.new(view_context, timeQueryString)}
+      format.json { render json: BandwidthByCountryDatatable.new(view_context, timeQueryString)}
     end
   end
 
