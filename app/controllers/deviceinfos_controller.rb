@@ -29,6 +29,10 @@ class DeviceinfosController < ApplicationController
   def authorize
      auth_src = params[:auth_type] || 0
      Deviceinfo.update_all(["auth_source=?", auth_src], :macid => params[:ids])
+ 
+     # Alert PG to pick up the new changes...
+     system("#{Pglite.config.peregrine_pgguard_SIGUSR_cmd}")
+
      redirect_to '/tbl_inventory'
   end
 

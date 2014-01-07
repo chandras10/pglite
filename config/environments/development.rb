@@ -35,29 +35,4 @@ Pglite::Application.configure do
   # Expands the lines which load the assets
   config.assets.debug = true
 
-  # Peregrine Guard Policy file residence
-  config.peregrine_policyfile = "/usr/local/etc/pgguard/policy.xml"
-  config.peregrine_configfile = "/usr/local/etc/pgguard/pgguardconfig.xml"
-  config.peregrine_policyfile_dtd = "/usr/local/etc/pgguard/pg_policy.dtd"
-  config.peregrine_pgguard_pidfile = "/usr/local/var/pgguard/pgguard.pid"
-  config.peregrine_adconfigfile = "/usr/local/etc/i7ADPlugin/config.xml"
-  config.peregrine_plugin_maas360_config = "/usr/local/var/plugin/Maas360Plugin/config.xml"
-  config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"
-
-#  config.i7alerts_ignore_classes=%w[0, 2, 3, 4, 5, 7, 8, 12]
-  config.i7alerts_ignore_classes=%w[0]
-  
-  config.use_ssl = true
-  config.ssl_port = 3001
-  config.force_ssl = true
-
-  if File.exist?(config.peregrine_configfile)
-     xmlfile = File.new(config.peregrine_configfile)
-     configHash = Hash.from_xml(xmlfile)
-     if (configHash['pgguard'].nil? || configHash['pgguard']['authentication'].nil? || configHash['pgguard']['authentication']['ldap'].nil?)
-        config.authentication = "Local"
-     else
-        config.authentication = "ActiveDirectory"
-     end
-  end
 end
