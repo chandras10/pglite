@@ -23,6 +23,7 @@
 		         <li><a href="#pluginConfig-tab" data-toggle="tab">Integrations</a></li>
 		         <li><a href="#alertsConfig-tab" data-toggle="tab">Alerts</a></li>
 		         <li><a href="#emailConfig-tab" data-toggle="tab">Email</a></li>
+             <li><a href="#aclConfig-tab" data-toggle="tab">Cisco ACL</a></li>             
 	        </ul>
 
 	        <div id="TabList" class="tab-content" style="overflow:visible">
@@ -287,6 +288,55 @@
                          <input type="text" value="" id="emailCc" class="input-xlarge focused">
                       </div>
                     </div>  
+                </form>
+             </div>
+
+             <div class="tab-pane" id="aclConfig-tab">
+                <form class="form-horizontal" action="/settings" method="POST">
+                   <div class="control-group">
+                     <label for="connectionMode" class="control-label">Connection Mode</label>
+                     <div class="controls">
+                        <select data-rel="chosen" id="connectionMode">
+                           <option value="ssh">SSH</option>
+                           <option value="telnet">TELNET</option>
+                        </select>
+                     </div>
+
+                      <span class="navbar-form navbar-left">
+                         <label for="switchIP" class="control-label">Switch IP Address</label>
+                         <div class="controls">
+                            <input type="text" value="" id="switchIP" class="input-xlarge focused" data-trigger="change" data-regexp="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$">
+                         </div>
+                         <label for="aclPort" class="control-label">BYOD Switch Port <i id='aclPortHelp' class="icon-question-sign" data-rel="popover" data-content="" title=""></i></label>
+                         <div class="controls">
+                            <input type="text" value="" id="aclPort" class="input-xlarge focused">
+                         </div>
+                      </span>
+                   </div>
+                   <div class="control-group">
+                      <label for="aclNumber" class="control-label">Cisco ACL Number</label>
+                      <div class="controls">
+                         <input type="text" value="" id="aclNumber" class="input-xlarge focused">
+                      </div>
+                   </div>  
+                   <div class="control-group">
+                      <label for="aclLogin" class="control-label">Login</label>
+                      <div class="controls">
+                         <input type="text" value="" id="aclLogin" class="input-xlarge focused">
+                      </div>
+                   </div>  
+                   <div class="control-group">
+                      <label for="aclPassword" class="control-label">Password</label>
+                      <div class="controls">
+                         <input type="password" value="" id="aclPassword" class="input-xlarge focused">
+                      </div>
+                   </div>  
+                   <div class="control-group">
+                      <label for="aclEnablePassword" class="control-label">Enable Password</label>
+                      <div class="controls">
+                         <input type="password" value="" id="aclEnablePassword" class="input-xlarge focused">
+                      </div>
+                   </div>  
                 </form>
              </div>
 

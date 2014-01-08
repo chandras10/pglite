@@ -303,6 +303,13 @@ class ConfigurationController < ApplicationController
        configHash["maas360"] = maas360Hash["maas360"]
     end
 
+    if File.exist?(Rails.configuration.peregrine_cisco_acl_configfile) then
+       xmlfile = File.new(Rails.configuration.peregrine_cisco_acl_configfile)
+       configHash = Hash.new if configHash.nil?
+       aclHash = Hash.from_xml(xmlfile)
+       configHash["ciscoACL"] = aclHash["cisco_config"]
+    end
+
     respond_to do |format|
       format.html # configuration.html.erb
       format.json { render json: (configHash.nil? ? {} : configHash)}
@@ -435,7 +442,38 @@ class ConfigurationController < ApplicationController
        file.write(mdmHash['maas360'].to_xml({:root => 'maas360', :skip_types => true}))
        file.close
     end
-    
+
+    #
+    # Cisco ACL configuration
+    #    
+    ciscoACL = paramHash['ciscoACL']
+    if (!ciscoACL.nil?)
+       if (!ciscoACL['password'].nil? && !ciscoACL['password'].empty?)
+          ciscoACL['password'] = encrypt(ciscoACL['password'])
+       end
+       if (!ciscoACL['enable'].nil? && !ciscoACL['enable'].empty?)
+          ciscoACL['enable'] = encrypt(ciscoACL['enable'])
+       end
+
+       #
+       # Cant use hyphen in javascript. Hence the kludge here to change underscore to hyphen before saving.
+       #
+       #ciscoACL['acl-no'] = ciscoACL.delete('acl_no')
+
+       if File.exist?(Rails.configuration.peregrine_cisco_acl_configfile) then
+          xmlfile = File.new(Rails.configuration.peregrine_cisco_acl_configfile)
+          aclHash = Hash.from_xml(xmlfile) || Hash.new
+          aclConfig = aclHash['cisco_config'] || Hash.new # What if that XML was malformed or was missing the root node? Hence create an empty if need be.
+       else
+          aclHash = Hash.new
+          aclHash['cisco_config'] = aclConfig = Hash.new
+       end
+       aclHash['cisco_config'] = aclConfig.merge(ciscoACL)       
+       file = File.new(Rails.configuration.peregrine_cisco_acl_configfile, "w")
+       file.write(aclHash['cisco_config'].to_xml({:root => 'cisco-config', :skip_types => true}))
+       file.close
+    end
+
     if paramHash['restart'] == true
        result, msg = PeregrineProcess.new.restart
        if (result == true) then

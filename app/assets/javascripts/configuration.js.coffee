@@ -14,6 +14,9 @@ loadContextHelp = ->
     title: 'BYOD Network'
     text: "BYODs connecting to the wireless network will be assigned IP from this address pool. 
            Peregrine will mainly monitor the traffic from/to this network. "
+  helpText['aclPort'] = 
+    title: 'BYOD Port'
+    text: "Port through which BYODs get into the network."
 
 loadConfiguration = ->
   $.ajax '/settings.json',
@@ -94,6 +97,20 @@ loadConfiguration = ->
          $('#smtpPassword').val(smtpSettings.password)
          $('#emailTo').val(pgConfig.email.to)
          $('#emailCc').val(pgConfig.email.cc)
+      #
+      # Cisco ACL Tab
+      #
+      $('#aclPortHelp').attr('data-original-title', helpText['aclPort'].title)
+      $('#aclPortHelp').attr('data-content', helpText['aclPort'].text)      
+      ciscoACL = data.ciscoACL
+      if (typeof ciscoACL isnt "undefined")
+         $('#connectionMode').val(ciscoACL.mode.toLowerCase()).trigger('liszt:updated')
+         $('#switchIP').val(ciscoACL.ip)
+         $('#aclPort').val(ciscoACL.port)
+         $('#aclNumber').val(ciscoACL.acl_no)
+         $('#aclLogin').val(ciscoACL.username)
+         $('#aclPassword').val(ciscoACL.password)
+         $('#aclEnablePassword').val(ciscoACL.enable)
 
 saveApplicationConfig = (restartFlag) ->
   data = {}
@@ -202,6 +219,19 @@ saveEmailConfig = (restartFlag) ->
   data.restart = restartFlag
   $('#tabParms').val(JSON.stringify(data))
 
+saveACLConfig = (restartFlag) ->
+  data = {}
+  ciscoACL = data.ciscoACL = {}
+  ciscoACL.mode = $('#connectionMode').val()
+  ciscoACL.ip = $('#switchIP').val()
+  ciscoACL.port = $('#aclPort').val()
+  ciscoACL.acl_no = $('#aclNumber').val()
+  ciscoACL.username = $('#aclLogin').val()
+  ciscoACL.password = $('#aclPassword').val()
+  ciscoACL.enable = $('#aclEnablePassword').val()
+  data.restart = restartFlag
+  $('#tabParms').val(JSON.stringify(data))  
+
 saveConfiguration = (restartFlag) ->
   activeTab = $('#TabList').find('.tab-pane:visible').attr('id')
   if activeTab is 'peregrineConfig-tab'
@@ -213,6 +243,8 @@ saveConfiguration = (restartFlag) ->
     return false # Abort form submission for this tab. The data is saved to the database instead of config files via AJAX call.
   else if activeTab is 'emailConfig-tab'
     saveEmailConfig(restartFlag)
+  else if activeTab is 'aclConfig-tab'
+    saveACLConfig(restartFlag)
   $('#SaveChangesBtn').closest('form').submit() #Explicitly submitting the form here since we just call noty() in the main SubmitBtn's routine.
   $('#dialog-modal').dialog
      resizable: false
@@ -357,6 +389,7 @@ jQuery ->
            $noty.close()
        ]
       false
+  $('#switchIP').parsley('validate') # Check for valid IP address (IPv4 format)      
   $('.form-horizontal').parsley
      listeners:
        onFieldError: (elem, constraints, parsleyField) ->

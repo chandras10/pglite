@@ -81,6 +81,7 @@ module Pglite
     config.peregrine_policyfile_dtd = "/usr/local/etc/pgguard/pg_policy.dtd"
     config.peregrine_pgguard_pidfile = "/usr/local/var/pgguard/pgguard.pid"
     config.peregrine_adconfigfile = "/usr/local/etc/i7ADPlugin/config.xml"
+    config.peregrine_cisco_acl_configfile = "/usr/local/etc/pgguard/ciscoconfig.xml"
     config.peregrine_plugin_maas360_config = "/usr/local/var/plugin/Maas360Plugin/config.xml"
     config.peregrine_pgguard_alert_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s ALRM"
     config.peregrine_pgguard_SIGUSR_cmd = "cat #{config.peregrine_pgguard_pidfile} | xargs kill -s USR1"
