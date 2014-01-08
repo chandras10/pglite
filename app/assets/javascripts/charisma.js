@@ -268,6 +268,32 @@ $.fn.dataTableExt.oApi.fnPagingInfo = function ( oSettings )
 		"iTotalPages":    Math.ceil( oSettings.fnRecordsDisplay() / oSettings._iDisplayLength )
 	};
 }
+
+$.fn.dataTableExt.oApi.fnSetFilteringEnterPress = function ( oSettings ) {
+    var _that = this;
+
+    this.each( function ( i ) {
+        $.fn.dataTableExt.iApiIndex = i;
+        var
+            $this = this, 
+            oTimerId = null, 
+            sPreviousSearch = null,
+            anControl = $( 'input', _that.fnSettings().aanFeatures.f );
+
+            anControl
+              .unbind( 'keyup' )
+              .bind( 'keyup', function(e) {
+
+              if (e.keyCode == 13){
+                _that.fnFilter( anControl.val() );
+              }
+        });
+
+        return this;
+    } );
+    return this;
+}
+
 $.extend( $.fn.dataTableExt.oPagination, {
 	"bootstrap": {
 		"fnInit": function( oSettings, nPaging, fnDraw ) {
@@ -344,6 +370,7 @@ $.extend( $.fn.dataTableExt.oPagination, {
 	}
 });
 
+
 Array.max = function( array ){
       return Math.max.apply( Math, array );
 };
@@ -410,3 +437,25 @@ var fromDate, toDate;
        	return num + labels[n];
        }
 
+function removeURLParameter(url, parameter) {
+    //prefer to use l.search if you have a location/link object
+    var urlparts= url.split('?');   
+    if (urlparts.length>=2) {
+
+        var prefix= encodeURIComponent(parameter)+'=';
+        var pars= urlparts[1].split(/[&;]/g);
+
+        //reverse iteration as may be destructive
+        for (var i= pars.length; i-- > 0;) {    
+            //idiom for string.startsWith
+            if (pars[i].lastIndexOf(prefix, 0) !== -1) {  
+                pars.splice(i, 1);
+            }
+        }
+
+        url= urlparts[0]+'?'+pars.join('&');
+        return url;
+    } else {
+        return url;
+    }
+}

@@ -19,9 +19,11 @@ class BandwidthResourceDatatable < BandwidthDatatable
 private
   
   def addLookupConditions
-    return @dbTable.joins(@lookupTable).select("#{@lookupColumn} as key").
+    query = @dbTable.joins(@lookupTable).select("#{@lookupColumn} as key").
             where("#{@dbTable}.#{@destIDColumn} > 0").  # Filter out unclassified/unrated information
             group("#{@lookupColumn}") 
+    query = query.where("#{@lookupColumn} ILIKE :search", search: "%#{params[:sSearch]}%") if (params[:sSearch].present? && !params[:sSearch].empty?)
+    query
   end
 
 end

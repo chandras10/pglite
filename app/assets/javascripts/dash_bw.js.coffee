@@ -18,7 +18,7 @@ jQuery ->
     bServerSide: true
     sAjaxSource: '/dash_bw.json' + queryParams.search
     bDeferRender: true
-    bStateSave: true
+    bStateSave: false
     sScrollX: "100%"
     bScrollCollapse: true
     aoColumns: [
@@ -27,23 +27,30 @@ jQuery ->
                    { mData: "recd", sClass: "right"},
                    { mData: "total", sClass: "right"}
                  ]      
+  serverTable.fnSetFilteringEnterPress()
   clientTable = $('#clientListTable').dataTable
-    sDom: "Rlfrtp"
+    sDom: "Rlrtp"
     sPaginationType: "bootstrap"
     bJQueryUI: true
     bProcessing: true
     bServerSide: true
     sAjaxSource: '/dash_bw.json' + queryParams.search + '&dataType=src'
     bDeferRender: true
-    bStateSave: true
+    bStateSave: false
     sScrollX: "100%"
-    bScrollCollapse: true
+    bScrollCollapse: true    
     aoColumns: [
-                   { mData: "key"},
+                   { mData: "key", bSortable: false}, 
                    { mData: "sent", sClass: "right"},
                    { mData: "recd", sClass: "right"},
                    { mData: "total", sClass: "right"}
-                 ]
+               ]
+  #
+  # NOTE: Sorting/Searching is NOT possible within the client datatable since the key can be macid/username/ip_address.
+  # Username/ip_Address is looked up after getting all the BW stat records. SQL JOIN is very very costly here and hence this is like this.
+  # Given the above, filtering the database records on username/ipaddress is complicated and best avoided.
+  #            
+  #clientTable.fnSetFilteringEnterPress()
   $("#graphBox .btn-minimize").click (e) ->
     if !$("#bw_graph_canvas").is(":visible")
       $("#graphLoadingIndicator").show()

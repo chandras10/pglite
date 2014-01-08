@@ -103,7 +103,10 @@ protected
   end
 
   def getDestinationsWithConditions(initialQuery)
-    records = initialQuery || @dbTable.select("#{@destIDColumn} as key").group("#{@destIDColumn}")
+    defaultQuery = @dbTable.select("#{@destIDColumn} as key").group("#{@destIDColumn}")
+    defaultQuery = defaultQuery.where("#{@destIDColumn} ILIKE :search", search: "%#{params[:sSearch]}%") if (params[:sSearch].present? && !params[:sSearch].empty?)
+
+    records = initialQuery || defaultQuery
     records = records.select("sum(inbytes) as sent, sum(outbytes) as recd, sum(inbytes) + sum(outbytes) as total")
     records = setTimePeriod(records)
     records = records.order("#{sort_column} #{sort_direction}")
