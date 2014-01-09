@@ -552,7 +552,7 @@ class ConfigurationController < ApplicationController
       matchDef = /(.*)_CHG_$/.match(str)
       if matchDef.nil?
          return  str # passwd didnt change, so return the already encrypted passwd as is.
-      elsif matchDef[1].nil?
+      elsif (matchDef[1].nil? or matchDef[1].empty?)
          return '' # maybe the user just blanked out the password and left it empty.
       end
 
