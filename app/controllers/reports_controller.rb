@@ -1,4 +1,5 @@
 class ReportsController < ApplicationController
+
   before_filter :signed_in_user, only: [:dash_inventory, :dash_inventory_bandwidth_stats, 
                                         :dash_bw, :dash_bw_server,
                                         :dash_snort, :tbl_snort,
@@ -184,7 +185,7 @@ class ReportsController < ApplicationController
 
     dbQuery = Alertdb.select("priority as priority, sigid as sigid, message as message, count(*) as cnt").
                                          group(:priority, :sigid, :message).order(:priority, :sigid)
-    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+    dbQuery = selectTimeIntervals(dbQuery)
     #add specific device to the query, if it exists
     if (params[:device].present?)
        dbQuery = dbQuery.where("srcmac = ? OR dstmac = ?", params[:device], params[:device])
@@ -221,13 +222,9 @@ class ReportsController < ApplicationController
 
     set_timeLine_constants
     
-    dbQuery = Externalipstat
-    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
-    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
-
     respond_to do |format|
       format.html # index.html.erb
-      format.json { render json: SnortAlertsDatatable.new(view_context, timeQueryString)}
+      format.json { render json: SnortAlertsDatatable.new(view_context)}
     end
 
 
@@ -302,7 +299,7 @@ class ReportsController < ApplicationController
     # I am employing 'find_by_sql' for the DB queries. (Not efficient but works...)
     #
     dbQuery = Internalipstat
-    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+    dbQuery = setTimePeriod(dbQuery)
     timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
 
     #
@@ -338,22 +335,12 @@ class ReportsController < ApplicationController
     set_timeLine_constants
 
     @countryCodes = IsoCountryCodes.for_select
-    #
-    # Get the WHERE clause for time-based query and append it to the SQL below.
-    # I had to do some regular expression gimmick/hack to extract only the WHERE clause because
-    # I am employing 'find_by_sql' for the DB queries. (Not efficient but works...)
-    #
-    dbQuery = Externalipstat
-    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
-    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
-
-
     bwLimit = 0
     @dbRecords = Externalipstat.select('cc, sum(inbytes) as download, sum(outbytes) as upload').
-                           where("#{timeQueryString[0][1]}").
                            having('sum(inbytes) > ? or sum(outbytes) > ?', bwLimit, bwLimit).
                            group('cc').
                            order('cc')
+    @dbRecords = setTimePeriod(@dbRecords)
 
     @totalBWPerCountry = Hash.new
     @dbRecords.each do |r|
@@ -368,17 +355,9 @@ class ReportsController < ApplicationController
   end
 
   def dash_bw_country
-    #
-    # Get the WHERE clause for time-based query and append it to the SQL below.
-    # I had to do some regular expression gimmick/hack to extract only the WHERE clause because
-    # I am employing 'find_by_sql' for the DB queries. (Not efficient but works...)
-    #
-    dbQuery = Externalipstat
-    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
-    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
-
     @dbRecords = Externalipstat.select('count(distinct destip) as serverCount, sum(inbytes) as download, sum(outbytes) as upload, sum(inbytes)+sum(outbytes) as total').
-                           where("#{timeQueryString[0][1]} and cc = ?", params[:country])
+                                where("cc = ?", params[:country])
+    @dbRecords = setTimePeriod(@dbRecords)
 
     respond_to do |format|
        format.json { render json: @dbRecords }
@@ -386,12 +365,8 @@ class ReportsController < ApplicationController
   end
 
   def dash_bw_country_details
-    dbQuery = Externalipstat
-    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
-    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
-
     respond_to do |format|
-      format.json { render json: BandwidthByCountryDatatable.new(view_context, timeQueryString)}
+      format.json { render json: BandwidthByCountryDatatable.new(view_context)}
     end
   end
 
@@ -456,7 +431,7 @@ class ReportsController < ApplicationController
                                                      order("hlurlcatid.name").scoped      
     end
 
-    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
+    dbQuery = selectTimeIntervals(dbQuery)
 
     #add specific device to the query, if it exists
     dbQuery = dbQuery.where("deviceid = ?", params[:device]) if !params[:device].nil?

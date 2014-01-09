@@ -4,13 +4,9 @@ class I7alertsController < ApplicationController
   def index
     set_timeLine_constants
 
-    dbQuery = I7alert
-    dbQuery = addTimeLinesToDatabaseQuery(dbQuery)
-    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
-
     respond_to do |format|
       format.html # index.html.erb
-      format.json { render json: I7alertsDatatable.new(view_context, timeQueryString)}
+      format.json { render json: I7alertsDatatable.new(view_context)}
     end
   end
 

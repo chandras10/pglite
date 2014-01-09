@@ -182,7 +182,7 @@ class ConfigurationController < ApplicationController
 
 
     #
-    # Assumption: JSON objected POSTed will always have a valid policy structure with at least one rule and
+    # Assumption: JSON object POSTed will always have a valid policy structure with at least one rule and
     # at least one source and destination ("ANY" could be the value, too)
     #
     policyJSON = JSON.parse params[:policy_json]

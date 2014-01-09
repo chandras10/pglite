@@ -3,13 +3,13 @@ class BandwidthByCountryDatatable
   include ReportsHelper
   delegate :params, :h, :link_to,  to: :@view
 
-  def initialize(view, timeCondition)
+  def initialize(view)
     @view = view
-    @timeCondition = timeCondition[0][1]
   end
 
   def as_json(options = {})
-    numServers =  Externalipstat.uniq.select('destip, destport').where("#{@timeCondition} and cc = ?", params[:country]).length
+    numServers =  Externalipstat.uniq.select('destip, destport').where("cc = ?", params[:country])
+    numServers = setTimePeriod(numServers).length
     {
       sEcho: params[:sEcho].to_i,
       iTotalRecords: numServers,
@@ -53,7 +53,8 @@ private
     servers = Externalipstat.select('destip as server, destport as port, sum(inbytes) as download, sum(outbytes) as upload, sum(inbytes)+sum(outbytes) as total').group('destip, destport')
     servers = servers.order("#{sort_column} #{sort_direction}")
     servers = servers.page(page).per_page(per_page)
-    servers = servers.where("#{@timeCondition} and cc = ?", params[:country])
+    servers = servers.where("cc = ?", params[:country])
+    servers = setTimePeriod(servers)
 
     if params[:sSearch].present?
       servers = servers.where("destip ILIKE :search", search: "%#{params[:sSearch]}%")

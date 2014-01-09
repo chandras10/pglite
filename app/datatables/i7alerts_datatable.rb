@@ -1,10 +1,10 @@
 class I7alertsDatatable
   include DatatablesHelper
+  include ReportsHelper
   delegate :params, :h, :link_to,  to: :@view
 
-  def initialize(view, queryConditions)
+  def initialize(view)
     @view = view
-    @queryConditions = queryConditions
   end
 
   def as_json(options = {})
@@ -66,8 +66,8 @@ private
                       joins('LEFT OUTER JOIN i7alertdef ON i7alertdef.id = i7alert.id 
                              LEFT OUTER JOIN i7alertclassdef ON i7alertclassdef.id = i7alertdef.classid').
                       where("i7alertdef.classid NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})").
-                      where("i7alertdef.active = true").
-                      where("#{@queryConditions[0][1]}").scoped
+                      where("i7alertdef.active = true").scoped
+    alerts = setTimePeriod(alerts)
     alerts = alerts.order("#{sort_column} #{sort_direction}")
     alerts = alerts.page(page).per_page(per_page)
     if params[:sSearch].present?

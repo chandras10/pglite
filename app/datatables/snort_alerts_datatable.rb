@@ -2,9 +2,8 @@ class SnortAlertsDatatable
   include DatatablesHelper
   delegate :params, :h, :link_to,  to: :@view
 
-  def initialize(view, queryConditions)
+  def initialize(view)
     @view = view
-    @queryConditions = queryConditions
   end
 
   def as_json(options = {})
@@ -57,8 +56,8 @@ private
 
   def fetch_alerts
     alerts = Alertdb.select("timestamp, priority, sigid, message, protocol, 
-                                             srcip, srcport, destip, destport, srcmac, dstmac").
-                     where("#{@queryConditions[0][1]}")
+                                             srcip, srcport, destip, destport, srcmac, dstmac")
+    alerts = setTimePeriod(alerts)
 
     if (params[:device].present?) then          
         alerts = alerts.where("(srcmac = ? OR dstmac = ?)", params[:device],  params[:device])
