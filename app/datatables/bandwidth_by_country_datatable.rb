@@ -1,6 +1,8 @@
 class BandwidthByCountryDatatable
   include DatatablesHelper
   include ReportsHelper
+  include ActionView::Helpers::NumberHelper  #using the number_to_human_size function call...
+
   delegate :params, :h, :link_to,  to: :@view
 
   def initialize(view)
@@ -37,9 +39,9 @@ private
       {
         server: link_to(rec.server, paramHash.merge({:resource=> rec.server})),
         port: h(rec.port),
-        upload: h(rec.upload.to_i/$BW_MEASURE),
-        download: h(rec.download.to_i/$BW_MEASURE),
-        total: h(rec.total.to_i/$BW_MEASURE),
+        upload: h(number_to_human_size rec.upload),
+        download: h(number_to_human_size rec.download),
+        total: h(number_to_human_size rec.total),
         "DT_RowId" =>  h(rec.server)
       }
     end

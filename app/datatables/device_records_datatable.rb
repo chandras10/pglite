@@ -1,5 +1,7 @@
 class DeviceRecordsDatatable
   include DatatablesHelper
+  include ActionView::Helpers::NumberHelper  #using the number_to_human_size function call...
+
   delegate :params, :h, :link_to,  to: :@view
 
   def initialize(view, tableName)
@@ -133,9 +135,9 @@ private
       {
         server: link_to(server.destip, paramHash.merge({:resource=> server.destip})),
         port: h(server.destport),
-        download: h(server.download.to_i/$BW_MEASURE),
-        upload: h(server.upload.to_i/$BW_MEASURE),
-        total: h(server.total.to_i/$BW_MEASURE)
+        download: h(number_to_human_size server.download),
+        upload: h(number_to_human_size server.upload),
+        total: h(number_to_human_size server.total)
       }
     end
   end

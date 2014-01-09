@@ -118,7 +118,7 @@ table li{
                       this.sumOUTbytes += parseInt(record.outbytes);
                    }
                 },
-                value: function() { return ((this.sumINbytes + this.sumOUTbytes)/bwMeasure).toFixed(1);},
+                value: function() { return (this.sumINbytes + this.sumOUTbytes).toFixed(1);},
                 format: function(nStr) {   return formatNumber(nStr); },
                 label: "TotalBW"
              };
@@ -134,7 +134,7 @@ table li{
                       this.sumINbytes += parseInt(record.inbytes);
                    }
                 },
-                value: function() { return ((this.sumINbytes)/bwMeasure).toFixed(1);},
+                value: function() { return (this.sumINbytes).toFixed(1);},
                 format: function(nStr) { return formatNumber(nStr); },
                 label: "Upload"
              };
@@ -149,7 +149,7 @@ table li{
                       this.sumOUTbytes += parseInt(record.outbytes);
                    }
                 },
-                value: function() { return ((this.sumOUTbytes)/bwMeasure).toFixed(1);},
+                value: function() { return (this.sumOUTbytes).toFixed(1);},
                 format: function(nStr) { return formatNumber(nStr); },
                 label: "Download"
              };

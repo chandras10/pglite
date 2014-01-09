@@ -2,9 +2,6 @@
 
 # Selecting the top 10 ports to display in the bandwidth line graph
 hashGraphTimeBasedTotals = Hash[@hashTimeIntervalData.sort_by {|key, value| value.reduce(:+)}.reverse[0..10]]
-hashGraphTimeBasedTotals.each do |i, arrayTotals|
-   arrayTotals.map! {|e| e/$BW_MEASURE}
-end
 
 if params['reportType'] == "byodIP" then
    serverPortListTitle = "BYOD Device Ports"
@@ -56,18 +53,18 @@ end
                <thead>
 	          <tr>
 	             <th>Ports</th>
-               <th><%= "Download #{bandwidth_label} " %></th>
-               <th><%= "Upload #{bandwidth_label} " %></th>
-               <th><%= "Total    #{bandwidth_label} " %></th>
+               <th><%= "Download" %></th>
+               <th><%= "Upload" %></th>
+               <th><%= "Total" %></th>
 	          </tr>
 	       </thead>   
 	       <tbody>
                <% @hashPortTotals.each do | port, arrayTotals | %>
                      <tr>
                         <td><%= port %></td>
-                        <td><%= sprintf("%.2f", arrayTotals[0]/$BW_MEASURE) %></td>
-                        <td><%= sprintf("%.2f", arrayTotals[1]/$BW_MEASURE) %></td>
-                        <td><%= sprintf("%.2f", arrayTotals.reduce(:+)/$BW_MEASURE) %></td>
+                        <td><%= number_to_human_size arrayTotals[0] %></td>
+                        <td><%= number_to_human_size arrayTotals[1] %></td>
+                        <td><%= number_to_human_size arrayTotals.reduce(:+) %></td>
                      </tr>
                <% end %>
                
@@ -86,9 +83,9 @@ end
                <thead>
 	                <tr>
 	                   <th>Device</th>
-                     <th><%= "Download #{bandwidth_label} " %></th>
-                     <th><%= "Upload #{bandwidth_label} " %></th>
-                     <th><%= "Total    #{bandwidth_label} " %></th>	                
+                     <th><%= "Download" %></th>
+                     <th><%= "Upload" %></th>
+                     <th><%= "Total" %></th>	                
                   </tr>
 	             </thead>   
 	             <tbody>
@@ -103,9 +100,9 @@ end
                %>
                   <tr>
                      <td><%= link_to linkText, :action => "device_details", :device => device %></td>
-                     <td><%= sprintf("%.2f", clientData[:totals][0]/$BW_MEASURE) %></td>
-                     <td><%= sprintf("%.2f", clientData[:totals][1]/$BW_MEASURE) %></td>
-                     <td><%= sprintf("%.2f", clientData[:totals].reduce(:+)/$BW_MEASURE) %></td>
+                     <td><%= number_to_human_size clientData[:totals][0] %></td>
+                     <td><%= number_to_human_size clientData[:totals][1] %></td>
+                     <td><%= number_to_human_size clientData[:totals].reduce(:+) %></td>
                   </tr>
                <% end %>
                </tbody>
@@ -153,7 +150,7 @@ end
             myLine.Set('text.color', '#666');
             myLine.Set('key.interactive', true);
             myLine.Set('spline', true);
-            myLine.Set('title', '<%= "Bandwidth #{bandwidth_label}" %>');
+            myLine.Set('title', '<%= "Bandwidth" %>');
             myLine.Set('gutter.left', 70);
             myLine.Set('gutter.right', 40);
             myLine.Set('tickmarks', 'circle');

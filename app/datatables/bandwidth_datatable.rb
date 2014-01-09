@@ -30,7 +30,7 @@ class BandwidthDatatable
         labels: bandwidthGraphTimeSlotLabels,
         keys: dests.keys,
         values: dests.values,
-        title: "Bandwidth #{bandwidth_label}"
+        title: "Bandwidth"
       }
 
     when "dst"

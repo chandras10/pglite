@@ -84,28 +84,13 @@ module ReportsHelper
   end  
 
   #
-  # Bandwidth data will be shown in M/K/bytes depending on the variable value below.
-  #  2 ** 0 = one byte; 1K = 2 ** 10;  1M = 2 ** 20
-  #
-  $BW_MEASURE = 2 ** 0
-
-  def bandwidth_label
-      label = "(bytes)"
-      if ($BW_MEASURE > 1000000) then
-         label = "(Mbytes)"
-      elsif ($BW_MEASURE > 1000) then
-         label = "(Kbytes)"
-      end
-  end
-
-  #
   # Set from and to limits to the incoming query based on relative parameters like past_day/week/month etc.
   #
   # ASSUMPTION: Incoming query references a table(s) which has column named 'timestamp'
   #
   def setTimePeriod(dbQuery)
 
-    if (dbQuery.nil? || dbQuery.empty?)
+    if dbQuery.nil?
       return dbQuery
     end
 
@@ -161,7 +146,7 @@ module ReportsHelper
   #
   def selectTimeIntervals(dbQuery)
 
-    if dbQuery.nil? || dbQuery.empty?
+    if dbQuery.nil?
        return
     end
 
