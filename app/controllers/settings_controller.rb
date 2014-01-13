@@ -229,7 +229,6 @@ skip_before_filter  :verify_authenticity_token
   end
 
   def save_alerts
-     Rails.logger.debug "Alerts to Save: #{params['ids']}"
 
      if (!params['activeids'].empty?) 
         I7alertdef.update_all({:active => true}, "id IN (#{params['activeids']})")

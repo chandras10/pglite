@@ -89,6 +89,10 @@ module Pglite
     config.i7alerts_ignore_classes=%w[0, 2, 3, 4, 5, 7, 8, 12]
   
 
+    #
+    # Default auth is using the local store (database table)
+    #
+    config.authentication = "Local"
     if File.exist?(config.peregrine_configfile)
       xmlfile = File.new(config.peregrine_configfile)
       configHash = Hash.from_xml(xmlfile)

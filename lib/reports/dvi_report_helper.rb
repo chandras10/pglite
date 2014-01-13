@@ -7,24 +7,28 @@ require 'thinreports'
     DVI_SEVERITY_LABELS = ["Low", "Medium", "High"]
     DVI_SEVERITY_RANGES = [0.0..0.39, 0.4..0.69, 0.7..1.0]
 
-    def dviReport
-          @reportGenTimeStamp = Time.now.strftime('%Y%m%d_%H%M%S')
-          @reportFileName = "dvi_report_" + @reportGenTimeStamp
+    def dviReport(filename=nil)
+          if filename.nil? then
+             @reportGenTimeStamp = Time.now.strftime('%Y%m%d_%H%M%S')
+             @reportFileName = "dvi_report_" + @reportGenTimeStamp
+          else
+             @reportFileName = filename
+          end
 
           dvi_report = ThinReports::Report.create do |r|
              @report = r
-             r.use_layout "#{Rails.root}/app/reports/dvi_chart.tlf", :id => :dvi_chart
-             r.use_layout "#{Rails.root}/app/reports/dvi_table.tlf", :id => :dvi_table
-             r.use_layout "#{Rails.root}/app/reports/dvi_vuln_by_os.tlf", :id => :vuln_by_os_summary
-             r.use_layout "#{Rails.root}/app/reports/dvi_vuln_by_os_osver_table.tlf", :id => :vuln_by_os_osver_table
-             r.use_layout "#{Rails.root}/app/reports/dvi_intrusion_summary_table.tlf", :id => :intrusion_summary
+             r.use_layout "#{Rails.root}/app/reports/layouts/dvi_chart.tlf", :id => :dvi_chart
+             r.use_layout "#{Rails.root}/app/reports/layouts/dvi_table.tlf", :id => :dvi_table
+             r.use_layout "#{Rails.root}/app/reports/layouts/dvi_vuln_by_os.tlf", :id => :vuln_by_os_summary
+             r.use_layout "#{Rails.root}/app/reports/layouts/dvi_vuln_by_os_osver_table.tlf", :id => :vuln_by_os_osver_table
+             r.use_layout "#{Rails.root}/app/reports/layouts/dvi_intrusion_summary_table.tlf", :id => :intrusion_summary
 
              setPageBreakEvents()
 
              #DATABASE QUERIES
              @deviceList = Deviceinfo.
                                select("macid, username, devicename, operatingsystem, osversion, weight, to_char(updated_at, 'YYYY-MM-DD HH') as updated_at, dvi, weight").
-                               where("ipaddr <> '' ").
+                               where("ipaddr <> '' ").where("updated_at >= date(CURRENT_TIMESTAMP)").
                                order("dvi DESC")
              @deviceVulns =  DviVuln.joins(:deviceinfo).joins(:vulnerability).
                                  select("deviceinfo.macid as mac, deviceinfo.operatingsystem as os, deviceinfo.osversion as osver, vuln_id, 

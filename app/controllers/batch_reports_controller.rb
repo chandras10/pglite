@@ -2,32 +2,87 @@ require 'thinreports'
 require 'gruff'
 
 class BatchReportsController < ApplicationController
-  
+
   include DviReportHelper
+  
+  @@reportGenerators = { 'dvi' => {generator: "dviReport", 
+                                   title: "DVI Report"}
+                       }
 
-  TRUNCATE_MESG_LENGTH = 400
-   
-  def dvi_report
+  def download_report
+
+    @reportType = params['reportType']
+
+    return if @reportType.nil? 
+
     begin
-       @tmpDir = Dir.mktmpdir(nil, "/var/tmp")
+      report = create_report
+      if !report.nil?
+         send_data report.generate, filename: @reportFileName, 
+                                    type: 'application/pdf', 
+                                    disposition: 'attachment'
+      else
+         send_data File.read(@reportFileName), filename: @reportFileName,
+                                               type: 'text/plain',
+                                               disposition: 'attachment'
+      end
+    ensure
+      FileUtils.remove_entry_secure @tmpDir
+    end
+  end
 
-       report = dviReport
+  def email_report
+    
+    @reportType = params['reportType']
 
-       if !report.nil?
-          send_data report.generate, filename: "DVI_report.pdf", 
-                                     type: 'application/pdf', 
-                                     disposition: 'attachment'
-       end
-    rescue Exception => e
-       file = File.open("error.txt", 'w')
-       file.write("Unable to generate the report.\n")
-       file.write("Error: #{e.message}\n\n")
-       file.write(e.backtrace.inspect)
+    if !@reportType.nil? then
+      begin
+        report = create_report
+        if !report.nil?
+          mimeType = 'application/pdf'
+          report.generate_file(@reportFileName) if !report.nil?
+        else
+          #
+          # Maybe there was an error while generating the report. Just send the error.txt file.
+          #
+          mimeType = 'text/plain'
+        end
+
+        mailToAddress = params['mailto'] || ActionMailer::Base.smtp_settings[:to]
+        PeregrineMailer.send_report(@@reportGenerators[@reportType][:title], @reportFileName, mimeType, mailToAddress).deliver
+        noticeMsg = "#{@@reportGenerators[@reportType][:title]} has been mailed to: #{mailToAddress}."
+      ensure
+        FileUtils.remove_entry_secure @tmpDir
+      end
+
+    else
+      noticeMsg = "Please select a report."
+    end
+    
+    redirect_to '/dash_inventory', notice: noticeMsg
+
+  end
+
+  private
+
+  def create_report
+    @tmpDir = Dir.mktmpdir('pg_reports_', "#{Rails.root}/tmp")
+    begin
+      @reportFileName = "#{@tmpDir}/#{@reportType}_" + Time.now.strftime('%Y%m%d_%H%M%S') + ".pdf"
+      generator = @@reportGenerators[@reportType][:generator]
+      report = method(generator.to_sym).call @reportFileName
+    rescue Exception => e  
+      @reportFileName = "#{@tmpDir}/error_" + Time.now.strftime('%Y%m%d_%H%M%S') + ".txt"
+      file = File.open(@reportFileName, 'w')
+      file.puts("Unable to generate the report.")
+      file.puts("Error: #{e.message}")
+      file.puts(e.backtrace.inspect)
+      file.close
+      return nil
     rescue IOError => e
        #Ignore for now...
-    ensure
-       FileUtils.remove_entry_secure @tmpDir   
-    end #begin (for exception handling)      
+      return nil
+    end #begin
+  end
 
-  end # end of dvi_report
 end
