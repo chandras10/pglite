@@ -41,7 +41,7 @@ else
     :port          => 587,
     :domain        => 'i7nw.com',
     :user_name     => 'i7mail@i7nw.com',
-    :password      => 'm@ilfr0mi7',
+    :password      => '21ILuDiFtQEhmyhjZYGv2Q==',
     :authentication=> 'plain',
     :enable_starttls_auto => true,
     :to            => 'i7mail@i7nw.com'
