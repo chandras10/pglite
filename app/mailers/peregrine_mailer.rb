@@ -2,18 +2,23 @@ class PeregrineMailer < ActionMailer::Base
   default from: "peregrine7@i7nw.com"
 
   def send_alert(alert)
-  	mail(:to => 'chandrashekar.m@gmail.com', :subject => 'I7 Alert')
+  	mail(:to => 'i7mail@i7nw.com', :subject => 'I7 Alert')
   end
 
-  def send_report(reportName, reportFile, mimeType, toAddress = nil)
+  def send_report(toAddress, reportType, parmHash)
 
-  	attachments[reportName] = {
-  		mime_type: mimeType,
+    reportObject = BatchReports.Report(reportType)
+    return if reportObject.nil?
+
+    reportFile = reportObject.create(parmHash)
+  	attachments[reportObject.title] = {
+  		mime_type: 'application/pdf',
   		content: File.read(reportFile) }
 
-    toAddress = ActionMailer::Base.smtp_settings[:to] if toAddress.nil?
-    mail(:to => toAddress, :subject => "Peregrine Report: #{reportName}")
-    #mail(:to => 'sachin.s@i7nw.com', :subject => "Peregrine Report: #{reportName}")
+    mail(:to => toAddress, :subject => "Peregrine Report: #{reportObject.title}").deliver
+   
+    FileUtils.remove_entry_secure File.dirname(reportFile)
+
   end
 
 end

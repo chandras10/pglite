@@ -89,47 +89,53 @@ module ReportsHelper
   # ASSUMPTION: Incoming query references a table(s) which has column named 'timestamp'
   #
   def setTimePeriod(dbQuery)
+    return mapTimePeriod_to_sql(dbQuery, "timestamp", params)
+  end
 
-    if dbQuery.nil?
+  def mapTimePeriod_to_sql(dbQuery, timeColumn, parmHash)
+
+    parmHash = {} if parmHash.nil?
+
+    if dbQuery.nil? || timeColumn.nil? 
       return dbQuery
     end
 
-    reportTime = params['reportTime'] || "today"
+    reportTime = parmHash['reportTime'] || "today"
 
-    fromDate = params['fromDate'] || Date.today.to_s
+    fromDate = parmHash['fromDate'] || Date.today.to_s
     begin
-       toDate = params['toDate'] || (Date.parse(fromDate, "YYYY-MM-DD") + 1.day).to_s
+       toDate = parmHash['toDate'] || (Date.parse(fromDate, "YYYY-MM-DD") + 1.day).to_s
     rescue
        toDate = Date.today.to_s # Just in case someone has meddled with the query string param and sent an invalid FROM date...
     end
 
-    case reportTime
+    case reportTime.downcase
     when "past_hour"
-         dbQuery = dbQuery.where("timestamp > (CURRENT_TIMESTAMP - '1 hour'::interval)")         
+         dbQuery = dbQuery.where("#{timeColumn} > (CURRENT_TIMESTAMP - '1 hour'::interval)")         
     when "past_day"
-         dbQuery = dbQuery.where("timestamp > (CURRENT_TIMESTAMP - '24 hour'::interval)")
+         dbQuery = dbQuery.where("#{timeColumn} > (CURRENT_TIMESTAMP - '24 hour'::interval)")
     when "past_week"
-         dbQuery = dbQuery.where("timestamp > (CURRENT_TIMESTAMP - '7 day'::interval)")
+         dbQuery = dbQuery.where("#{timeColumn} > (CURRENT_TIMESTAMP - '7 day'::interval)")
     when "past_month"
-         dbQuery = dbQuery.where("timestamp > (CURRENT_TIMESTAMP - '1 month'::interval)")
+         dbQuery = dbQuery.where("#{timeColumn} > (CURRENT_TIMESTAMP - '1 month'::interval)")
     when "date_range"
          begin
-            fromDate = Date.parse(params['fromDate'], 'YYYY-MM-DD').to_time
+            fromDate = Date.parse(parmHash['fromDate'], 'YYYY-MM-DD').to_time
          rescue
             fromDate = Date.today #if the incoming parameter is an invalid date format, then pick TODAY as the date!
-            params['fromDate'] = fromDate.to_s
+            parmHash['fromDate'] = fromDate.to_s
          end
          begin
-            toDate = Date.parse(params['toDate'], 'YYYY-MM-DD').to_time + 1.day # end date should be inclusive in the range
+            toDate = Date.parse(parmHash['toDate'], 'YYYY-MM-DD').to_time + 1.day # end date should be inclusive in the range
          rescue
             # in case of parsing error, take FROMDATE + 1 as the end date...
-            params['toDate'] = (Date.parse(params['fromDate'], 'YYYY-MM-DD') + 1.day).to_s
-            toDate = (Date.parse(params['fromDate'], 'YYYY-MM-DD') + 1.day).to_time
+            parmHash['toDate'] = (Date.parse(parmHash['fromDate'], 'YYYY-MM-DD') + 1.day).to_s
+            toDate = (Date.parse(parmHash['fromDate'], 'YYYY-MM-DD') + 1.day).to_time
          end
 
-         dbQuery = dbQuery.where("timestamp between '#{fromDate.strftime('%F')}' and '#{toDate.strftime('%F')}'")
+         dbQuery = dbQuery.where("#{timeColumn} between '#{fromDate.strftime('%F')}' and '#{toDate.strftime('%F')}'")
     else #default is TODAY
-         dbQuery = dbQuery.where("timestamp >= date_trunc('day', CURRENT_TIMESTAMP)")
+         dbQuery = dbQuery.where("#{timeColumn} >= date_trunc('day', CURRENT_TIMESTAMP)")
     end
 
     return dbQuery
@@ -161,7 +167,7 @@ module ReportsHelper
        toDate = Date.today.to_s # Just in case someone has meddled with the query string param and sent an invalid FROM date...
     end
 
-    case reportTime
+    case reportTime.downcase
     when "past_hour"
          @timeSlot = "minute"
          @numTimeSlots = 5

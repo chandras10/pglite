@@ -24,4 +24,7 @@ module ConstantsHelper
        @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
   end
 
+  def reports_tmpdir
+    Dir.mktmpdir('pg_reports_', "#{Rails.root}/tmp")
+  end
 end
