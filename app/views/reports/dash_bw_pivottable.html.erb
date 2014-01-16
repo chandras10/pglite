@@ -50,7 +50,7 @@ table li{
    <div class="row-fluid sorttable">
       <div class="box span12">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Resource Consumption (Pivot)",
+                    :locals => { :header_title => "Bandwidth consumed/served between BYODs and Internal Servers",
                                  :header_link  => "#" }
          %>
          <div id="statsPivot" class="box-content" style="overflow:auto">
@@ -160,7 +160,6 @@ table li{
            $("#statsPivot").pivotUI(<%=raw @dbRecords.to_json %>, 
              {
                 rows: ["internal_server"],
-                cols: ["port"],
                 hiddenAttributes: ["inbytes", "outbytes"],
                 aggregators: [totalBW, upload, download]
              });

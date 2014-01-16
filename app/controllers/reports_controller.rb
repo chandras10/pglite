@@ -294,41 +294,21 @@ class ReportsController < ApplicationController
     reportType = params['reportType'] || "internalIP"
 
     #
-    # Get the WHERE clause for time-based query and append it to the SQL below. 
-    # I had to do some regular expression gimmick/hack to extract only the WHERE clause because
-    # I am employing 'find_by_sql' for the DB queries. (Not efficient but works...)
-    #
-    dbQuery = Internalipstat
-    dbQuery = setTimePeriod(dbQuery)
-    timeQueryString = dbQuery.to_sql.scan(/SELECT (.*) FROM .* WHERE\s+\((.*)\).*/i)
-
-    #
-    # Limiting this query to 10 DISTINCT ports and also to a maximum of 2000 database records only. Else, the client browser will hang...
+    # We will for now, only show the statistics for BYOD devices. 
     #
     case reportType
     when "internalIP"
-       @dbRecords = Internalipstat.find_by_sql("with top_ports as 
-                                               (SELECT destport, sum(inbytes)+sum(outbytes) as total_bw from internalipstat
-                                                where #{timeQueryString[0][1]} 
-                                                group by destport order by total_bw desc LIMIT 10),
-                                                ports as (select destport from top_ports) 
-                                                select d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip as Internal_Server, destport as Port, 
-                                                       sum(inbytes) as inbytes, sum(outbytes) as outbytes  from internalipstat stat, deviceinfo d 
-                                                where destport in (select destport from ports) and d.macid = stat.deviceid and #{timeQueryString[0][1]}
-                                                group by d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip, destport order by destip, destport
-                                                LIMIT 2000")
+       @dbRecords = Internalipstat.joins(:deviceinfo).select("operatingsystem, destip as Internal_Server, sum(inbytes) as inbytes, sum(outbytes) as outbytes ").
+                                   group("operatingsystem, destip").order("destip").
+                                   where("deviceclass = 'MobileDevice'")
     when "byodIP"
-       @dbRecords = Intincomingipstat.find_by_sql("with top_ports as 
-                                                  (SELECT destport, sum(inbytes)+sum(outbytes) as total_bw from intincomingipstat 
-                                                   where #{timeQueryString[0][1]} 
-                                                  group by destport order by total_bw desc LIMIT 10), 
-                                                  ports as (select destport from top_ports) 
-                                                  select d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip as Internal_Server, destport as Port, 
-                                                         sum(inbytes) as inbytes, sum(outbytes) as outbytes  from intincomingipstat stat, deviceinfo d 
-                                                  where destport in (select destport from ports) and d.macid = stat.deviceid and #{timeQueryString[0][1]}
-                                                  group by d.username, d.groupname, d.auth_source, d.operatingsystem, d.deviceclass, destip, destport order by destip, destport
-                                                  LIMIT 2000")
+       @dbRecords = Intincomingipstat.joins(:deviceinfo).select("operatingsystem, destip as Internal_Server, sum(inbytes) as inbytes, sum(outbytes) as outbytes ").
+                                   group("operatingsystem, destip").order("destip").
+                                   where("deviceclass = 'MobileDevice'")
     end # Which reportType?
+
+    @dbRecords = setTimePeriod(@dbRecords)
+
   end
   
   def dash_bw_world
