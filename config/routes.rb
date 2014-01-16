@@ -66,7 +66,7 @@ Pglite::Application.routes.draw do
   match '/resolve_hosts', to: 'reports#resolve_hosts'
 
   # Batch Reports
-  match '/dvi_report', to:  'batch_reports#email_report'
+  match '/report', to:  'batch_reports#email_report'
 
   match '/alerts', to: 'i7alerts#index'
   match '/download_pcap', to: 'i7alerts#download_pcap'

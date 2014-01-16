@@ -10,12 +10,8 @@ class DviReport
     DVI_SEVERITY_LABELS = ["Low", "Medium", "High"]
     DVI_SEVERITY_RANGES = [0.0..0.39, 0.4..0.69, 0.7..1.0]
 
-    def initialize(title=nil)
-      @reportTitle = title
-    end
-
     def title
-      @reportTitle
+      "DVI Report"
     end
 
     def create(parmHash = nil)
