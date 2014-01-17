@@ -11,25 +11,51 @@ class ReportsController < ApplicationController
     @deviceinfos = Deviceinfo.scoped
   end
 
-  def dash_inventory_asset_count
-    assetCount = Internalipstat.select(:destip).uniq.group(:destip).having('sum(inbytes) > 0').length
+  def dash_inventory_i7_alert_count
+    count = I7alert.where("timestamp >= date(CURRENT_TIMESTAMP)").count
     respond_to do |format|
-       format.json { render json: assetCount}
+       format.json { render json: count}
     end    
   end
 
-  def dash_inventory_alert_count
-    cnt = Alertdb.count
+  def dash_inventory_snort_alert_count
+    count = Alertdb.where("timestamp >= date(CURRENT_TIMESTAMP)").count
     respond_to do |format|
-       format.json { render json: cnt}
+       format.json { render json: count}
     end    
   end
 
   def dash_inventory_vuln_count
-    cnt = DviVuln.count
+    count = DviVuln.count
     respond_to do |format|
-       format.json { render json: cnt}
+       format.json { render json: count}
     end    
+  end
+
+  def dash_latest_i7_alerts
+    alerts = I7alert.select('timestamp, i7alertdef.priority as priority, 
+                              i7alertdef.description as description, i7alertclassdef.description as classtype, 
+                              srcmac, dstmac').
+                      joins('LEFT OUTER JOIN i7alertdef ON i7alertdef.id = i7alert.id 
+                             LEFT OUTER JOIN i7alertclassdef ON i7alertclassdef.id = i7alertdef.classid').
+                      where("i7alertdef.classid NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})").
+                      where("i7alertdef.active = true").
+                      order("timestamp desc").limit(10)
+    respond_to do |format|
+      timeZone = Time.zone.name
+
+       format.json {
+          render json: alerts.map do |alert|
+            {
+        timestamp: alert.timestamp.in_time_zone(timeZone).strftime("%Y-%m-%d %H:%M"),
+        priority: alert.priority,
+        alerttype: alert.description,
+        srcmac: alert.srcmac,
+        dstmac: alert.dstmac
+            }
+          end
+       }
+    end        
   end
 
   def dash_inventory_bandwidth_stats

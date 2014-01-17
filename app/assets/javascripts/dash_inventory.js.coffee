@@ -1,46 +1,80 @@
-GetAssetCount = ->
-  $('.assetCount #loading-indicator').show()
-  $('#inventoryAssetCount').hide()
-  $.ajax '/dash_inventory/assetCount.json',
+Geti7AlertCount = ->
+  $('#i7AlertCount #loading-indicator').show()
+  $('#i7AlertCount .counter').hide()
+  $.ajax '/dash_inventory/i7AlertCount.json',
     dataType: 'json'
     type: 'GET'
     data: {authenticity_token: AUTH_TOKEN}
     error: (jqXHR, textStatus, errorThrown) ->
-      $('.assetCount #loading-indicator').hide()
+      $('#i7AlertCount #loading-indicator').hide()
     success: (data, textStatus, jqXHR) ->
-      $('.assetCount #loading-indicator').hide()
-      $('#inventoryAssetCount').show()
-      $('#inventoryAssetCount').text(data)
+      $('#i7AlertCount #loading-indicator').hide()
+      $('#i7AlertCount .counter').text(data).show()
 
 GetSnortAlertCount = ->
-  $('.alertCount #loading-indicator').show()
-  $('#inventoryAlertCount').hide()
-  $.ajax '/dash_inventory/alertCount.json',
+  $('#snortAlertCount #loading-indicator').show()
+  $('#snortAlertCount .counter').hide()
+  $.ajax '/dash_inventory/snortAlertCount.json',
     dataType: 'json'
     type: 'GET'
     data: {authenticity_token: AUTH_TOKEN}
     error: (jqXHR, textStatus, errorThrown) ->
-      $('.alertCount #loading-indicator').hide()
+      $('#snortAlertCount #loading-indicator').hide()
     success: (data, textStatus, jqXHR) ->
-      $('.alertCount #loading-indicator').hide()
-      $('#inventoryAlertCount').show()
-      $('#inventoryAlertCount').text(data)
+      $('#snortAlertCount #loading-indicator').hide()
+      $('#snortAlertCount .counter').text(data).show()
 
 GetVulnCount = ->
-  $('.vulnCount #loading-indicator').show()
-  $('#inventoryVulnCount').hide()
+  $('#vulnCount #loading-indicator').show()
+  $('#vulnCount .counter').hide()
   $.ajax '/dash_inventory/vulnCount.json',
     dataType: 'json'
     type: 'GET'
     data: {authenticity_token: AUTH_TOKEN}
     error: (jqXHR, textStatus, errorThrown) ->
-      $('.vulnCount #loading-indicator').hide()
+      $('#vulnCount #loading-indicator').hide()
     success: (data, textStatus, jqXHR) ->
-      $('.vulnCount #loading-indicator').hide()
-      $('#inventoryVulnCount').show()
-      $('#inventoryVulnCount').text(data)
+      $('#vulnCount #loading-indicator').hide()
+      $('#vulnCount .counter').text(data).show()
+
+CreateAlertNotification = (container, type, text) ->
+  notyTypes = ['notification', 'error', 'warning', 'information', 'alert', 'success' ]
+  n = $(container).noty(
+    text: text
+    type: notyTypes[type]
+    dismissQueue: true
+    layout: "topCenter"
+    template: '<div style="font-size: 13px; line-height: 16px; padding: 8px 10px 9px; width: auto; position: relative;"><span class="noty_text"></span></div>',
+    theme: "defaultTheme"
+    force: true
+    maxVisible: 5
+    animation:
+      open:
+        height: "toggle"
+
+      close:
+        height: "toggle"
+
+      easing: "swing"
+      speed: 500 # opening & closing animation speed
+  )
+
+GetPeregrineAlerts = ->
+  $('#peregrineAlertsContainer #loading-indicator').show()
+  $.ajax '/dash_inventory/latesti7Alerts.json',
+    dataType: 'json'
+    type: 'GET'
+    data: {authenticity_token: AUTH_TOKEN}
+    error: (jqXHR, textStatus, errorThrown) ->
+      $('#peregrineAlertsContainer #loading-indicator').hide()
+    success: (data, textStatus, jqXHR) ->
+      $('#peregrineAlertsContainer #loading-indicator').hide()
+      for alert in data
+        alertText = '<b>' + alert.timestamp + '</b><br>' + alert.description + '<br><b>Device: </b>' + alert.srcmac
+        CreateAlertNotification('#peregrineAlertsContainer', alert.priority, alertText)
 
 jQuery ->
-  GetAssetCount()
+  Geti7AlertCount()
   GetSnortAlertCount()
   GetVulnCount()
+  GetPeregrineAlerts()

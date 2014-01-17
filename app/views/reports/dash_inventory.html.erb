@@ -27,6 +27,11 @@
 .icon-flag:before{
   content: "";
 }
+
+#peregrineAlertsContainer li {
+  margin: 0 0 10px 0;
+}
+
 </style>
 <div id="content" class="span10">
 <!-- content starts -->
@@ -46,33 +51,35 @@
 	       <div><%= Deviceinfo.count(:username, :conditions => "username <> ''", :distinct => true) %></div>
       </a>
 
-      <a data-rel="tooltip" title="Internal/Corporate Servers to which the devices connected." 
-         class="well span2 top-block assetCount" href="/dash_bw?reportType=internalIP&reportTime=today">
-         <span class="icon32 icon-blue icon-briefcase-new"></span>
-	       <div>Assets</div>
+      <a id="i7AlertCount" data-rel="tooltip" title="Alerts raised by Peregrine." 
+         class="well span2 top-block" href="/alerts">
+         <span class="icon32 icon-blue icon-bell-new"></span>
+	       <div>Alerts</div>
          <div id="loading-indicator" style="display: none;">
             <%= image_tag("peregrine-loader.gif") %>
          </div>
-	       <div id="inventoryAssetCount">0</div>
+	       <div class="counter">0</div>
+         <span class="notification">today</span>
       </a>
 				
-      <a data-rel="tooltip" title="Total Intrusion alerts raised so far." 
-         class="well span2 top-block alertCount" href="/tbl_snort">
+      <a id="snortAlertCount" data-rel="tooltip" title="Snort alerts raised." 
+         class="well span2 top-block" href="/tbl_snort">
 	       <span class="icon32 icon-color icon-alert"></span>
-	       <div>Security Alerts</div>
+	       <div>IDS Alerts</div>
          <div id="loading-indicator" style="display: none;">
             <%= image_tag("peregrine-loader.gif") %>
          </div>
-         <div id="inventoryAlertCount">0</div>
+         <div class="counter">0</div>
+         <span class="notification">today</span>
       </a>
-      <a data-rel="tooltip" title="Total Vulnerabilities discovered so far." 
-         class="well span2 top-block vulnCount" href="/tbl_vulnerability">
+      <a id="vulnCount" data-rel="tooltip" title="Vulnerabilities discovered so far." 
+         class="well span2 top-block" href="/tbl_vulnerability">
          <span class="icon32  icon-color icon-flag"></span>
          <div>Vulnerability Notices</div>
          <div id="loading-indicator" style="display: none;">
             <%= image_tag("peregrine-loader.gif") %>
          </div>
-         <div id="inventoryVulnCount">0</div>
+         <div class="vulnCount">0</div>      
       </a>
       <a data-rel="tooltip" title="License expires at <%= @license_info.valid_until if !@license_info.nil? %>" 
          class="well span2 top-block">
@@ -94,16 +101,14 @@
 
       <div class="box span4">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Bandwidth Consumed (Past Month)",
+                    :locals => { :header_title => "Most Recent Peregrine Alerts",
                                  :header_link  => "/dash_bw" }
          %>
-         <div class="box-content bandwidth_stats_box">
+         <div id="peregrineAlertsContainer" style="padding: 5px">
             <div id="loading-indicator" style="display: none;">
-               <%= image_tag("ajax-loader-8.gif") %>
+               <%= image_tag("peregrine-loader.gif") %>
             </div>
-
-            <canvas id="bandwidth_stats" >[No canvas support]</canvas>
-         </div> <!-- box-content -->
+         </div>
       </div> <!-- box span4 -->
 
       <div class="box span4">
@@ -152,6 +157,7 @@
    </div><!-- row-fluid sortable -->
 </div><!-- content ends -->
 <script type="text/javascript">
+
    var graphData;
 
    function roundNumber(rnum, rlength) {
@@ -161,42 +167,6 @@
 
 
    window.onload = function (){
-
-   $('.bandwidth_stats_box #loading-indicator').show();
-   $.ajax({url: '/dash_inventory_bandwidth_stats.json'}).done(
-      function(data) {
-
-         var deviceClassTypes = [];
-         var values = [];
-         for (key in data) {
-             deviceClassTypes.push(key);
-             values.push(data[key]);
-         }
-
-         var Labels = ['Download (LAN) ', 'Upload (LAN)', 'Download (WAN)', 'Upload (WAN)' ];
-         var tooltipArray = [];
-
-         for (var i=0; i < deviceClassTypes.length; i++) {
-             tooltipArray = tooltipArray.concat(Labels);
-         }
-
-         $('.bandwidth_stats_box #loading-indicator').hide();
-         var hBar = new RGraph.Bar('bandwidth_stats', values);
-         hBar.Set('grouping', 'grouped');
-         hBar.Set('vmargin', 20);
-         hBar.Set('labels', deviceClassTypes);
-         hBar.Set('tooltips', tooltipArray);
-         hBar.Set('key', Labels);
-         hBar.Set('key.position', 'graph');
-         hBar.Set('key.position.gutter.boxed', false);
-         hBar.Set('colors', ['Gradient(white:#3366CC:#3366CC)',
-                             'Gradient(white:#DC3912:#DC3912)',
-                             'Gradient(white:#FF9900:#FF9900)',
-                             'Gradient(white:#109618:#109618)']);
-         hBar.Set('noaxes', true);
-         hBar.Set('ylabels', false);
-         hBar.Draw();
-      });
 
      var labels = <%=raw hashOperatingSystem.keys %>;
      var data = <%=raw hashOperatingSystem.values %>;
@@ -221,9 +191,6 @@
        pieCanvas.width = pieCanvas.parentNode.clientWidth;
        pieCanvas.height = pieCanvas.parentNode.clientHeight * 2;
 
-       var hbarCanvas = document.getElementById('bandwidth_stats');
-       hbarCanvas.width = hbarCanvas.parentNode.clientWidth;
-       hbarCanvas.height = hbarCanvas.parentNode.clientHeight * 2;
      }
 
      document.body.onresize();

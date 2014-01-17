@@ -371,21 +371,21 @@ jQuery ->
        type: 'confirm'
        modal: true
        buttons: [
-         type: 'btn btn-danger'
+         addClass: 'btn btn-danger'
          text: 'Save & Restart'
-         click: ($noty) ->
+         onClick: ($noty) ->
            $noty.close()
            saveConfiguration(true)
         ,
-         type: 'btn btn-primary'
+         addClass: 'btn btn-primary'
          text: 'Save'
-         click: ($noty) ->
+         onClick: ($noty) ->
            $noty.close()
            saveConfiguration(false)
         ,
-         type: 'btn'
+         addClass: 'btn'
          text: 'Cancel'
-         click: ($noty) ->
+         onClick: ($noty) ->
            $noty.close()
        ]
       false
