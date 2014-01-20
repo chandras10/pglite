@@ -32,6 +32,8 @@ class DviReport
           #DATABASE QUERIES
           @deviceRecords = Deviceinfo.select("macid, username, devicename, operatingsystem, osversion, weight, to_char(updated_at, 'YYYY-MM-DD HH') as updated_at, dvi, weight").order("dvi DESC")
           @deviceRecords = mapTimePeriod_to_sql(@deviceRecords, "updated_at", parmHash)
+          @deviceRecords = @deviceRecords.where("deviceclass = ?", parmHash['deviceclass']) if parmHash['deviceclass'].present?
+          @deviceRecords = @deviceRecords.where("auth_source = ?", parmHash['authsource']) if parmHash['authsource'].present?
 
           @deviceList    = @deviceRecords.map {|d| d.macid }
           @osList        = @deviceRecords.map { |d| d.operatingsystem.downcase }.uniq
