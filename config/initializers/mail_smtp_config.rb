@@ -8,13 +8,15 @@ if File.exist?(Rails.configuration.peregrine_configfile) then
        	!configHash['pgguard']['email'].nil? && !configHash['pgguard']['email']['smtp'].nil?) then
       newSettings = configHash['pgguard']['email']['smtp']
 
-      decodePW = Base64.decode64(newSettings['password'])
-      cipher = OpenSSL::Cipher::Cipher.new("AES-256-CBC")
-      cipher.decrypt
-      cipher.key = KEY_TO_PASSWD
-      passwd = cipher.update(decodePW)
-      passwd << cipher.final
-      newSettings['password'] = passwd
+      if !newSettings['password'].nil?
+        decodePW = Base64.decode64(newSettings['password'])
+        cipher = OpenSSL::Cipher::Cipher.new("AES-256-CBC")
+        cipher.decrypt
+        cipher.key = KEY_TO_PASSWD
+        passwd = cipher.update(decodePW)
+        passwd << cipher.final
+        newSettings['password'] = passwd
+      end
 
       newSettings['to'] = configHash['pgguard']['email']['to']
       newSettings['cc'] = configHash['pgguard']['email']['cc']
