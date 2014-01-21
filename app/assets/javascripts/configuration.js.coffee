@@ -66,7 +66,9 @@ loadConfiguration = ->
             $('#maas360 #appVer').val(maas360Config.APP_VERSION)                  
             $('#maas360 #appAccessKey').val(maas360Config.APP_ACCESS_KEY)
             $('#maas360 #adminUsername').val(maas360Config.MAAS_ADMIN_USERNAME)
-            $('#maas360 #adminPassword').val(maas360Config.MAAS_ADMIN_PASSWORD)         
+            $('#maas360 #adminPassword').val(maas360Config.MAAS_ADMIN_PASSWORD)
+      else # MDM is not enabled
+         $('#mdmConfig').toggle($(this).is(':checked'))         
       if (typeof pgConfig.authentication isnt "undefined" and pgConfig.authentication?)
          if (typeof pgConfig.authentication.ldap isnt "undefined")
             $('#enableLDAPAuthFlag').parent().toggleClass('checked')
