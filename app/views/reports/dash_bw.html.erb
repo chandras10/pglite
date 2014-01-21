@@ -43,7 +43,7 @@
    <div class="row-fluid sortable">		
       <div class="box span12" id="graphBox">
          <%= render :partial => 'layouts/title_bar_icons',
-                    :locals => { :header_title => "Resource Consumption",
+                    :locals => { :header_title => "Resource Consumption " + (params['resource'].present? ? "for #{params['resource']}" : ""),
                                  :header_link  => "#" }
          %>
          <div class="box-content" style="overflow:visible">

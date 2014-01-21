@@ -31,7 +31,6 @@ Pglite::Application.routes.draw do
   match '/tbl_inventory', to: 'deviceinfos#index'
 
   match '/dash_bw', to: 'reports#dash_bw'
-  match '/dash_bw_server', to: 'reports#dash_bw_server'
   match '/dash_bw_pivottable', to: 'reports#dash_bw_pivottable'
   match '/dash_bw_world', to: 'reports#dash_bw_world'
   match '/dash_bw_country', to: 'reports#dash_bw_country'

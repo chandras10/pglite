@@ -10,6 +10,8 @@ jQuery ->
   $("#graphLoadingIndicator").hide()
   url = window.location.href
   queryParams = $('<a>', { href: url})[0]
+  if (!queryParams.search)
+    queryParams.search = "?dummy=foobar"
   serverTable = $('#serverListTable').dataTable
     sDom: "Rlfrtp"
     sPaginationType: "bootstrap"
@@ -34,7 +36,7 @@ jQuery ->
     bJQueryUI: true
     bProcessing: true
     bServerSide: true
-    sAjaxSource: '/dash_bw.json' + queryParams.search + '&dataType=src'
+    sAjaxSource: '/dash_bw.json' + queryParams.search + "&dataType=src"
     bDeferRender: true
     bStateSave: false
     sScrollX: "100%"
