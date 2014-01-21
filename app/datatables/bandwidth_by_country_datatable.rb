@@ -24,7 +24,7 @@ private
 
   def data
     paramHash = {}
-    paramHash[:action] = "dash_bw_server"
+    paramHash[:action] = "dash_bw"
     paramHash[:controller] = "reports"
     paramHash[:reportType] = "externalIP"
     if params.has_key?(:reportTime) then

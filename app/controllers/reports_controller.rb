@@ -1,7 +1,7 @@
 class ReportsController < ApplicationController
 
   before_filter :signed_in_user, only: [:dash_inventory, :dash_inventory_bandwidth_stats, 
-                                        :dash_bw, :dash_bw_server,
+                                        :dash_bw, 
                                         :dash_snort, :tbl_snort,
                                         :device_details, :tbl_vulnerability,
                                         :dash_bw_world, :dash_bw_country]
@@ -113,94 +113,6 @@ class ReportsController < ApplicationController
     end
 
   end # end of method
-
-  # Bandwidth usage per server, for all ports and devices connected to this server
-  def dash_bw_server
-
-    set_timeLine_constants
-
-
-    # Total (IN + OUTbytes) consumption per Port of the SELECTED server, per hour/day/month etc.
-    # Key: Port, Value: 'integer' array holding Mbytes consumed/hr/day/month etc.
-    @hashTimeIntervalData = Hash.new
-
-    #
-    #  Per Port, Total INbytes and OUTBytes.
-    # Key: Internal_Server_IP_address, Value: Array[INbytes, OUTbytes]
-    @hashPortTotals = Hash.new
-
-    #
-    # Per Device, Total INbytes and OUTbytes
-    # Key: Mobile Device MAC id, Value: Array[INbytes, OUTbytes]
-    @hashDeviceTotals = Hash.new
-
-    reportType = params['reportType'] || "internalIP"
-    reportType = "internalIP" if (!reportType.nil? && reportType == "deviceAPP" )
-
-    case reportType
-      when "internalIP"
-        dbQuery = Internalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-        dbQuery = dbQuery.where("destip = ?", params['resource'])
-      when "externalIP"
-        dbQuery = Externalipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-        dbQuery = dbQuery.where("destip = ?", params['resource'])
-      when "byodIP"
-        dbQuery = Intincomingipstat.select("deviceid as client, destport as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-        dbQuery = dbQuery.where("destip = ?", params['resource'])
-      when "internalAPP"
-        dbQuery = Internalresourcestat.select("deviceid as client, appidinternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-        dbQuery = dbQuery.where("appidinternal.appname = ?", params['resource'])
-      when "externalAPP"
-        dbQuery = Externalresourcestat.select("deviceid as client, appidexternal.appname as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-        dbQuery = dbQuery.where("appidexternal.appname = ?", params['resource'])
-      when "external_urlcat"
-        dbQuery = Urlcatstat.joins(:urlcatid).select("deviceid as client, urlcatid.name as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-        dbQuery = dbQuery.where("urlcatid.name = ?", params['resource'])
-      when "external_hlurlcat"
-        dbQuery = Hlurlcatstat.joins(:hlurlcatid).select("deviceid as client, hlurlcatid.name as service, sum(inbytes) as inbytes, sum(outbytes) as outbytes")
-        dbQuery = dbQuery.where("hlurlcatid.name = ?", params['resource'])
-    end
-    dbQuery = createBandwidthStatsQuery(dbQuery, reportType)
-    dbQuery = dbQuery.group(:service)
-
-    dbQuery.each do |rec |
-
-      # Update the Hashmap holding per hour/day/month stats for each port of the SELECTED server
-       arrayData = @hashTimeIntervalData[rec['service']]
-       if arrayData.nil? then
-          arrayData = @hashTimeIntervalData[rec['service']] = Array.new(@numTimeSlots, 0)
-       end
-
-       arrayData[rec['time'].to_i] += (rec['inbytes'] + rec['outbytes'])
-
-       # Update the Hashmap holding total in/out bytes counters for each port of the SELECTED server
-       arrayData = @hashPortTotals[rec['service']]
-       if arrayData.nil? then
-          arrayData = @hashPortTotals[rec['service']] = Array.new(2, 0)
-       end
-       arrayData[1] += rec['inbytes']
-       arrayData[0] += rec['outbytes']
-
-       # Update the Hashmap holding total in/out bytes counters for each device (or client)
-       clientData = @hashDeviceTotals[rec['client']]
-       if clientData.nil? then
-          clientData = @hashDeviceTotals[rec['client']] =  {:user => rec['user'], :ipaddress => rec['ipaddress'], :totals => Array.new(2, 0) }
-       end
-       clientData[:totals][0] += rec['inbytes']  
-       clientData[:totals][1] += rec['outbytes']
-
-    end # For each stat record...
-
-    case params['reportTime']
-    when "past_day"
-          # in case of past 24 hours, 
-          currentHour = Time.now.strftime("%H.%M").to_f.ceil 
-          @hashTimeIntervalData.each do |k, v|
-             @hashTimeIntervalData[k] = v.rotate(currentHour+1)
-          end
-    end
-
-  end
 
   # SNORT Alerts dashboard
   def dash_snort
@@ -404,46 +316,6 @@ class ReportsController < ApplicationController
   #-----------------------------------------------------------------------------
   #
   private
-
-  def createBandwidthStatsQuery(dbQuery, reportType)
-
-    #if there is no query string, then show the total bandwidth consumption.
-    #else show specific data as pointed to by "type"
-    #
-
-    case reportType
-    when "internalIP", "externalIP", "byodIP"
-         dbQuery = dbQuery.joins(:deviceinfo).select("destip as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
-                                                     group(:resource, 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
-                                                     order(:resource).scoped
-    when "internalAPP"
-         dbQuery = dbQuery.joins(:deviceinfo).joins(:appidinternal).select("appidinternal.appname as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
-                                                     where("appidinternal.appid > 0").
-                                                     group("appidinternal.appid", 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
-                                                     order("appidinternal.appid").scoped
-
-    when "externalAPP"
-         dbQuery = dbQuery.joins(:deviceinfo).joins(:appidexternal).select("appidexternal.appname as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
-                                                     where("appidexternal.appid > 0").
-                                                     group("appidexternal.appid", 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
-                                                     order("appidexternal.appid").scoped
-    when "external_urlcat"
-         dbQuery = dbQuery.joins(:deviceinfo).joins(:urlcatid).select("urlcatid.name as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
-                                                     group("urlcatid.id", 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
-                                                     order("urlcatid.name").scoped      
-    when "external_hlurlcat"
-         dbQuery = dbQuery.joins(:deviceinfo).joins(:hlurlcatid).select("hlurlcatid.name as resource, deviceinfo.username as user, deviceinfo.ipaddr as ipaddress").
-                                                     group("hlurlcatid.id", 'deviceinfo.username', 'deviceinfo.ipaddr', :client).
-                                                     order("hlurlcatid.name").scoped      
-    end
-
-    dbQuery = selectTimeIntervals(dbQuery)
-
-    #add specific device to the query, if it exists
-    dbQuery = dbQuery.where("deviceid = ?", params[:device]) if !params[:device].nil?
-
-    return dbQuery
-  end
 
 
 end

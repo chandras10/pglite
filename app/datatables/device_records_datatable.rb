@@ -123,7 +123,7 @@ private
 
   def bandwidthData
     paramHash = {}
-    paramHash[:action] = "dash_bw_server"
+    paramHash[:action] = "dash_bw"
     paramHash[:controller] = "reports"
     paramHash[:device] = params[:device]
     paramHash[:reportType] = "externalIP"
