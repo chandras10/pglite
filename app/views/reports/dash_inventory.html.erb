@@ -23,6 +23,10 @@
 %>
 
 <style>
+.icon-compose:before,
+.icon-check:before,
+.icon-star-off:before,
+.icon-comment:before,
 .icon-home:before,
 .icon-flag:before{
   content: "";
@@ -53,7 +57,7 @@
 
       <a id="i7AlertCount" data-rel="tooltip" title="Alerts raised by Peregrine." 
          class="well span2 top-block" href="/alerts">
-         <span class="icon32 icon-blue icon-bell-new"></span>
+         <span class="icon32 icon-orange icon-alert"></span>
 	       <div>Alerts</div>
          <div id="loading-indicator" style="display: none;">
             <%= image_tag("peregrine-loader.gif") %>
@@ -64,7 +68,7 @@
 				
       <a id="snortAlertCount" data-rel="tooltip" title="Snort alerts raised." 
          class="well span2 top-block" href="/tbl_snort">
-	       <span class="icon32 icon-color icon-alert"></span>
+	       <span class="icon32 icon-orange icon-flag"></span>
 	       <div>IDS Alerts</div>
          <div id="loading-indicator" style="display: none;">
             <%= image_tag("peregrine-loader.gif") %>
@@ -74,7 +78,7 @@
       </a>
       <a id="vulnCount" data-rel="tooltip" title="Vulnerabilities discovered so far." 
          class="well span2 top-block" href="/tbl_vulnerability">
-         <span class="icon32  icon-color icon-flag"></span>
+         <span class="icon32  icon-orange icon-compose"></span>
          <div>Vulnerability Notices</div>
          <div id="loading-indicator" style="display: none;">
             <%= image_tag("peregrine-loader.gif") %>

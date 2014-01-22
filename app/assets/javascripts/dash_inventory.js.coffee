@@ -39,12 +39,18 @@ GetVulnCount = ->
 
 CreateAlertNotification = (container, type, text) ->
   notyTypes = ['notification', 'error', 'warning', 'information', 'alert', 'success' ]
+  iconTypes = ['icon-orange icon-comment',
+               'icon-white icon-cancel',
+               'icon-red icon-alert',
+               'icon-blue icon-info',
+               'icon-green icon-star-off',
+               'icon-white icon-flag']
   n = $(container).noty(
     text: text
     type: notyTypes[type]
     dismissQueue: true
     layout: "topCenter"
-    template: '<div style="font-size: 13px; line-height: 16px; padding: 8px 10px 9px; width: auto; position: relative;"><span class="noty_text"></span></div>',
+    template: '<div title="Priority: ' + type + '" style="font-size: 13px; line-height: 16px; padding: 8px 10px 9px; width: auto; position: relative;"><span class="icon32 ' + iconTypes[type] + '" style="width: 2.25em" /> <span class="noty_text"></span></div>',
     theme: "defaultTheme"
     force: true
     maxVisible: 5
