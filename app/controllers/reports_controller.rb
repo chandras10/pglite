@@ -40,7 +40,7 @@ class ReportsController < ApplicationController
                              LEFT OUTER JOIN i7alertclassdef ON i7alertclassdef.id = i7alertdef.classid').
                       where("i7alertdef.classid NOT in (#{Rails.configuration.i7alerts_ignore_classes.join('')})").
                       where("i7alertdef.active = true").
-                      order("timestamp desc").limit(10)
+                      order("timestamp desc").limit(20)
     respond_to do |format|
       timeZone = Time.zone.name
 
