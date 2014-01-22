@@ -44,7 +44,9 @@ CreateAlertNotification = (container, type, text) ->
                'icon-red icon-alert',
                'icon-blue icon-info',
                'icon-green icon-star-off',
-               'icon-white icon-flag']
+               'icon-blue icon-flag']
+  if type > (notyTypes.length - 1)
+    type = 0 #In case notification type exceeds what we are handling now, then reset it to 0. Else the noty will not have proper icons/color.
   n = $(container).noty(
     text: text
     type: notyTypes[type]
