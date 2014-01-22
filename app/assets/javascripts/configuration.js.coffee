@@ -1,5 +1,23 @@
 ipv4_pattern = new RegExp("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(?:[0-9]|1[0-9]|2[0-9]|3[0-2])$") 
 
+window.onload = ->
+  aclmodeType = $("#aclMode").val()
+  if aclmodeType.toUpperCase() is "VLAN"
+    $("#aclmodeattr").show()
+    $("#aclportid").hide()
+  else
+    $("#aclmodeattr").hide()
+    $("#aclportid").show()
+
+$(document).ready ->
+  $("#aclMode").change ->
+    if @value.toUpperCase() is "VLAN"
+      $("#aclmodeattr").show()
+      $("#aclportid").hide()
+    else
+      $("#aclmodeattr").hide()
+      $("#aclportid").show()
+      
 isBlank = (str) ->
   (!str || /^\s*$/.test(str))
 
@@ -108,7 +126,10 @@ loadConfiguration = ->
       if (typeof ciscoACL isnt "undefined")
          $('#connectionMode').val(ciscoACL.mode.toLowerCase()).trigger('liszt:updated')
          $('#switchIP').val(ciscoACL.ip)
+         $('#aclMode').val(ciscoACL.acl_mode.toLowerCase()).trigger('liszt:updated')
          $('#aclPort').val(ciscoACL.port)
+         $('#vlanmodemapno').val(ciscoACL.vlan_map_no)
+         $('#vlanmodeno').val(ciscoACL.vlan_no)
          $('#aclNumber').val(ciscoACL.acl_no)
          $('#aclLogin').val(ciscoACL.username)
          $('#aclPassword').val(ciscoACL.password)
@@ -228,12 +249,15 @@ saveACLConfig = (restartFlag) ->
   ciscoACL.ip = $('#switchIP').val()
   ciscoACL.port = $('#aclPort').val()
   ciscoACL.acl_no = $('#aclNumber').val()
+  ciscoACL.acl_mode = $('#aclMode').val()
+  ciscoACL.vlan_map_no = $('#vlanmodemapno').val()
+  ciscoACL.vlan_no = $('#vlanmodeno').val()
   ciscoACL.username = $('#aclLogin').val()
   ciscoACL.password = $('#aclPassword').val()
   ciscoACL.enable = $('#aclEnablePassword').val()
   data.restart = restartFlag
   $('#tabParms').val(JSON.stringify(data))  
-
+  
 saveConfiguration = (restartFlag) ->
   activeTab = $('#TabList').find('.tab-pane:visible').attr('id')
   if activeTab is 'peregrineConfig-tab'
