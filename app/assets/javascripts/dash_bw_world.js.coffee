@@ -52,7 +52,7 @@ jQuery ->
                 data: {authenticity_token: AUTH_TOKEN, country: code.toUpperCase()}
                 error: (jqXHR, textStatus, errorThrown) ->
                   $('#loading-indicator').hide()
-                  alert("AJAX ERROR: #{textStatus}")
+                  console.log "AJAX ERROR: #{textStatus}"
                 success: (data, textStatus, jqXHR) ->
                   servers = totalBW = uploadBW = downloadBW = 0
                   if data && data[0].total != null

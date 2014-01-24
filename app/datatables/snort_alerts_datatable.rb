@@ -1,5 +1,6 @@
 class SnortAlertsDatatable
   include DatatablesHelper
+  include ReportsHelper
   delegate :params, :h, :link_to,  to: :@view
 
   def initialize(view)
