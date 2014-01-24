@@ -73,7 +73,7 @@ jQuery ->
                 type: 'POST'
                 data: { _method: 'PUT', authenticity_token: AUTH_TOKEN, auth_type: auth_src, ids: devices}
                 error: (jqXHR, textStatus, errorThrown) ->
-                  alert("AJAX ERROR: #{textStatus}")
+                  console.log "AJAX ERROR: #{textStatus}"
                 success: (data, textStatus, jqXHR) ->
                   oTable.fnDraw()
      else
