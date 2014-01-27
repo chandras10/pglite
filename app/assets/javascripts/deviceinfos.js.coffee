@@ -1,6 +1,7 @@
 # Place all the behaviors and hooks related to the matching controller here.
 # All this logic will automatically be available in application.js.
 # You can use CoffeeScript in this file: http://jashkenas.github.com/coffee-script/
+
 jQuery ->
   $('#auth_device_dialog_placeholder').hide()
   #
@@ -29,6 +30,15 @@ jQuery ->
     oTableTools: {
       sRowSelect: "multi", aButtons: ["select_all", "select_none", {sExtends: "text", sButtonText: "Authorize"}]
     }
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )
     aoColumns: [
                    { mData: "macid"},
                    { mData: "username"},
@@ -48,7 +58,7 @@ jQuery ->
                    { mData: "devicename"},
                    { mData: "vendorname"},
                    { mData: "parentmacid"}
-                 ]      
+                 ]
 
   $('.ColVis_MasterButton').removeClass('ColVis_Button').addClass('DTTT_button')
 

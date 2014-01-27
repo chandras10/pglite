@@ -23,6 +23,15 @@ jQuery ->
     sScrollX: "100%"
     bScrollCollapse: true
     oColVis: { bRestore: true}
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )    
     aoColumns: [
                    { mData: "snortID"},
                    { mData: "timestamp"},

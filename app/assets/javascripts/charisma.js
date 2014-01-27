@@ -459,3 +459,29 @@ function removeURLParameter(url, parameter) {
         return url;
     }
 }
+
+function handleDatatablesAjaxError(xhr, textStatus, error) {
+  //
+  // Most likely we got here because of a session timeout. In that case, just try redirecting to that location and our app
+  // will automagically send the user to the login page.
+  //
+  if (xhr.status == 200) {
+     window.location.replace(window.location.href)
+  } else {
+  	 console.log(textStatus)
+  }
+}
+
+(function($) {
+    $.QueryString = (function(a) {
+        if (a == "") return {};
+        var b = {};
+        for (var i = 0; i < a.length; ++i)
+        {
+            var p=a[i].split('=');
+            if (p.length != 2) continue;
+            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+        }
+        return b;
+    })(window.location.search.substr(1).split('&'))
+})(jQuery);

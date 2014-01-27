@@ -21,6 +21,15 @@ jQuery ->
     bStateSave: false
     sScrollX: "100%"
     bScrollCollapse: true
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )    
     oColVis: 
        bRestore: true
     aoColumns: [

@@ -23,6 +23,15 @@ jQuery ->
     bStateSave: false
     sScrollX: "100%"
     bScrollCollapse: true
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )    
     aoColumns: [
                    { mData: "key"},
                    { mData: "sent", sClass: "right"},
@@ -40,7 +49,16 @@ jQuery ->
     bDeferRender: true
     bStateSave: false
     sScrollX: "100%"
-    bScrollCollapse: true    
+    bScrollCollapse: true
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )    
     aoColumns: [
                    { mData: "key", bSortable: false}, 
                    { mData: "sent", sClass: "right"},
