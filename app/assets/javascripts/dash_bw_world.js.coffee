@@ -20,6 +20,15 @@ jQuery ->
       bStateSave: true
       sScrollX: "100%"
       bScrollCollapse: true
+      fnServerData: (sSource, aoData, fnCallback) ->
+        $.ajax(
+          dataType: 'json'
+          type: 'GET'
+          url: sSource
+          data: aoData
+          success: fnCallback
+          error: handleDatatablesAjaxError
+        )    
       aoColumns: [
                    { mData: "server"},
                    { mData: "port", sClass: "right"},
@@ -38,7 +47,7 @@ jQuery ->
          showTooltip: true
          values: mapData
          scaleColors: ['#C8EEFF', '#006491']
-         normalizeFunction: 'polynomial',
+         normalizeFunction: 'polynomial'
          onRegionClick: (event, code, region) ->
            $('#countryDetails .box-header').text(region)
            $('#countryCode').val(code.toUpperCase())
@@ -50,9 +59,7 @@ jQuery ->
                 dataType: 'json'
                 type: 'GET'
                 data: {authenticity_token: AUTH_TOKEN, country: code.toUpperCase()}
-                error: (jqXHR, textStatus, errorThrown) ->
-                  $('#loading-indicator').hide()
-                  console.log "AJAX ERROR: #{textStatus}"
+                error: handleDatatablesAjaxError
                 success: (data, textStatus, jqXHR) ->
                   servers = totalBW = uploadBW = downloadBW = 0
                   if data && data[0].total != null

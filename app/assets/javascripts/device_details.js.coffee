@@ -24,6 +24,15 @@ jQuery ->
     sScrollX: "100%"
     bScrollCollapse: true
     oColVis: { bRestore: true}
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )        
     aoColumns: [
                    { mData: "id"},
                    { mData: "priority"},
@@ -44,6 +53,15 @@ jQuery ->
     sScrollX: "100%"
     bScrollCollapse: true
     oColVis: { bRestore: true}
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )        
     aoColumns: [
                    { mData: "id"},
                    { mData: "priority"},
@@ -63,6 +81,15 @@ jQuery ->
     sScrollX: "100%"
     bScrollCollapse: true
     oColVis: { bRestore: true}
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )        
     aoColumns: [
                    { mData: "id"},
                    { mData: "score"},
@@ -82,6 +109,15 @@ jQuery ->
     sScrollX: "100%"
     bScrollCollapse: true
     oColVis: { bRestore: true}
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )        
     aoColumns: [
                    { mData: "name"},
                    { mData: "version"}
@@ -99,6 +135,15 @@ jQuery ->
     sScrollX: "100%"
     bScrollCollapse: true
     oColVis: { bRestore: true}
+    fnServerData: (sSource, aoData, fnCallback) ->
+      $.ajax(
+        dataType: 'json'
+        type: 'GET'
+        url: sSource
+        data: aoData
+        success: fnCallback
+        error: handleDatatablesAjaxError
+      )        
     aoColumns: [
                    { mData: "server"},
                    { mData: "port"},
