@@ -21,17 +21,7 @@ private
   def data
     timeZone = Time.zone.name
 
-    #
-    # Create tooltips for each "Source Mac" found in the alerts..
-    #
-    devices = alerts.map {|a| a.srcmac}.uniq
-    deviceHash = Hash.new
-    devices.each do |d|
-      deviceHash[d] = Deviceinfo.where("macid = ?", d).first
-    end
-
     alerts.map do |alert|
-      macIDTooltip = @view.render :partial=> 'layouts/tooltip_device', :formats=>[:html], :locals => {:device => deviceHash[alert.srcmac]}
       if (!alert.pcap.nil? && !alert.pcap.empty?) then
          pcap = link_to('Packet Capture', {:action => :download_pcap, :controller => "i7alerts", :filename => h(alert.pcap)})
       else
@@ -43,10 +33,10 @@ private
         alerttype: h(alert.description),
         id: "<a href='#' title='" + alert.classtype + "'>#{alert.id}</a>",
         proto: h(alert.proto),
-        srcmac: link_to(alert.srcmac, {:action=> "device_details", :controller=> "reports", :device => alert.srcmac}, {:rel => "popover", :'data-content' => "#{macIDTooltip}", :'data-original-title' => "#{alert.srcmac}" }),
+        srcmac: device_tooltip(alert.srcmac),
         srcip: h(alert.srcip),
         srcport: h(alert.srcport),
-        dstmac: h(alert.dstmac),
+        dstmac: device_tooltip(alert.dstmac),
         dstip: h(alert.dstip),
         dstport: h(alert.dstport),
         pcap: pcap,
