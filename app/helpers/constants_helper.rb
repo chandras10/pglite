@@ -24,7 +24,14 @@ module ConstantsHelper
        @priorityLabels = Array["High", "Medium", "Low", "Very Low"]
   end
 
+  def set_report_filters
+	@availabledeviceClass = Deviceinfo.select(:deviceclass).uniq.map{ |r|r.deviceclass}
+	@availabledeviceClass.push("All")
+	@availableauthSource = Hash[Authsources.all.map { |r|["#{r.id}", r.description]}]
+	@availableauthSource["All"] = "All"
+  end
+
+end
   def reports_tmpdir
     Dir.mktmpdir('pg_reports_', "#{Rails.root}/tmp")
   end
-end

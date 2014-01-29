@@ -3,6 +3,10 @@ require 'gruff'
 
 class BatchReportsController < ApplicationController
 
+  def select_report
+    set_timeLine_constants
+    set_report_filters
+  end
   
   def download_report
 
