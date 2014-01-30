@@ -110,6 +110,15 @@
                                data-trigger="change" data-type="number">
                      </div>
                   </div>
+                   <div class="control-group">
+                     <label for="fwtype" class="control-label">FW Type</label>
+                     <div class="controls">
+                        <select data-rel="chosen" id="fwtype">
+                           <option value="Cisco">Cisco</option>
+                           <option value="IPFW">IPFW</option>
+                        </select>
+                     </div>
+		    </div>
                   <div class="control-group">
                      <label for="loggingLevel" class="control-label">Logging Level</label>
                      <div class="controls">
@@ -314,8 +323,8 @@
                      <label for="aclMode" class="control-label">ACL Mode</label>
                      <div class="controls">
                         <select data-rel="chosen" id="aclMode">
-                           <option value="vlan">VLAN</option>
-                           <option value="port">PORT</option>
+                           <option value="VLAN">VLAN</option>
+                           <option value="Port">PORT</option>
                         </select>
                      </div>
 		   		   </div>

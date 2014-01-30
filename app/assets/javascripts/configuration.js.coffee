@@ -60,6 +60,7 @@ loadConfiguration = ->
          $('#httpProxyPort').val(pgConfig.httpproxy.port)
          $('#httpProxy').show()
       $('#dtiThreshold').val(pgConfig.DTIThreshold)
+      $('#fwtype').val(pgConfig.fwType).trigger('liszt:updated')
       $('#loggingLevel').val(pgConfig.logmask).trigger('liszt:updated')
       #
       # Integrations Tab
@@ -144,6 +145,7 @@ saveApplicationConfig = (restartFlag) ->
   pgConfig.httpproxy.ip = $('#httpProxyIP').val()
   pgConfig.httpproxy.port = $('#httpProxyPort').val()
   pgConfig.DTIThreshold = $('#dtiThreshold').val()
+  pgConfig.fwType = $('#fwtype').val()
   pgConfig.logmask = $('#loggingLevel').val()
   pgConfig.homeNets = ''
   $('input[type=text]', '#homeNets').each( ->
