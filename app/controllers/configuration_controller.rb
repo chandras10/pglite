@@ -364,7 +364,7 @@ class ConfigurationController < ApplicationController
        #
        configHash = configHash.merge(pgConfig)       
        file = File.new(Rails.configuration.peregrine_configfile, "w")
-       file.write(configHash.to_xml({:root => 'pgguard', :skip_types => true}))
+       file.write(configHash.to_xml({:root => 'pgguard', :skip_types => true, :dasherize => false}))
        file.close
 
     end # pg configuration?
