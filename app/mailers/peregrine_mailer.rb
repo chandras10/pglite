@@ -1,5 +1,4 @@
 class PeregrineMailer < ActionMailer::Base
-  default from: "peregrine7@i7nw.com"
 
   def send_alert(alert)
   	mail(:to => 'i7mail@i7nw.com', :subject => 'I7 Alert')
@@ -15,7 +14,7 @@ class PeregrineMailer < ActionMailer::Base
   		mime_type: 'application/pdf',
   		content: File.read(reportFile) }
 
-    mail(:to => toAddress, :subject => "Peregrine Report: #{reportObject.title}").deliver
+    mail(:subject => "Peregrine Report: #{reportObject.title}").deliver
    
     FileUtils.remove_entry_secure File.dirname(reportFile)
 

@@ -35,6 +35,17 @@ loadContextHelp = ->
   helpText['aclPort'] = 
     title: 'BYOD Port'
     text: "Port through which BYODs get into the network."
+  helpText['smtp_auth_type'] = 
+    title: 'SMTP Authentication'
+    text: "If your mail server requires authentication, you need to specify the authentication type here. It can be:<br><ul>
+           <li><b>'plain':</b> will send the password in the clear. <br>
+           <li><b>'login':</b> will send password Base64 encoded. <br>
+           <li><b>'cram_md5':</b> combines a Challenge/Response mechanism to exchange information and a cryptographic Message 
+                  Digest 5 algorithm to hash important information.</ul>"
+  helpText['openssl_verify_mode'] = 
+    title: 'SSL Certificate Validation'
+    text: "You can set how OpenSSL checks the certificate. This is really useful if you need to validate a self-signed and/or 
+           a wildcard certificate.<br><i>If dont know which value to set, it is better to check with your mail server administrator. </i>"
 
 loadConfiguration = ->
   $.ajax '/settings.json',
@@ -110,6 +121,10 @@ loadConfiguration = ->
       #
       # Email Tab
       #
+      $('#smtp_auth_type_help').attr('data-original-title', helpText['smtp_auth_type'].title)
+      $('#smtp_auth_type_help').attr('data-content', helpText['smtp_auth_type'].text)            
+      $('#openssl_verify_mode_help').attr('data-original-title', helpText['openssl_verify_mode'].title)
+      $('#openssl_verify_mode_help').attr('data-content', helpText['openssl_verify_mode'].text)            
       if (typeof pgConfig.email isnt "undefined") and (typeof pgConfig.email.smtp isnt "undefined")
          smtpSettings = pgConfig.email.smtp
          $('#smtpServer').val(smtpSettings.ip)
@@ -118,6 +133,8 @@ loadConfiguration = ->
          $('#smtpPassword').val(smtpSettings.password)
          $('#emailTo').val(pgConfig.email.to)
          $('#emailCc').val(pgConfig.email.cc)
+         $('#smtp_auth_type').val(smtpSettings.smtp_auth_type).trigger('liszt:updated')
+         $('#openssl_verify_mode').val(smtpSettings.openssl_verify_mode).trigger('liszt:updated')
       #
       # Cisco ACL Tab
       #
@@ -239,6 +256,8 @@ saveEmailConfig = (restartFlag) ->
   smtpConfig.port = $('#smtpPort').val()
   smtpConfig.login = $('#smtpLogin').val()
   smtpConfig.password = $('#smtpPassword').val()
+  smtpConfig.smtp_auth_type = $('#smtp_auth_type').val()
+  smtpConfig.openssl_verify_mode = $('#openssl_verify_mode').val()
   pgConfig.email.to = $('#emailTo').val()
   pgConfig.email.cc = $('#emailCc').val()
   data.restart = restartFlag
