@@ -6,36 +6,63 @@
   color: green;
   font-style: italic;
 }
+
+#center {
+text-align: left;
+}
 </style>
 <div id="content" class="span10">
+	<div class="box span10">
+	<%= render :partial => 'layouts/title_bar_icons',
+                    :locals => { :header_title =>  'Report Generation',
+                                 :header_link  => "#" }
+         %> 
+		<div class="box-content">
+			<form class="form-horizontal">
+				<fieldset>
+					<div class="control-group">
+						<label for="deviceclass" class="control-label">Device Class</label>
+						<div class="controls">
+							<select data-rel="chosen" id="deviceclass">
+								<% @availabledeviceClass.each do |elem| %>
+								<option value="<%= elem %>"><%= elem %></option>
+								<% end %>
+							</select>
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="authsource" class="control-label">Authorisation Source</label>
+						<div class="controls">
+							<select data-rel="chosen" id="authsource">
+								<% @availableauthSource.each do |key, value| %>
+								<option value="<%= key %>"><%= @availableauthSource[key] %></option>
+								<% end %>
+							</select>
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="reportTime" class="control-label">Time</label>
+						<div class="controls">
+							<select data-rel="chosen" id="reportTime">
+								<% @availableTimeLines.each do |key, value| %>
+								<option value="<%= key %>"><%= value %></option>
+								<% end %>
+							</select>
+						</div>
+					</div>
 
-<div class="control-group">
-							<select id="reportTime" class="chosen">
-               <% @availableTimeLines.each do |key, value| %>
-                                   <option value="<%= key %>"><%= value %></option>
-               <% end %>
-                          </select>
-
-                          <select id="deviceclass" class="chosen">
-                <% @availabledeviceClass.each do |elem| %>
-                                    <option value="<%= elem %>"><%= elem %></option>
-                <% end %>
-                          </select>
-                          <select id="authsource" class="chosen">
-                <% @availableauthSource.each do |key, value| %>
-                                    <option value="<%= key %>"><%= @availableauthSource[key] %></option>
-                <% end %>
-                          </select>
-                          
-            <button class="btn btn-primary" id="emailreport">E-mail</button>
-            <button class="btn btn-primary" id="downloadreport">Download</button>
-
-        </div>
-        <div class="control-group" id="dateRange">
-    			  <input   class="datepicker" id="fromDate" value="From" type="text" >
-    			  <input   class="datepicker" id="toDate" value="To" type="text">
-        </div>
-
+					<div class="control-group" id="dateRange">
+						<input   class="datepicker" id="fromDate" value="From" type="text" >
+						<input   class="datepicker" id="toDate" value="To" type="text">
+					</div>
+					<div class="form-actions">
+						<button class="btn btn-primary" id="emailreport">E-mail</button>
+						<button class="btn btn-primary" id="downloadreport">Download</button>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+	</div>
 </div>
 <script type="text/javascript">
 
@@ -85,7 +112,6 @@ $("#reportTime").chosen().change(function() {
                }
                urlString += "&fromDate=" + fromDate + "&toDate=" + toDate;
             }
-	    alert(urlString);
             window.location.href= urlString;
        });
 
@@ -117,7 +143,6 @@ $("#reportTime").chosen().change(function() {
                }
                urlString += "&fromDate=" + fromDate + "&toDate=" + toDate;
             }
-            alert(urlString)
 	        window.location.href= urlString;
        });
 
